@@ -1,0 +1,33 @@
+[build-system]
+requires = [
+    "setuptools>=61.0"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rolch"
+version = "0.1.0"
+authors = [
+  {name="Simon Hirsch", email="simon.hirsch@stud.uni-due.de"},
+  {name="Jonathan Berrisch", email="jonathan.berrisch@uni-due.de"},
+  {name="Florian Ziel", email="florian.ziel@uni-due.de"}
+]
+description = "Methods for online / incremental estimation of distributional regression models"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies=[
+    "scipy >= 1.00",
+    "numpy >= 1.00",
+    "numba >= 0.59.1"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.urls]
+Homepage = "https://gitlab.com/simonhirsch/rolch"

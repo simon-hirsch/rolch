@@ -1,0 +1,14 @@
+*.vscode*
+*.ruff_cache*
+*__pycache__*
+.ipynb_checkpoints
+.git
+dist
+development
+*.egg-info*
+*build*
+*build/clear*
+*build/doctrees*
+*dev_*
+literature/*
+presentation/*
