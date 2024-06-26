@@ -30,4 +30,4 @@ dependencies=[
 where = ["src"]
 
 [project.urls]
-Homepage = "https://gitlab.com/simonhirsch/rolch"
+Homepage = "https://github.com/simon-hirsch/rolch"
