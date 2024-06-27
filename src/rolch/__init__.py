@@ -3,6 +3,7 @@ from importlib.metadata import version
 from rolch.coordinate_descent import (
     online_coordinate_descent,
     online_coordinate_descent_path,
+    soft_threshold,
 )
 from rolch.distributions import DistributionJSU, DistributionNormal, DistributionT
 from rolch.gram import (
@@ -49,6 +50,7 @@ __all__ = [
     update_y_gram,
     online_coordinate_descent,
     online_coordinate_descent_path,
+    soft_threshold,
     information_criterion,
     select_best_model_by_information_criterion,
     calculate_asymptotic_training_length,
