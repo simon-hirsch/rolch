@@ -8,6 +8,13 @@ This package provides online estimation of models for distributional regression 
 
 We're actively working on the package and welcome contributions from the community.
 
+## Install from PyPI
+
+The package is available from [pypi](https://pypi.org/project/rolch/).
+
+1) `pip install rolch`. 
+2) Enjoy
+
 ## Install from source:
 
 1) Clone this repo.
