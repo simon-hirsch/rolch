@@ -1,4 +1,4 @@
-site_name: My Docs
+site_name: "ROLCH: Regularized Online Learning for Conditional Heteroskedasticity"
 
 theme:
   name: "material"
@@ -22,4 +22,5 @@ markdown_extensions:
   - mdx_math
 
 nav:
-  - API Reference : reference.md
+  - Coordinate Descent : coordinate_descent.md
+  - Link Functions : links.md
