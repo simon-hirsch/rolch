@@ -7,6 +7,12 @@ EXP_UPPER_BOUND = 25
 
 
 class LogLink(LinkFunction):
+    """
+    The log-link function.
+
+    The log-link function is defined as \(g(x) = \log(x)\).
+    """
+
     def __init__(self):
         pass
 
@@ -21,6 +27,12 @@ class LogLink(LinkFunction):
 
 
 class IdentityLink(LinkFunction):
+    """
+    The identity link function.
+
+    The identity link is defined as \(g(x) = x\).
+    """
+
     def __init__(self):
         pass
 
@@ -35,6 +47,15 @@ class IdentityLink(LinkFunction):
 
 
 class LogShiftValueLink(LinkFunction):
+    """
+    The Log-Link function shifted to a value \(v\).
+
+    This link function is defined as \(g(x) = \log(x + v)\). It can be used
+    to ensure that certain distribution paramters don't fall below lower
+    bounds, e.g. ensuring that the degrees of freedom of a Student's t distribtuion
+    don't fall below 2, hence ensuring that the variance exists.
+    """
+
     def __init__(self, value):
         self.value = value
 
@@ -51,6 +72,15 @@ class LogShiftValueLink(LinkFunction):
 
 
 class LogShiftTwoLink(LogShiftValueLink):
+    """
+    The Log-Link function shifted to 2.
+
+    This link function is defined as \(g(x) = \log(x + 2)\). It can be used
+    to ensure that certain distribution paramters don't fall below lower
+    bounds, e.g. ensuring that the degrees of freedom of a Student's t distribtuion
+    don't fall below 2, hence ensuring that the variance exists.
+    """
+
     def __init__(self):
         super().__init__(2)
         pass
