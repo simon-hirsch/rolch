@@ -14,9 +14,6 @@ theme:
     - search.share
     - search.highlight
     - search.suggest
-  icon:
-    admonition:
-      numba: octicons/rocket-16
 
 plugins:
 - mkdocstrings:
