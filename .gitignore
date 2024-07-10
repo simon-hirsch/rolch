@@ -12,3 +12,4 @@ development
 *dev_*
 literature/*
 presentation/*
+.cache

@@ -1,6 +1,7 @@
 site_name: "ROLCH: Regularized Online Learning for Conditional Heteroskedasticity"
 
 nav:
+  - Home: index.md
   - Estimators : estimators.md
   - Coordinate Descent : coordinate_descent.md
   - Distributions : distributions.md
