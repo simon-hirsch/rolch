@@ -8,7 +8,7 @@ def init_forget_vector(forget: float, size: int) -> np.ndarray:
 
     Recursively initialise a vector of exponentially discounted weights of `size` N.
 
-    The weight for \(n\)-th observation is defined as $$(1 - \\text{forget})^{(N - n)}$$
+    The weight for $n$-th observation is defined as $(1 - \\text{forget})^{(N - n)}$
 
     Note that this functions assumes that the first observation is the oldest observation
     and the last observation is the newest observation. This is in line with the standard
@@ -39,15 +39,18 @@ def init_forget_vector(forget: float, size: int) -> np.ndarray:
 def init_gram(X: np.ndarray, w: np.ndarray, forget: float = 0) -> np.ndarray:
     """Initialise the Gramian Matrix.
 
-    The Gramian Matrix is defined as $$G = X^T \\Gamma WX$$ where \(X\) is the
-    design matrix, \(W\) is a diagonal, user-defined weight matrix, \(\\Gamma\) is a
+    The Gramian Matrix is defined as
+    $$
+    G = X^T \Gamma WX
+    $$
+    where $X$ is the design matrix, $W$ is a diagonal, user-defined weight matrix, $\\Gamma$ is a
     diagonal matrix of exponentially discounting weights.
 
     !!! numba "Numba"
         This function uses `numba` just-in-time-compilation.
 
     Args:
-        X (np.ndarray): Design matrix \(X\)
+        X (np.ndarray): Design matrix $X$
         w (np.ndarray): Weights vector
         forget (float, optional): Forget factor. Defaults to 0.
 
@@ -67,16 +70,17 @@ def init_y_gram(
 ) -> np.ndarray:
     """Initialise the y-Gramian Matrix.
 
-    The Gramian Matrix is defined as $$H = X^T \\Gamma WY$$ where \(X\) is the
-    design matrix, \(Y\) is the response variable, \(W\) is a diagonal, user-defined weight matrix, \(\\Gamma\) is a
-    diagonal matrix of exponentially discounting weights.
+    The Gramian Matrix is defined as $$
+    H = X^T \\Gamma WY
+    $$ where $X$ is the design matrix, $Y$ is the response variable, $W$ is a diagonal,
+    user-defined weight matrix, $\\Gamma$ is a diagonal matrix of exponentially discounting weights.
 
     !!! numba "Numba"
         This function uses `numba` just-in-time-compilation.
 
     Args:
-        X (np.ndarray): Design matrix \(X\)
-        y (np.ndarray): Response variable \(Y\)
+        X (np.ndarray): Design matrix $X$
+        y (np.ndarray): Response variable $Y$
         w (np.ndarray): Weights vector
         forget (float, optional): Forget factor. Defaults to 0.
 
@@ -94,15 +98,16 @@ def init_y_gram(
 def init_inverted_gram(X: np.ndarray, w: np.ndarray, forget: float = 0) -> np.ndarray:
     """Initialise the inverted Gramian Matrix.
 
-    The inverted Gramian Matrix is defined as $$G = (X^T \\Gamma WX)^{-1}$$ where \(X\) is the
-    design matrix, \(W\) is a diagonal, user-defined weight matrix, \(\\Gamma\) is a
-    diagonal matrix of exponentially discounting weights.
+    The inverted Gramian Matrix is defined as $$
+    G = (X^T \Gamma WX)^{-1}
+    $$ where $X$ is the design matrix, $W$ is a diagonal, user-defined weight matrix,
+    $\Gamma$ is a diagonal matrix of exponentially discounting weights.
 
     !!! numba "Numba"
         This function uses `numba` just-in-time-compilation.
 
     Args:
-        X (np.ndarray): Design matrix \(X\)
+        X (np.ndarray): Design matrix $X$
         w (np.ndarray): Weights vector
         forget (float, optional): Forget factor. Defaults to 0.
 
