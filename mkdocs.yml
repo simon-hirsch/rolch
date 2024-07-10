@@ -1,0 +1,80 @@
+site_name: "ROLCH: Regularized Online Learning for Conditional Heteroskedasticity"
+
+nav:
+  - Home: index.md
+  - Estimators : estimators.md
+  - Coordinate Descent : coordinate_descent.md
+  - Distributions : distributions.md
+  - Link Functions : links.md
+  - Gramian Matrix : gram.md
+  - Model Selection : model_selection.md
+  - Issues [Github] : "https://github.com/simon-hirsch/rolch/issues"
+  - Source [Github] : "https://github.com/simon-hirsch/rolch/tree/main"
+  - Licence [Github] : "https://github.com/simon-hirsch/rolch/tree/main?tab=MIT-1-ov-file#readme"
+
+theme:
+  name: "material"
+  features:
+    - search.share
+    - search.highlight
+    - search.suggest
+  palette: 
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      accent: deep purple
+      primary: teal
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      accent: deep purple
+      primary: teal
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to light mode
+
+
+
+plugins:
+- mkdocstrings:
+    handlers:
+      python:
+        paths: [src]
+        # docstring_style: "numpy"
+        options:
+          heading_level: 3
+          show_source: false
+          show_root_heading: true
+          separate_signature: true
+          show_signature_annotations: true
+- search
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+extra_css:
+- stylesheets/extra.css
+- https://unpkg.com/katex@0/dist/katex.min.css
+
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+  - admonition
+
+

@@ -8,7 +8,7 @@ from rolch.link import IdentityLink, LogLink
 class DistributionJSU(Distribution):
     """
     Corresponds to GAMLSS JSUo() and scipy.stats.johnsonsu()
-    
+
     Distribution parameters:
     0 : Location
     1 : Scale (close to standard deviation)
@@ -29,10 +29,10 @@ class DistributionJSU(Distribution):
         self.shape_link = shape_link
         self.tail_link = tail_link
         self.links = [
-            self.loc_link, 
+            self.loc_link,
             self.scale_link,
-            self.shape_link, # skew
-            self.tail_link, # tail
+            self.shape_link,  # skew
+            self.tail_link,  # tail
         ]
 
     def theta_to_params(self, theta):
@@ -117,7 +117,6 @@ class DistributionJSU(Distribution):
             return d2ldt2
 
     def dl2_dpp(self, y, theta, params=(0, 1)):
-        """Cross derivatives"""
         mu, sigma, nu, tau = self.theta_to_params(theta)
         if sorted(params) == [0, 1]:
             z = (y - mu) / sigma

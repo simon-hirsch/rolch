@@ -76,7 +76,6 @@ class DistributionT(Distribution):
             return np.clip(out, -np.inf, -1e-15)
 
     def dl2_dpp(self, y, theta, params=(0, 1)):
-        """Cross derivatives"""
         mu, sigma, nu = self.theta_to_params(theta)
         if sorted(params) == [0, 1]:
             # d2l/(dm ds)

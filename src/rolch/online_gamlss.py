@@ -15,6 +15,8 @@ from rolch.utils import calculate_effective_training_length
 
 
 class OnlineGamlss:
+    """The online/incremental GAMLSS class."""
+
     def __init__(
         self,
         distribution,
@@ -33,10 +35,22 @@ class OnlineGamlss:
         rel_tol_inner: float = 1e-20,
         rss_tol_inner: float = 1.5,
     ):
-        """
-        Initialise the Online GAMLSS Model
-        """
+        """Initialise the online GAMLSS Model
 
+        Args:
+            distribution (rolch.Distribution): The parametric distribution
+            forget (float, optional): The forget factor. Defaults to 0.0.
+            method (str, optional): The estimation method. Defaults to "ols".
+            do_scale (Optional[Dict], optional): Whether to scale the input matrices. Defaults to None, which implies that all inputs will be scaled. Note that the scaler assumes that the first column of each $X$ contains the intercept.
+            estimation_kwargs (Optional[Dict], optional): Dictionary of estimation method kwargs. Defaults to None.
+            max_it_outer (int, optional): Maximum outer iterations for the RS algorithm. Defaults to 30.
+            max_it_inner (int, optional): Maximum inner iterations for the RS algorithm. Defaults to 30.
+            abs_tol_outer (float, optional): Absolute tolerance on the Deviance in the outer fit. Defaults to 1e-3.
+            abs_tol_inner (float, optional): Absolute tolerance on the Deviance in the inner fit. Defaults to 1e-3.
+            rel_tol_outer (float, optional): Relative tolerance on the Deviance in the outer fit. Defaults to 1e-20.
+            rel_tol_inner (float, optional): Relative tolerance on the Deviance in the inner fit. Defaults to 1e-20.
+            rss_tol_inner (float, optional): Tolerance for increasing RSS in the inner fit. Defaults to 1.5.
+        """
         self.distribution = distribution
         self.forget = forget
 
@@ -304,6 +318,23 @@ class OnlineGamlss:
         sample_weights: Optional[np.ndarray] = None,
         beta_bounds: Dict[int, Tuple] = None,
     ):
+        """Fit the online GAMLSS model.
+
+        !!! note
+            The user is only required to provide the design matrix $X$ for the first distribution parameters. If for some distribution parameter no design matrix is provided, `ROLCH` will model the parameter using an intercept.
+
+        !!! note
+            The provision of bounds for the coefficient vectors is only possible for LASSO/coordinate descent estimation.
+
+        Args:
+            y (np.ndarray): Response variable $Y$.
+            x0 (np.ndarray): Design matrix for the 1st distribution parameter $X_\\mu$
+            x1 (Optional[np.ndarray], optional): Design matrix for the 2nd distribution parameter $X_\\sigma$. Defaults to None.
+            x2 (Optional[np.ndarray], optional): Design matrix for the 3rd distribution parameter $X_\\nu$. Defaults to None.
+            x3 (Optional[np.ndarray], optional): Design matrix for the 4th distribution parameter $X_\\tau$. Defaults to None.
+            sample_weights (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+            beta_bounds (Dict[int, Tuple], optional): Bounds for the $\beta$ in the coordinate descent algorithm. The user needs to provide a `dict` with a mapping of tuples to distribution parameters 0, 1, 2, and 3 potentially. Defaults to None.
+        """
         self.n_obs = y.shape[0]
         self.n_training = calculate_effective_training_length(self.forget, self.n_obs)
 
@@ -431,6 +462,22 @@ class OnlineGamlss:
         x3: Optional[np.ndarray] = None,
         sample_weights: Optional[np.ndarray] = None,
     ):
+        """Update the fit for the online GAMLSS Model.
+
+        !!! warning
+            Currently, the algorithm only takes single-step updates. Batch updates are planned for the first stable version.
+
+        !!! note
+            The `beta_bounds` from the initial fit are still valid for the update.
+
+        Args:
+            y (np.ndarray): Response variable $Y$.
+            x0 (np.ndarray): Design matrix for the 1st distribution parameter $X_\\mu$
+            x1 (Optional[np.ndarray], optional): Design matrix for the 2nd distribution parameter $X_\\sigma$. Defaults to None.
+            x2 (Optional[np.ndarray], optional): Design matrix for the 3rd distribution parameter $X_\\nu$. Defaults to None.
+            x3 (Optional[np.ndarray], optional): Design matrix for the 4th distribution parameter $X_\\tau$. Defaults to None.
+            sample_weights (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+        """
         if sample_weights is not None:
             w = sample_weights  # Align to sklearn API
         else:
@@ -858,7 +905,23 @@ class OnlineGamlss:
         x3: Optional[np.ndarray] = None,
         what: str = "response",
         return_contributions: bool = False,
-    ):
+    ) -> np.ndarray:
+        """Predict the distibution parameters given input data.
+
+        Args:
+            x0 (np.ndarray): Design matrix for the 1st distribution parameter $X_\\mu$
+            x1 (Optional[np.ndarray], optional): Design matrix for the 2nd distribution parameter $X_\\sigma$. Defaults to None.
+            x2 (Optional[np.ndarray], optional): Design matrix for the 3rd distribution parameter $X_\\nu$. Defaults to None.
+            x3 (Optional[np.ndarray], optional): Design matrix for the 4th distribution parameter $X_\\tau$. Defaults to None.
+            what (str, optional): Predict the response or the link. Defaults to "response".
+            return_contributions (bool, optional): Whether to return a `Tuple[prediction, contributions]` where the contributions of the individual covariates for each distribution parameter's predicted value is specified. Defaults to False.
+
+        Raises:
+            ValueError: Raises if `what` is not in `["link", "response"]`.
+
+        Returns:
+            np.ndarray: Predicted values for the distribution.
+        """
         X = self._make_input_array_list(x0=x0, x1=x1, x2=x2, x3=x3)
         X_scaled = self._scaler_transform(X=X)
         prediction = [x @ b.T for x, b in zip(X_scaled, self.betas)]

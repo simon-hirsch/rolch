@@ -39,7 +39,6 @@ class DistributionNormal(Distribution):
             return -(2 / (sigma**2))
 
     def dl2_dpp(self, y, theta, params=(0, 1)):
-        """Cross derivatives"""
         mu, sigma = self.theta_to_params(theta)
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
