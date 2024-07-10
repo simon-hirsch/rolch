@@ -17,6 +17,25 @@ theme:
     - search.share
     - search.highlight
     - search.suggest
+  palette: 
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      accent: deep purple
+      primary: teal
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      accent: deep purple
+      primary: teal
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to light mode
+
+
 
 plugins:
 - mkdocstrings:
