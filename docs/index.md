@@ -2,6 +2,9 @@
 
 `ROLCH` is a `Python` package for online distributional learning and online models for conditionally heteroskedastic data. We provide an online implementation of the well-known GAMLSS model using online coordinate descent (OCD).
 
+!!! note
+    `ROLCH` is currently in the first alpha phase. Please expect changes to happen frequently.
+
 ## Installation
 
 `ROLCH` is available on the [Python Package Index](https://pypi.org/project/rolch/) and can be installed via `pip`:
