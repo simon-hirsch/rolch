@@ -4,6 +4,7 @@ nav:
   - Coordinate Descent : coordinate_descent.md
   - Link Functions : links.md
   - Gramian Matrix : gram.md
+  - Model Selection : model_selection.md
   - Issues [Github] : "https://github.com/simon-hirsch/rolch/issues"
   - Source [Github] : "https://github.com/simon-hirsch/rolch/tree/main"
   - Licence [Github] : "https://github.com/simon-hirsch/rolch/tree/main?tab=MIT-1-ov-file#readme"
