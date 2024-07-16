@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies=[
     "scipy >= 1.00",
-    "numpy >= 1.00",
+    "numpy >= 1.2, < 2",
     "numba >= 0.59.1"
 ]
 
