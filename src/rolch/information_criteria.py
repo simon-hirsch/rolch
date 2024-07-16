@@ -28,11 +28,11 @@ def information_criterion(
     """
 
     if criterion == "aic":
-        ic_params = {2, 0, 0}
+        ic_params = [2, 0, 0]
     elif criterion == "bic":
-        ic_params = {0, 1, 0}
+        ic_params = [0, 1, 0]
     elif criterion == "hqc":
-        ic_params = {0, 0, 2}
+        ic_params = [0, 0, 2]
     else:
         raise ValueError("criterion not recognized.")
 
@@ -44,7 +44,7 @@ def information_criterion(
         -n_observations / 2 * np.log(rss / n_observations) + constant_term
     ) + n_parameters * (
         ic_params[0]
-        + ic_params[1] * np.plog(n_observations)
+        + ic_params[1] * np.log(n_observations)
         + ic_params[2] * np.log(np.log(n_observations))
     )
 
