@@ -26,28 +26,28 @@ def information_criterion(
     Returns:
         Union[float, np.ndarray]: The value of the IC for given inputs.
     """
-    constant_term = -n_observations / 2 * (1 + np.log(2 * np.pi))
 
     if criterion == "aic":
-        ic = (
-            2 * n_parameters
-            + n_observations * np.log(rss / n_observations)
-            + constant_term
-        )
+        ic_params = [2, 0, 0]
     elif criterion == "bic":
-        ic = (
-            n_parameters * np.log(n_observations)
-            + n_observations * np.log(rss / n_observations)
-            + constant_term
-        )
+        ic_params = [0, 1, 0]
     elif criterion == "hqc":
-        ic = (
-            2 * n_parameters * np.log(np.log(n_observations))
-            + n_observations * np.log(rss / n_observations)
-            + constant_term
-        )
+        ic_params = [0, 0, 2]
     else:
         raise ValueError("criterion not recognized.")
+
+    # https://en.wikipedia.org/wiki/Akaike_information_criterion#Comparison_with_least_squares
+
+    constant_term = -n_observations / 2 * (1 + np.log(2 * np.pi))
+
+    ic = -2 * (
+        -n_observations / 2 * np.log(rss / n_observations) + constant_term
+    ) + n_parameters * (
+        ic_params[0]
+        + ic_params[1] * np.log(n_observations)
+        + ic_params[2] * np.log(np.log(n_observations))
+    )
+
     return ic
 
 

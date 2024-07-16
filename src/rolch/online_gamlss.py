@@ -204,7 +204,7 @@ class OnlineGamlss:
 
             model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
-                self.n_training, model_params_n, rss, self.ic
+                self.n_training, model_params_n, rss, self.ic[param]
             )
             beta = beta_path[best_ic, :]
 
@@ -294,7 +294,7 @@ class OnlineGamlss:
 
             model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
-                self.n_training, model_params_n, rss, self.ic
+                self.n_training, model_params_n, rss, self.ic[param]
             )
 
             self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss

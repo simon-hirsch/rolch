@@ -30,11 +30,13 @@ np.set_printoptions(precision=3, suppress=True)
 X, y = load_diabetes(return_X_y=True)
 X = np.hstack((np.ones((X.shape[0], 1)), X))
 
+dist = rolch.DistributionT()
+
 # Initialise the estimator
 online_gamlss_lasso = rolch.OnlineGamlss(
-    distribution=rolch.DistributionT(), 
+    distribution=dist, 
     method="lasso", 
-    estimation_kwargs={"ic" : "bic"}
+    estimation_kwargs={"ic" : {i: "bic" for i in range(dist.n_params)}}
 )
 
 # Fit the model and print coefficients

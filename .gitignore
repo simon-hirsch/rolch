@@ -14,3 +14,4 @@ development
 literature/*
 presentation/*
 .cache
+.devcontainer/*

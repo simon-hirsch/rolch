@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rolch"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
   {name="Simon Hirsch", email="simon.hirsch@stud.uni-due.de"},
   {name="Jonathan Berrisch", email="jonathan.berrisch@uni-due.de"},
@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies=[
     "scipy >= 1.00",
-    "numpy >= 1.00",
+    "numpy >= 1.2, < 2",
     "numba >= 0.59.1"
 ]
 
