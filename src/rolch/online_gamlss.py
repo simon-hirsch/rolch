@@ -144,9 +144,9 @@ class OnlineGamlss:
             residuals = y - X @ beta.T
 
             if self.method == "ols" or self.intercept_only[param]:
-                rss = np.sum((residuals * w) ** 2, axis=0) / np.sum(w)
+                rss = np.sum(residuals**2 * w) / np.mean(w)
             else:
-                rss = np.sum((residuals * w[:, None]) ** 2, axis=0) / np.sum(w)
+                rss = np.sum(residuals**2 * w[:, None], axis=0) / np.mean(w)
 
         elif (self.method == "lasso") & self.intercept_only[param]:
             lambda_max = None
@@ -168,9 +168,9 @@ class OnlineGamlss:
             residuals = y - X @ beta.T
 
             if self.method == "ols" or self.intercept_only[param]:
-                rss = np.sum((residuals * w) ** 2, axis=0) / np.sum(w)
+                rss = np.sum(residuals**2 * w, axis=0) / np.mean(w)
             elif self.method == "lasso":
-                rss = np.sum((residuals * w[:, None]) ** 2, axis=0) / np.sum(w)
+                rss = np.sum(residuals**2 * w[:, None], axis=0) / np.mean(w)
 
         elif self.method == "lasso":
             intercept = (
@@ -195,14 +195,14 @@ class OnlineGamlss:
                 max_iterations=self.max_iterations,
             )[0]
 
-            residuals = X @ beta_path.T
+            residuals = y[:, None] - X @ beta_path.T
 
             if self.method == "ols" or self.intercept_only[param]:
-                rss = np.sum((residuals * w) ** 2, axis=0) / np.sum(w)
+                rss = np.sum(residuals**2 * w, axis=0) / np.mean(w)
             elif self.method == "lasso":
-                rss = np.sum((residuals * w[:, None]) ** 2, axis=0) / np.sum(w)
+                rss = np.sum(residuals**2 * w[:, None], axis=0) / np.mean(w)
 
-            model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
+            model_params_n = np.sum(~np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
                 self.n_training, model_params_n, rss, self.ic[param]
             )
@@ -210,6 +210,9 @@ class OnlineGamlss:
 
             self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
             self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
+
+        self.residuals[param] = residuals
+        self.weights[param] = w
 
         return beta, beta_path, rss, lambda_max, lambda_path
 
@@ -365,6 +368,9 @@ class OnlineGamlss:
         self.intercept_only = {
             p: self.intercept[p] == J[p] for p in range(self.distribution.n_params)
         }
+
+        self.weights = {}
+        self.residuals = {}
 
         ## Handle parameter bounds
         if beta_bounds is None:
@@ -637,8 +643,6 @@ class OnlineGamlss:
                 self.rss_iterations_inner[param][iteration_outer] = {}
                 self.ic_iterations_inner[param][iteration_outer] = {}
 
-                # print("Start:", betas[param])
-
                 (
                     fv,
                     global_dev,
@@ -748,13 +752,10 @@ class OnlineGamlss:
                 )
             )
 
-            # print(param, ":", rss_new)
-
             if iteration_inner > 1 or iteration_outer > 1:
 
                 if self.method == "ols" or self.intercept_only[param]:
                     if rss_new > (self.rss_tol_inner * rss):
-                        # print("Rss break")
                         break
                 else:
                     ic_idx = self.ic_iterations_inner[param][iteration_outer][
@@ -783,8 +784,6 @@ class OnlineGamlss:
             self.beta_path_iterations_inner[param][iteration_outer][
                 iteration_inner
             ] = beta_path
-
-        # print("End:", beta)
 
         return (fv, dv, beta, beta_path, x_gram, y_gram, rss, lambda_max, lambda_path)
 
