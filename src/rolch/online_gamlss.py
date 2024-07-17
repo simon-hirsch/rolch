@@ -240,7 +240,7 @@ class OnlineGamlss:
             rss = (
                 (residuals**2).flatten() * w
                 + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
-            ) / (self.sum_of_weights[param] * (1 - self.forget) + w)
+            ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
         elif (self.method == "lasso") & self.intercept_only[param]:
             lambda_max = None
@@ -264,7 +264,7 @@ class OnlineGamlss:
             rss = (
                 (residuals**2).flatten() * w
                 + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
-            ) / (self.sum_of_weights[param] * (1 - self.forget) + w)
+            ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
         elif self.method == "lasso":
             intercept = (
@@ -293,7 +293,7 @@ class OnlineGamlss:
             rss = (
                 (residuals**2).flatten() * w
                 + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
-            ) / (self.sum_of_weights[param] * (1 - self.forget) + w)
+            ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
             model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
@@ -405,6 +405,7 @@ class OnlineGamlss:
         # distribution parameter for
         # model selection online
         self.sum_of_weights = {}
+        self.mean_of_weights = {}
 
         (
             self.betas,
@@ -779,6 +780,7 @@ class OnlineGamlss:
 
             ## Sum of weights
             self.sum_of_weights[param] = np.sum(w * wt)
+            self.mean_of_weights[param] = np.mean(w * wt)
 
             self.beta_iterations_inner[param][iteration_outer][iteration_inner] = beta
             self.beta_path_iterations_inner[param][iteration_outer][
