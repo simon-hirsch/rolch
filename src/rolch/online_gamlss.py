@@ -239,7 +239,7 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
+                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
         elif (self.method == "lasso") & self.intercept_only[param]:
@@ -263,7 +263,8 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
+
+                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
         elif self.method == "lasso":
@@ -292,7 +293,8 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
+
+                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
             model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
@@ -510,6 +512,7 @@ class OnlineGamlss:
         self.y_gram_inner = copy.copy(self.y_gram)
         self.rss_inner = copy.copy(self.rss)
         self.sum_of_weights_inner = copy.copy(self.sum_of_weights)
+        self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
 
         self.lambda_max_inner = copy.copy(self.lambda_max)
         self.lambda_path_inner = copy.copy(self.lambda_path)
@@ -536,6 +539,7 @@ class OnlineGamlss:
         self.x_gram = copy.copy(self.x_gram_inner)
         self.y_gram = copy.copy(self.y_gram_inner)
         self.sum_of_weights = copy.copy(self.sum_of_weights_inner)
+        self.mean_of_weights = copy.copy(self.mean_of_weights_inner)
         self.rss = copy.copy(self.rss_inner)
 
         self.lambda_max = copy.copy(self.lambda_max_inner)
@@ -879,6 +883,9 @@ class OnlineGamlss:
 
             self.sum_of_weights_inner[param] = (
                 np.sum(w * wt) + (1 - self.forget) * self.sum_of_weights[param]
+            )
+            self.mean_of_weights_inner[param] = (
+                self.sum_of_weights_inner[param] / self.n_training
             )
 
             olddv = dv
