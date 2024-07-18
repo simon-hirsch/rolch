@@ -239,7 +239,7 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
+                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
         elif (self.method == "lasso") & self.intercept_only[param]:
@@ -263,7 +263,7 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
+                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
         elif self.method == "lasso":
@@ -292,7 +292,7 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.sum_of_weights[param])
+                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
             model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
@@ -883,7 +883,7 @@ class OnlineGamlss:
                 np.sum(w * wt) + (1 - self.forget) * self.sum_of_weights[param]
             )
             self.mean_of_weights_inner[param] = (
-                np.mean(w * wt) + (1 - self.forget) * self.mean_of_weights[param]
+                self.sum_of_weights_inner[param] / self.n_training
             )
 
             olddv = dv
