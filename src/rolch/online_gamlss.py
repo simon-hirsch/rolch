@@ -510,6 +510,7 @@ class OnlineGamlss:
         self.y_gram_inner = copy.copy(self.y_gram)
         self.rss_inner = copy.copy(self.rss)
         self.sum_of_weights_inner = copy.copy(self.sum_of_weights)
+        self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
 
         self.lambda_max_inner = copy.copy(self.lambda_max)
         self.lambda_path_inner = copy.copy(self.lambda_path)
