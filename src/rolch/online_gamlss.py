@@ -263,6 +263,7 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
+
                 + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
@@ -292,6 +293,7 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
+
                 + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 

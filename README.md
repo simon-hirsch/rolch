@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This package provides online estimation of models for distributional regression respectively models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in Hirsch, Berrisch & Ziel, 2024.
+This package provides online estimation of models for distributional regression respectively models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
 
 Please have a look at the [documentation](https://simon-hirsch.github.io/rolch/) or the [example notebook](https://github.com/simon-hirsch/rolch/blob/main/example.ipynb).
 
