@@ -822,6 +822,8 @@ class OnlineGamlss:
         rss = rss[param]
         lambda_max = lambda_max[param]
         lambda_path = lambda_path[param]
+        x_gram_it = x_gram[param]
+        y_gram_it = x_gram[param]
 
         di = -2 * np.log(self.distribution.pdf(y, fv))
         dv = (1 - self.forget) * self.global_dev + np.sum(di * w)
