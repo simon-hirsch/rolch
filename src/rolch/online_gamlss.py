@@ -31,8 +31,8 @@ class OnlineGamlss:
         max_it_inner: int = 30,
         abs_tol_outer: float = 1e-3,
         abs_tol_inner: float = 1e-3,
-        rel_tol_outer: float = 1e-20,
-        rel_tol_inner: float = 1e-20,
+        rel_tol_outer: float = 1e-5,
+        rel_tol_inner: float = 1e-5,
         rss_tol_inner: float = 1.5,
     ):
         """Initialise the online GAMLSS Model
@@ -263,7 +263,6 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-
                 + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
@@ -293,7 +292,6 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-
                 + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
             ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
 
@@ -724,10 +722,18 @@ class OnlineGamlss:
             if iteration_inner >= self.max_it_inner:
                 break
 
-            if abs(olddv - dv) <= 1e-3:
+            # We allow for breaking in the inner iteration in
+            # - the 1st outer iteration (iteration_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
+            # - the 2nd outer iteration (iteration_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
+
+            if (abs(olddv - dv) <= self.abs_tol_inner) & (
+                (iteration_inner + iteration_outer) >= 2
+            ):
                 break
 
-            if abs(olddv - dv) / abs(olddv) < self.rel_tol_inner:
+            if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
+                (iteration_inner + iteration_outer) >= 2
+            ):
                 break
 
             iteration_inner += 1
