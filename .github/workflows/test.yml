@@ -23,7 +23,7 @@ jobs:
       - name: Build package
         run: python -m build --wheel
       - name: Install Package
-          pip install dist/*
+        run: pip install dist/*
       - name: Run tests with pytest
         run: pytest test
 
