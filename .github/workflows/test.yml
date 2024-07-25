@@ -1,9 +1,9 @@
 name: Python application
 on:
   push:
-    branches: [ "testing_ci" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "testing_ci" ]
+    branches: [ "main" ]
 permissions:
   contents: read
 jobs:
