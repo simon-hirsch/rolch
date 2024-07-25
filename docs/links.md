@@ -40,4 +40,4 @@ Some link functions implement _shifted_ versions. The shifted link function is i
 
 ::: rolch.link.SqrtShiftValueLink
 
-::: rolch.Link.SqrtShiftTwoLink
+::: rolch.link.SqrtShiftTwoLink
