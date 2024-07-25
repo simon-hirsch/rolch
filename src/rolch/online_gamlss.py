@@ -8,10 +8,16 @@ from rolch.coordinate_descent import (
     online_coordinate_descent,
     online_coordinate_descent_path,
 )
-from rolch.gram import init_gram, init_inverted_gram, init_y_gram, update_inverted_gram
+from rolch.gram import (
+    init_gram,
+    init_inverted_gram,
+    init_y_gram,
+    update_inverted_gram,
+    init_forget_vector,
+)
 from rolch.information_criteria import select_best_model_by_information_criterion
 from rolch.scaler import OnlineScaler
-from rolch.utils import calculate_effective_training_length
+from rolch.utils import calculate_effective_training_length, online_mean_update
 
 
 class OnlineGamlss:
@@ -135,6 +141,9 @@ class OnlineGamlss:
         iteration_inner,
         param,
     ):
+
+        f = init_forget_vector(self.forget, self.n_obs)
+
         if self.method == "ols":
             lambda_max = None
             lambda_path = None
@@ -143,10 +152,7 @@ class OnlineGamlss:
             beta = (x_gram @ y_gram).flatten()
             residuals = y - X @ beta.T
 
-            if self.method == "ols" or self.intercept_only[param]:
-                rss = np.sum(residuals**2 * w) / np.mean(w)
-            else:
-                rss = np.sum(residuals**2 * w[:, None], axis=0) / np.mean(w)
+            rss = np.sum(residuals**2 * w * f) / np.mean(w * f)
 
         elif (self.method == "lasso") & self.intercept_only[param]:
             lambda_max = None
@@ -167,10 +173,7 @@ class OnlineGamlss:
             )[0]
             residuals = y - X @ beta.T
 
-            if self.method == "ols" or self.intercept_only[param]:
-                rss = np.sum(residuals**2 * w, axis=0) / np.mean(w)
-            elif self.method == "lasso":
-                rss = np.sum(residuals**2 * w[:, None], axis=0) / np.mean(w)
+            rss = np.sum(residuals**2 * w * f, axis=0) / np.mean(w * f)
 
         elif self.method == "lasso":
             intercept = (
@@ -197,10 +200,9 @@ class OnlineGamlss:
 
             residuals = y[:, None] - X @ beta_path.T
 
-            if self.method == "ols" or self.intercept_only[param]:
-                rss = np.sum(residuals**2 * w, axis=0) / np.mean(w)
-            elif self.method == "lasso":
-                rss = np.sum(residuals**2 * w[:, None], axis=0) / np.mean(w)
+            rss = np.sum(residuals**2 * w[:, None] * f[:, None], axis=0) / np.mean(
+                w * f
+            )
 
             model_params_n = np.sum(~np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
@@ -228,6 +230,11 @@ class OnlineGamlss:
         iteration_inner,
         param,
     ):
+
+        denom = online_mean_update(
+            self.mean_of_weights[param], w, self.forget, self.n_obs
+        )
+
         if self.method == "ols":
             # Not relevant for OLS
             lambda_max = None
@@ -240,7 +247,7 @@ class OnlineGamlss:
             rss = (
                 (residuals**2).flatten() * w
                 + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
-            ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
+            ) / denom
 
         elif (self.method == "lasso") & self.intercept_only[param]:
             lambda_max = None
@@ -264,7 +271,7 @@ class OnlineGamlss:
             rss = (
                 (residuals**2).flatten() * w
                 + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
-            ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
+            ) / denom
 
         elif self.method == "lasso":
             intercept = (
@@ -293,7 +300,7 @@ class OnlineGamlss:
             rss = (
                 (residuals**2).flatten() * w
                 + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
-            ) / (self.mean_of_weights[param] * (1 - self.forget) + w)
+            ) / denom
 
             model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
