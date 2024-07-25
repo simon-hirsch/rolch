@@ -21,17 +21,9 @@ jobs:
           pip install flake8 pytest
           if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
       - name: Build package
-        run: python -m build
-      - name: Publish artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: python-package
-          path: dist/
-      - name: Download and install package
-        run: |
-          mkdir -p dist
-          curl -L ${{ steps.build.outputs.artifacts_url }}/python-package.tar.gz | tar xz -C dist
-          pip install dist/*.whl
+        run: python -m build --wheel
+      - name: Install Package
+          pip install dist/*
       - name: Run tests with pytest
         run: pytest test
 
