@@ -25,5 +25,5 @@ jobs:
       - name: Install Package
         run: pip install dist/*
       - name: Run tests with pytest
-        run: pytest test
+        run: pytest tests
 
