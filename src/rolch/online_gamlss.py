@@ -823,6 +823,11 @@ class OnlineGamlss:
         lambda_max = lambda_max[param]
         lambda_path = lambda_path[param]
 
+        ## TODO REFACTOR: Will be returned if we converge in the first iteration
+        ## Will be overwritten if don't converge in the first iteration
+        x_gram_it = self.x_gram_inner[param]
+        y_gram_it = self.y_gram_inner[param]
+
         di = -2 * np.log(self.distribution.pdf(y, fv))
         dv = (1 - self.forget) * self.global_dev + np.sum(di * w)
         olddv = dv + 1
