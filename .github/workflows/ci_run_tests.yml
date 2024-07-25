@@ -1,29 +1,28 @@
-name: Automated Tests 
+name: Automated Tests
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 permissions:
-  contents: write
+  contents: read
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configure Git Credentials
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
-      - uses: actions/cache@v4
-        with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
-      - run: pip install mkdocs-material 
-      - run: pip install "mkdocstrings[python]"
-      - run: mkdocs gh-deploy --force
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
+      - name: Build package
+        run: python -m build --wheel
+      - name: Install Package
+        run: pip install dist/*
+      - name: Run tests with pytest
+        run: pytest tests
