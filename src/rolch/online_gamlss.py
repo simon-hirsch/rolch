@@ -832,9 +832,13 @@ class OnlineGamlss:
         while True:
             if iteration_inner >= self.max_it_inner:
                 break
-            if abs(olddv - dv) <= self.abs_tol_inner:
+            if (abs(olddv - dv) <= self.abs_tol_inner) & (
+                (iteration_inner + iteration_outer) >= 2
+            ):
                 break
-            if abs(olddv - dv) / abs(olddv) < self.rel_tol_inner:
+            if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
+                (iteration_inner + iteration_outer) >= 2
+            ):
                 break
 
             iteration_inner += 1
