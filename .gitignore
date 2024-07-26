@@ -2,7 +2,7 @@
 *.ruff_cache*
 *__pycache__*
 .ipynb_checkpoints
-.git
+.git/* 
 dist
 dist_old
 development
