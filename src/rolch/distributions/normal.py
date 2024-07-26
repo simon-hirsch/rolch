@@ -56,9 +56,9 @@ class DistributionNormal(Distribution):
         if param == 0:
             return (y + np.mean(y, axis=None)) / 2
         if param == 1:
-            return np.repeat(np.std(y, axis=None), y.shape[0])
-        if param == 2:
-            return np.full_like(y, 10)
+            return (
+                np.repeat(np.std(y, axis=None), y.shape[0]) + np.abs(y - np.mean(y))
+            ) / 2
 
     def cdf(self, y, theta):
         mu, sigma = self.theta_to_params(theta)

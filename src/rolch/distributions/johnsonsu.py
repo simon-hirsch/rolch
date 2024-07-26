@@ -191,7 +191,9 @@ class DistributionJSU(Distribution):
         if param == 0:
             return (y + np.mean(y, axis=None)) / 2
         if param == 1:
-            return np.repeat(np.std(y, axis=None), y.shape[0])
+            return (
+                np.repeat(np.std(y, axis=None), y.shape[0]) + np.abs(y - np.mean(y))
+            ) / 2
         if param == 2:
             return np.full_like(y, 0)
         if param == 3:
