@@ -15,4 +15,5 @@ literature/*
 presentation/*
 .cache
 .devcontainer/*
+.coverage
 build.txt
