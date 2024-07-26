@@ -1,9 +1,13 @@
 name: Automated Tests
 on:
   push:
-    branches: [ "main" ]
+    branches:    
+      - '**'            # matches every branch
+      - '!gh-pages'     # excludes gh-pages
   pull_request:
-    branches: [ "main" ]
+    branches:    
+    - '**'              # matches every branch
+    - '!gh-pages'       # excludes gh-pages
 permissions:
   contents: read
 jobs:
@@ -31,3 +35,4 @@ jobs:
         run: pip install dist/*
       - name: Run tests with pytest
         run: pytest tests
+
