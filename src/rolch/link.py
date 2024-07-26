@@ -4,6 +4,7 @@ from rolch.abc import LinkFunction
 
 LOG_LOWER_BOUND = 1e-25
 EXP_UPPER_BOUND = 25
+SMALL_NUMBER = 1e-10
 
 
 class LogLink(LinkFunction):
@@ -20,7 +21,10 @@ class LogLink(LinkFunction):
         return np.log(np.fmax(x, LOG_LOWER_BOUND))
 
     def inverse(self, x):
-        return np.exp(np.fmin(x, EXP_UPPER_BOUND))
+        return np.fmax(
+            np.exp(np.fmin(x, EXP_UPPER_BOUND)),
+            LOG_LOWER_BOUND,
+        )
 
     def derivative(self, x):
         return np.exp(np.fmin(x, EXP_UPPER_BOUND))
