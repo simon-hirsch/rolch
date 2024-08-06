@@ -9,15 +9,19 @@ from rolch.coordinate_descent import (
     online_coordinate_descent_path,
 )
 from rolch.gram import (
+    init_forget_vector,
     init_gram,
     init_inverted_gram,
     init_y_gram,
     update_inverted_gram,
-    init_forget_vector,
 )
 from rolch.information_criteria import select_best_model_by_information_criterion
 from rolch.scaler import OnlineScaler
-from rolch.utils import calculate_effective_training_length, online_mean_update
+from rolch.utils import (
+    calculate_effective_training_length,
+    handle_param_dict,
+    online_mean_update,
+)
 
 
 class OnlineGamlss:
@@ -28,10 +32,8 @@ class OnlineGamlss:
         distribution,
         forget: float = 0.0,
         method: str = "ols",
-        do_scale: Optional[Dict] = None,
-        # lambda_n: int = 100,
-        # lambda_eps: float = 1e-3,
-        # start_value: str = "previous_fit",
+        do_scale: Union[Dict, bool] = True,
+        expect_intercept: Union[Dict, bool] = True,
         estimation_kwargs: Optional[Dict] = None,
         max_it_outer: int = 30,
         max_it_inner: int = 30,
@@ -59,7 +61,9 @@ class OnlineGamlss:
         """
         self.distribution = distribution
         self.forget = forget
+        self.method = method  # lasso
 
+        # These are global for all distribution parameters
         self.max_it_outer = max_it_outer
         self.max_it_inner = max_it_inner
         self.abs_tol_outer = abs_tol_outer
@@ -67,11 +71,22 @@ class OnlineGamlss:
         self.rel_tol_outer = rel_tol_outer
         self.rel_tol_inner = rel_tol_inner
         self.rss_tol_inner = rss_tol_inner
-        self.method = method  # lasso
 
-        # self.lambda_n = lambda_n
-        # self.lambda_eps = lambda_eps
-        # self.start_value = start_value
+        handle_param_dict(
+            self=self,
+            param=do_scale,
+            default=True,
+            name="do_scale",
+            n_params=self.distribution.n_params,
+        )
+
+        handle_param_dict(
+            self=self,
+            param=expect_intercept,
+            default=True,
+            name="expect_intercept",
+            n_params=self.distribution.n_params,
+        )
 
         for i, attribute in DEFAULT_ESTIMATOR_KWARGS.items():
             if (estimation_kwargs is not None) and (i in estimation_kwargs.keys()):
@@ -79,16 +94,10 @@ class OnlineGamlss:
             else:
                 setattr(self, i, attribute)
 
-        if do_scale is not None:
-            self.do_scale = do_scale
-        else:
-            self.do_scale = {i: True for i in range(self.distribution.n_params)}
-        self.intercept = {i: True for i in range(self.distribution.n_params)}
-
         self.scalers = {
             i: OnlineScaler(
                 forget=self.forget,
-                intercept=self.intercept[i],
+                intercept=self.expect_intercept[i],
                 do_scale=self.do_scale[i],
             )
             for i in range(self.distribution.n_params)
@@ -373,7 +382,8 @@ class OnlineGamlss:
 
         # Intercept only
         self.intercept_only = {
-            p: self.intercept[p] == J[p] for p in range(self.distribution.n_params)
+            p: self.scale_intercept[p] == J[p]
+            for p in range(self.distribution.n_params)
         }
 
         self.weights = {}
@@ -395,7 +405,8 @@ class OnlineGamlss:
         if self.method == "lasso":
             for param in range(self.distribution.n_params):
                 is_regularized = np.repeat(True, X[param].shape[1])
-                is_regularized[0] = False
+                if self.expect_intercept[p]:
+                    is_regularized[0] = False
                 self.is_regularized[param] = is_regularized
 
         self.beta_iterations = {i: {} for i in range(self.distribution.n_params)}
