@@ -13,7 +13,7 @@ class DistributionGamma(Distribution):
         self.n_params = 2
         self.loc_link = loc_link
         self.scale_link = scale_link
-        self.links = [self.loc_link, self.scale_link]
+        self.links = {0: self.loc_link, 1: self.scale_link}
         self.corresponding_gamlss = "GA"
         self.scipy_dist = st.gamma
 
