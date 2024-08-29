@@ -27,7 +27,7 @@ class Estimator(ABC):
 
     @staticmethod
     def _add_intercept(x: np.ndarray) -> np.ndarray:
-        return np.hstack((np.ones((x.shape[0], 1)), X))
+        return np.hstack((np.ones((x.shape[0], 1)), x))
 
     @staticmethod
     def _make_intercept(y: np.ndarray) -> np.ndarray:
@@ -45,6 +45,8 @@ class Estimator(ABC):
     def _add_lags(
         y: np.ndarray, x: np.ndarray, lags: Union[int, np.ndarray]
     ) -> Tuple[np.ndarray, np.ndarray]:
+        if lags == 0:
+            return y, x
 
         if isinstance(lags, int):
             lags = np.arange(1, lags + 1, dtype=int)
