@@ -63,28 +63,29 @@ class DistributionGamma(Distribution):
         mu, sigma = self.theta_to_params(theta)
 
         if param == 0:
-            return ((y - mu) / ((sigma ^ 2) * (mu ^ 2)),)
+            return (y - mu) / ((sigma**2) * (mu**2))
 
         if param == 1:
-            return (2 / sigma ^ 3) * (
+            return (2 / sigma**3) * (
                 (y / mu)
                 - np.log(y)
                 + np.log(mu)
-                + np.log(sigma ^ 2)
+                + np.log(sigma**2)
                 - 1
-                + spc.digamma(1 / (sigma ^ 2))
+                + spc.digamma(1 / (sigma**2))
             )
 
     def dl2_dp2(self, y, theta, param=0):
         mu, sigma = self.theta_to_params(theta)
         if param == 0:
             # MU
-            return -1 / ((sigma ^ 2) * (mu ^ 2))
+            return -1 / ((sigma**2) * (mu**2))
 
         if param == 1:
             # SIGMA
             # R Code (4/sigma^4)-(4/sigma^6)*trigamma((1/sigma^2))
-            return (4 / sigma ^ 4) - (4 / sigma ^ 6) * spc.polygama(2, (1 / sigma ^ 2))
+            # polygamma(1, x) == trigamma(x) in R
+            return (4 / sigma**4) - (4 / sigma**6) * spc.polygamma(1, (1 / sigma**2))
 
     def dl2_dpp(self, y, theta, params=(0, 1)):
         if sorted(params) == [0, 1]:
@@ -107,20 +108,20 @@ class DistributionGamma(Distribution):
 
     def cdf(self, y, theta):
         mu, sigma = self.theta_to_params(theta)
-        return self.scipy_dist(**self.gamlss_to_scipy(mu, sigma)).cdf(y)
+        return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).cdf(y)
 
     def pdf(self, y, theta):
         mu, sigma = self.theta_to_params(theta)
-        return self.scipy_dist(**self.gamlss_to_scipy(mu, sigma)).pdf(y)
+        return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).pdf(y)
 
     def ppf(self, q, theta):
         mu, sigma = self.theta_to_params(theta)
-        return self.scipy_dist(**self.gamlss_to_scipy(mu, sigma)).ppf(q)
+        return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).ppf(q)
 
     def rvs(self, size, theta):
         mu, sigma = self.theta_to_params(theta)
         return (
-            self.scipy_dist(**self.gamlss_to_scipy(mu, sigma))
+            self.scipy_dist(*self.gamlss_to_scipy(mu, sigma))
             .rvs((size, theta.shape[0]))
             .T
         )
