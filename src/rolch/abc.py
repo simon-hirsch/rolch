@@ -20,6 +20,42 @@ class LinkFunction(ABC):
         """Calculate the first derivative of the link function"""
 
 
+class Estimator(ABC):
+
+    def __init__():
+        pass
+
+    @staticmethod
+    def _add_intercept(x: np.ndarray) -> np.ndarray:
+        return np.hstack((np.ones((x.shape[0], 1)), X))
+
+    @staticmethod
+    def _make_intercept(y: np.ndarray) -> np.ndarray:
+        """Make the intercept series as N x 1 array.
+
+        Args:
+            y (np.ndarray): Response variable $Y$
+
+        Returns:
+            np.ndarray: Intercept array.
+        """
+        return np.ones((y.shape[0], 1))
+
+    @staticmethod
+    def _add_lags(
+        y: np.ndarray, x: np.ndarray, lags: Union[int, np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+
+        if isinstance(lags, int):
+            lags = np.arange(1, lags + 1, dtype=int)
+
+        max_lag = np.max(lags)
+        lagged = np.stack([np.roll(y, i) for i in lags], axis=1)[max_lag:, :]
+        new_x = np.hstack((x, lagged))[max_lag:, :]
+        new_y = y[max_lag:]
+        return new_y, new_x
+
+
 class Distribution(ABC):
 
     @abstractmethod
