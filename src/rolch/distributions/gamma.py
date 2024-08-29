@@ -7,27 +7,45 @@ from rolch.link import LogLink
 
 
 class DistributionGamma(Distribution):
-    """Corresponds to GAMLSS GA() and scipy.stats.gamma()"""
+    """The Gamma Distribution for GAMLSS.
+
+    The distribution function is defined as in GAMLSS as:
+    $$
+    f(y|\mu,\sigma)=\\frac{y^{(1/\sigma^2-1)}\exp[-y/(\sigma^2 \mu)]}{(\sigma^2 \mu)^{(1/\sigma^2)} \Gamma(1/\sigma^2)}
+    $$
+
+    with the location and shape parameters $\mu, \sigma > 0$.
+
+    !!! Note
+        The function is parameterized as GAMLSS' GA() distribution.
+
+        This parameterization is different to the `scipy.stats.gamma(alpha, loc, scale)` parameterization.
+
+        We can use `DistributionGamma().gamlss_to_scipy(mu, sigma)` to map the distribution parameters to scipy.
+
+    The `scipy.stats.gamma()` distribution is defined as:
+    $$
+    f(x, \\alpha, \\beta) = \\frac{\\beta^\\alpha x^{\\alpha - 1} \exp[-\\beta x]}{\Gamma(\\alpha)}
+    $$
+
+    with the paramters $\\alpha, \\beta >0$. The parameters can be mapped as follows:
+    $$
+    \\alpha = 1/\sigma^2 \Leftrightarrow \sigma = \sqrt{1 / \\alpha}
+    $$
+    and
+    $$
+    \\beta = 1/(\sigma^2\mu).
+    $$
+
+
+    Args:
+        loc_link (LinkFunction, optional): The link function for $\mu$. Defaults to LogLink().
+        scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LogLink().
+    """
 
     def __init__(
         self, loc_link: LinkFunction = LogLink(), scale_link: LinkFunction = LogLink()
     ):
-        """The Gamma Distribution for GAMLSS.
-
-        The distribution function is defined as in GAMLSS as:
-        $$
-        f(y|\mu,\sigma)=\frac{y^{(1/\sigma^2-1)}\exp[-y/(\sigma^2 \mu)]}{(\sigma^2 \mu)^{(1/\sigma^2)} \Gamma(1/\sigma^2)}
-        $$
-
-        !!! Note
-            The function is parameterized as GAMLSS' GA() distribution.
-            This parameterization is different to the `scipy.stats.gamma(alpha, loc, scale)` parameterization.
-            We can use `DistributionGamma().gamlss_to_scipy(mu, sigma)` to map the distribution parameters to scipy.
-
-        Args:
-            loc_link (LinkFunction, optional): The link function for $\mu$. Defaults to LogLink().
-            scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LogLink().
-        """
         self.loc_link = loc_link
         self.scale_link = scale_link
         # Set up links as dict

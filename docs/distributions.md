@@ -18,3 +18,5 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ::: rolch.DistributionT
 
 ::: rolch.DistributionJSU
+
+::: rolch.DistributionGamma
