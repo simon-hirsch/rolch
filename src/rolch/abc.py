@@ -7,7 +7,7 @@ import numpy as np
 class LinkFunction(ABC):
     """The base class for the link functions."""
 
-    self._valid_structures: List[str]
+    _valid_structures: List[str]
 
     @abstractmethod
     def link(self, x: np.ndarray) -> np.ndarray:
@@ -24,8 +24,8 @@ class LinkFunction(ABC):
 
 class Distribution(ABC):
 
-    self.links: Dict[int, Linkfunction] | List[Linkfunction]
-    self._param_structure: Dict[int, str]
+    links: Dict[int, Linkfunction] | List[Linkfunction]
+    _param_structure: Dict[int, str]
 
     def _check_links(self):
         for p in range(self.n_params):
