@@ -13,7 +13,7 @@ class DistributionNormal(Distribution):
         self.loc_link = loc_link
         self.scale_link = scale_link
         self.links = [self.loc_link, self.scale_link]
-        self._param_structure = {0: "vector", 1: "vector", 2}
+        self._param_structure = {0: "vector", 1: "vector"}
         self._check_links()
 
     def theta_to_params(self, theta):

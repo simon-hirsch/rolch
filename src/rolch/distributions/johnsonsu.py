@@ -34,7 +34,7 @@ class DistributionJSU(Distribution):
             self.shape_link,  # skew
             self.tail_link,  # tail
         ]
-        self._param_structure = {0: "vector", 1: "vector", 2: "vector", 3: "vector"}
+        self._param_structure = {0: "vector", 1: "vector": 2: "vector", 3: "vector"}
         self._check_links()
 
     def theta_to_params(self, theta):
