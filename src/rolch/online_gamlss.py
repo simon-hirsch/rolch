@@ -380,11 +380,9 @@ class OnlineGamlss:
 
         J = {p: x.shape[1] for p, x in enumerate(X)}
 
-        # Intercept only
-        self.intercept_only = {
-            p: self.scale_intercept[p] == J[p]
-            for p in range(self.distribution.n_params)
-        }
+        self.intercept_only = {}
+        for p in range(self.distribution.n_params):
+            self.intercept_only[p] = self.expect_intercept[p] == J[p]
 
         self.weights = {}
         self.residuals = {}
