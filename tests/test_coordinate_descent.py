@@ -102,7 +102,3 @@ def test_coordinate_descent_bounds():
 
     assert np.all(rolch_lasso_path_negative <= 0), "Path should contain only betas <= 0"
     assert np.all(rolch_lasso_path_positive >= 0), "Path should contain only betas >= 0"
-
-
-test_coordinate_descent()
-test_coordinate_descent_bounds()
