@@ -15,7 +15,7 @@ class LogLink(LinkFunction):
     """
 
     def __init__(self):
-        pass
+        self._valid_structures = ["vector", "matrix", "square_matrix"]
 
     def link(self, x):
         return np.log(np.fmax(x, LOG_LOWER_BOUND))
@@ -38,7 +38,7 @@ class IdentityLink(LinkFunction):
     """
 
     def __init__(self):
-        pass
+        self._valid_structures = ["vector", "matrix", "square_matrix"]
 
     def link(self, x):
         return x
@@ -62,6 +62,7 @@ class LogShiftValueLink(LinkFunction):
 
     def __init__(self, value):
         self.value = value
+        self._valid_structures = ["vector", "matrix", "square_matrix"]
 
     def link(self, x):
         return np.log(x - self.value + LOG_LOWER_BOUND)
@@ -97,7 +98,7 @@ class SqrtLink(LinkFunction):
     """
 
     def __init__(self):
-        pass
+        self._valid_structures = ["vector", "matrix", "square_matrix"]
 
     def link(self, x):
         return np.sqrt(x)
@@ -121,6 +122,7 @@ class SqrtShiftValueLink(LinkFunction):
 
     def __init__(self, value):
         self.value = value
+        self._valid_structures = ["vector", "matrix", "square_matrix"]
 
     def link(self, x):
         return np.sqrt(x - self.value + LOG_LOWER_BOUND)
@@ -156,7 +158,7 @@ class LogIdentLink(LinkFunction):
     """
 
     def __init__(self):
-        pass
+        self._valid_structures = ["vector", "matrix", "square_matrix"]
 
     def link(self, x: np.ndarray):
         return np.where(x <= 1, np.log(x), x - 1)

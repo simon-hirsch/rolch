@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 
 
 class LinkFunction(ABC):
     """The base class for the link functions."""
+
+    self._valid_structures: List[str]
 
     @abstractmethod
     def link(self, x: np.ndarray) -> np.ndarray:
