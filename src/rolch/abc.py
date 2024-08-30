@@ -24,6 +24,18 @@ class LinkFunction(ABC):
 
 class Distribution(ABC):
 
+    self.links: Dict[int, Linkfunction] | List[Linkfunction]
+    self._param_structure: Dict[int, str]
+
+    def _check_links(self):
+        for p in range(self.n_params):
+            if self.param_structure[p] not in self.links[p]._valid_structures:
+                raise ValueError(
+                    f"Link function does not match parameter structure for parameter {p}. \n"
+                    f"Parameter structure is {self.param_structure[p]}. \n"
+                    f"Link function supports {self.links[p]._valid_structures}"
+                )
+
     @abstractmethod
     def theta_to_params(self, theta: np.ndarray) -> Tuple:
         """Take the fitted values and return tuple of vectors for distribution parameters."""
