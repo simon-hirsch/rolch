@@ -17,3 +17,4 @@ presentation/*
 .devcontainer/*
 .coverage
 build.txt
+gist.githubusercontent*
