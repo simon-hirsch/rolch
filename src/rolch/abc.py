@@ -24,7 +24,7 @@ class LinkFunction(ABC):
 
 class Distribution(ABC):
 
-    links: Dict[int, Linkfunction] | List[Linkfunction]
+    links: Dict[int, LinkFunction] | List[LinkFunction]
     _param_structure: Dict[int, str]
 
     def _check_links(self):
