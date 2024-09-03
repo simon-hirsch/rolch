@@ -10,6 +10,16 @@ Please have a look at the [documentation](https://simon-hirsch.github.io/rolch/)
 
 We're actively working on the package and welcome contributions from the community. Have a look at the [Release Notes](https://github.com/simon-hirsch/rolch/releases) and the [Issue Tracker](https://github.com/simon-hirsch/rolch/issues).
 
+## Distributional Regression
+
+The main idea of distributional regression (or regression beyond the mean, multiparameter regression) is that the response variable $Y$ is distributed according to a specified distribution $\mathcal{F}(\theta)$, where $\theta$ is the parameter vector for the distribution. In the Gaussian case, we have $\theta = (\theta_1, \theta_2) = (\mu, \sigma)$. We then specify an individual regression model for all parameters of the distribution of the form 
+
+$$g_k(\theta_k) = \eta_k = X_k\beta_k$$
+
+where $g_k(\cdot)$ is a link function, which ensures that the predicted distribution parameters are in a sensible range (we don't want e.g. negative standard deviations), and $\eta_k$ is the predictor. For the Gaussian case, this would imply that we have two regression equations, one for the mean (location) and one for the standard deviation (scale) parameters. Other distributions than the Normal distribution are possible and we have implemented e.g. Student's $t$-distribution and Johnson's $S_U$ distribution already. If you are interested in another distribution, please open an Issue.
+
+This allows us to specify very flexible models that take into account conditional behaviour of the volatility and skewness and tail behaviour of the variable. An simple example for electricity markets are wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production, if the production level is already high, since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probablistic behaviours is the key strength of distributional regression models.
+
 ## Install from PyPI
 
 The package is available from [pypi](https://pypi.org/project/rolch/).
