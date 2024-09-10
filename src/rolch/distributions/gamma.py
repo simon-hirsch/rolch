@@ -101,8 +101,6 @@ class DistributionGamma(Distribution):
 
         if param == 1:
             # SIGMA
-            # R Code (4/sigma^4)-(4/sigma^6)*trigamma((1/sigma^2))
-            # polygamma(1, x) == trigamma(x) in R
             return (4 / sigma**4) - (4 / sigma**6) * spc.polygamma(1, (1 / sigma**2))
 
     def dl2_dpp(self, y, theta, params=(0, 1)):
