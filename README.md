@@ -20,6 +20,55 @@ where $g_k(\cdot)$ is a link function, which ensures that the predicted distribu
 
 This allows us to specify very flexible models that take into account conditional behaviour of the volatility and skewness and tail behaviour of the variable. An simple example for electricity markets are wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production, if the production level is already high, since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probablistic behaviours is the key strength of distributional regression models.
 
+## Example
+
+Basic estimation and updating procedure:
+
+```python
+import rolch
+import numpy as np
+from sklearn.datasets import load_diabetes
+
+X, y = load_diabetes(return_X_y=True)
+X = np.hstack((np.ones((X.shape[0], 1)), X))
+
+# Create the estimator
+online_gamlss_lasso = rolch.OnlineGamlss(
+    distribution=rolch.DistributionT(), 
+    method="lasso"
+)
+
+# Initial Fit
+online_gamlss_lasso.fit(
+    y[:-11], 
+    X[:-11, :], 
+    X[:-11, :], 
+    X[:-11, :]
+)
+print("Coefficients for the first N-11 observations \n")
+print(np.vstack(online_gamlss_lasso.betas).T)
+
+# Update call
+online_gamlss_lasso.update(
+    y[[-11]], 
+    X[[-11], :], 
+    X[[-11], :], 
+    X[[-11], :]
+)
+print("\nCoefficients after update call \n")
+print(np.vstack(online_gamlss_lasso.betas).T)
+
+# Prediction for the last 10 observations
+prediction = online_gamlss_lasso.predict(
+    X[-10:, :], 
+    X[-10:, :], 
+    X[-10:, :]
+)
+
+print("\n Predictions for the last 10 observations")
+print(prediction)
+```
+
 ## Install from PyPI
 
 The package is available from [pypi](https://pypi.org/project/rolch/).
@@ -49,6 +98,10 @@ Simon is employed at Statkraft and gratefully acknowledges support received from
 
 `ROLCH` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
 
-## Formater
+## Contributing 
 
-We use `ruff` and `black`.
+We welcome every contribution from the community. Feel free to open an issue if you find bugs or want propose changes. 
+
+We're still in an early phase and welcome feedback, especially on the usability and "look and feel" of the package. Secondly, we're working to port distributions from the `R`-GAMLSS package and welcome according PRs.
+
+To get started, just create a fork and get going. We try to modularize the code more over the next version and increase our testing coverage. We use `ruff` and `black` as formatters.
