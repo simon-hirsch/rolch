@@ -18,7 +18,7 @@ $$g_k(\theta_k) = \eta_k = X_k\beta_k$$
 
 where $g_k(\cdot)$ is a link function, which ensures that the predicted distribution parameters are in a sensible range (we don't want e.g. negative standard deviations), and $\eta_k$ is the predictor. For the Gaussian case, this would imply that we have two regression equations, one for the mean (location) and one for the standard deviation (scale) parameters. Other distributions than the Normal distribution are possible and we have implemented e.g. Student's $t$-distribution and Johnson's $S_U$ distribution already. If you are interested in another distribution, please open an Issue.
 
-This allows us to specify very flexible models that take into account conditional behaviour of the volatility and skewness and tail behaviour of the variable. An simple example for electricity markets are wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production, if the production level is already high, since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probablistic behaviours is the key strength of distributional regression models.
+This allows us to specify very flexible models that take into account conditional behaviour of the volatility and skewness and tail behaviour of the variable. An simple example for electricity markets are wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production, if the production level is already high, since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probabilistic behaviours is the key strength of distributional regression models.
 
 ## Example
 
@@ -69,20 +69,12 @@ print("\n Predictions for the last 10 observations")
 print(prediction)
 ```
 
-## Install from PyPI
+## Installation & Dependencies
 
-The package is available from [pypi](https://pypi.org/project/rolch/).
+The package is available from [pypi](https://pypi.org/project/rolch/) - do `pip install rolch` and enjoy.
 
-1) `pip install rolch`. 
-2) Enjoy
+`ROLCH` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
 
-## Install from source:
-
-1) Clone this repo.
-2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`. 
-3) Run `python3 -m build` to build the wheel.
-4) Run `pip install dist/rolch-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
-5) Enjoy.
 
 ## Authors
 
@@ -94,14 +86,18 @@ The package is available from [pypi](https://pypi.org/project/rolch/).
 
 Simon is employed at Statkraft and gratefully acknowledges support received from Statkraft for his PhD studies. This work contains the author's opinion and not necessarily reflects Statkraft's position.
 
-## Dependencies
-
-`ROLCH` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
-
 ## Contributing 
 
 We welcome every contribution from the community. Feel free to open an issue if you find bugs or want propose changes. 
 
 We're still in an early phase and welcome feedback, especially on the usability and "look and feel" of the package. Secondly, we're working to port distributions from the `R`-GAMLSS package and welcome according PRs.
 
-To get started, just create a fork and get going. We try to modularize the code more over the next version and increase our testing coverage. We use `ruff` and `black` as formatters.
+To get started, just create a fork and get going. We try to modularize the code more over the next versions and increase our testing coverage. We use `ruff` and `black` as formatters.
+
+## Install from source:
+
+1) Clone this repo.
+2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`. 
+3) Run `python3 -m build` to build the wheel.
+4) Run `pip install dist/rolch-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
+5) Enjoy.
