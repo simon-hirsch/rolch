@@ -1,7 +1,11 @@
 # ROLCH: Regularized Online Learning for Conditional Heteroskedasticity
 
-[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) ![GitHub Release](https://img.shields.io/github/v/release/simon-hirsch/rolch?display_name=release&label=Release)
+[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) 
+![GitHub Release](https://img.shields.io/github/v/release/simon-hirsch/rolch?display_name=release&label=Release)
 [![Downloads](https://static.pepy.tech/badge/rolch)](https://pepy.tech/project/rolch) 
+[![Tests](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml)
+[![Docs](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml)
 
 ## Introduction
 
