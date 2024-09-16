@@ -90,7 +90,7 @@ The package is available from [pypi](https://pypi.org/project/rolch/).
 - Jonathan Berrisch, University of Duisburg-Essen
 - Florian Ziel, University of Duisburg-Essen
 
-## Acknowledgements
+## Acknowledgements & Disclosure
 
 Simon is employed at Statkraft and gratefully acknowledges support received from Statkraft for his PhD studies. This work contains the author's opinion and not necessarily reflects Statkraft's position.
 
