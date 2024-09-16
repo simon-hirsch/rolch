@@ -5,7 +5,12 @@ from rolch.coordinate_descent import (
     online_coordinate_descent_path,
     soft_threshold,
 )
-from rolch.distributions import DistributionJSU, DistributionNormal, DistributionT
+from rolch.distributions import (
+    DistributionGamma,
+    DistributionJSU,
+    DistributionNormal,
+    DistributionT,
+)
 from rolch.gram import (
     init_forget_vector,
     init_gram,
@@ -54,6 +59,7 @@ __all__ = [
     "DistributionNormal",
     "DistributionT",
     "DistributionJSU",
+    "DistributionGamma",
     "init_forget_vector",
     "init_gram",
     "update_gram",
