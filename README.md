@@ -9,7 +9,7 @@
 
 ## Introduction
 
-This package provides online estimation of models for distributional regression respectively models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
+This package provides an online estimation of models for distributional regression, respectively, models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
 
 Please have a look at the [documentation](https://simon-hirsch.github.io/rolch/) or the [example notebook](https://github.com/simon-hirsch/rolch/blob/main/example.ipynb).
 
@@ -21,9 +21,9 @@ The main idea of distributional regression (or regression beyond the mean, multi
 
 $$g_k(\theta_k) = \eta_k = X_k\beta_k$$
 
-where $g_k(\cdot)$ is a link function, which ensures that the predicted distribution parameters are in a sensible range (we don't want e.g. negative standard deviations), and $\eta_k$ is the predictor. For the Gaussian case, this would imply that we have two regression equations, one for the mean (location) and one for the standard deviation (scale) parameters. Other distributions than the Normal distribution are possible and we have implemented e.g. Student's $t$-distribution and Johnson's $S_U$ distribution already. If you are interested in another distribution, please open an Issue.
+where $g_k(\cdot)$ is a link function, which ensures that the predicted distribution parameters are in a sensible range (we don't want, e.g. negative standard deviations), and $\eta_k$ is the predictor. For the Gaussian case, this would imply that we have two regression equations, one for the mean (location) and one for the standard deviation (scale) parameters. Distributions other than the normal distribution are possible, and we have already implemented them, e.g., Student's $ t$ distribution and Johnson's $S_U$ distribution. If you are interested in another distribution, please open an Issue.
 
-This allows us to specify very flexible models that take into account conditional behaviour of the volatility and skewness and tail behaviour of the variable. An simple example for electricity markets are wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production, if the production level is already high, since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probabilistic behaviours is the key strength of distributional regression models.
+This allows us to specify very flexible models that consider the conditional behaviour of the variable's volatility, skewness and tail behaviour. A simple example for electricity markets is wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production if the production level is already high since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probabilistic behaviours is the key strength of distributional regression models.
 
 ## Example
 
@@ -93,11 +93,11 @@ Simon is employed at Statkraft and gratefully acknowledges support received from
 
 ## Contributing 
 
-We welcome every contribution from the community. Feel free to open an issue if you find bugs or want propose changes. 
+We welcome every contribution from the community. Feel free to open an issue if you find bugs or want to propose changes. 
 
 We're still in an early phase and welcome feedback, especially on the usability and "look and feel" of the package. Secondly, we're working to port distributions from the `R`-GAMLSS package and welcome according PRs.
 
-To get started, just create a fork and get going. We try to modularize the code more over the next versions and increase our testing coverage. We use `ruff` and `black` as formatters.
+To get started, just create a fork and get going. We will modularize the code over the next versions and increase our testing coverage. We use `ruff` and `black` as formatters.
 
 ## Install from source:
 
