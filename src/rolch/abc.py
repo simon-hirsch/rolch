@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 
 
 class LinkFunction(ABC):
     """The base class for the link functions."""
+
+    _valid_structures: List[str]
 
     @abstractmethod
     def link(self, x: np.ndarray) -> np.ndarray:
@@ -21,6 +23,18 @@ class LinkFunction(ABC):
 
 
 class Distribution(ABC):
+
+    links: Dict[int, LinkFunction] | List[LinkFunction]
+    _param_structure: Dict[int, str]
+
+    def _check_links(self):
+        for p in range(self.n_params):
+            if self.param_structure[p] not in self.links[p]._valid_structures:
+                raise ValueError(
+                    f"Link function does not match parameter structure for parameter {p}. \n"
+                    f"Parameter structure is {self.param_structure[p]}. \n"
+                    f"Link function supports {self.links[p]._valid_structures}"
+                )
 
     @abstractmethod
     def theta_to_params(self, theta: np.ndarray) -> Tuple:
