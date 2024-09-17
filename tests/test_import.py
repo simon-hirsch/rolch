@@ -4,10 +4,10 @@
 
 def test_import():
     try:
-        import rolch
+        import rolch  # noqa
 
         failed = False
-    except Exception as e:
+    except Exception:
         failed = True
 
-    assert ~failed, f"Import failed with Exception {e}."
+    assert not failed, f"Import failed with Exception {e}."
