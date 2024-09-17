@@ -10,4 +10,4 @@ def test_import():
     except Exception:
         failed = True
 
-    assert not failed, f"Import failed with Exception {e}."
+    assert not failed, f"Import failed with Exception."
