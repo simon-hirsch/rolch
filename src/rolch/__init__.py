@@ -1,6 +1,15 @@
 from importlib.metadata import version
 from importlib.util import find_spec
 
+HAS_PANDAS = False
+HAS_POLARS = False
+
+if find_spec("pandas") is not None:
+    HAS_PANDAS = True
+
+if find_spec("polars") is not None:
+    HAS_POLARS = True
+
 from rolch.coordinate_descent import (
     online_coordinate_descent,
     online_coordinate_descent_path,
@@ -42,15 +51,6 @@ from rolch.utils import (
     calculate_asymptotic_training_length,
     calculate_effective_training_length,
 )
-
-HAS_PANDAS = False
-HAS_POLARS = False
-
-if find_spec("pandas") is not None:
-    HAS_PANDAS = True
-
-if find_spec("polars") is not None:
-    HAS_POLARS = True
 
 __version__ = version("rolch")
 
