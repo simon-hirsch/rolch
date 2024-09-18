@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
+from rolch.gram import init_forget_vector
 from rolch.stats import IncrementalWeightedMean
-from rolch.utils import init_forget_vector
 
 M = [100, 1000, 10000]
 D = [1, 10, 100]
