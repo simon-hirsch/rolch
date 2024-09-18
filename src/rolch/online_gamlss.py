@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 
-from rolch.abc import Distribution
+from rolch.abc import Distribution, Estimator
 from rolch.coordinate_descent import (
     DEFAULT_ESTIMATOR_KWARGS,
     online_coordinate_descent,
@@ -26,7 +26,7 @@ from rolch.utils import (
 )
 
 
-class OnlineGamlss:
+class OnlineGamlss(Estimator):
     """The online/incremental GAMLSS class."""
 
     def __init__(
