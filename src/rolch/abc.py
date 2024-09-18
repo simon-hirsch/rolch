@@ -107,11 +107,9 @@ class Estimator(ABC):
     ):
         self.method = method
         self.distribution = distribution
-        self.fit_intercept = self.process_attributes(
-            fit_intercept, True, "fit_intercept"
-        )
-        self.forget = self.process_attributes(forget, 0.0, "forget")
         self.equation = self.process_equation(equation)
+        self.process_attributes(fit_intercept, True, "fit_intercept")
+        self.process_attributes(forget, 0.0, "forget")
 
     def process_attributes(self, attribute: Any, default: Any, name: str) -> None:
         if isinstance(attribute, dict):
@@ -176,20 +174,35 @@ class Estimator(ABC):
 
         return equation
 
+    def get_J_from_equation(self, X: np.ndarray):
+        J = {}
+        for p in range(self.distribution.n_params):
+            if isinstance(self.equation[p], str):
+                if self.equation[p] == "all":
+                    J[p] = X.shape[1] + int(self.fit_intercept[p])
+                if self.equation[p] == "intercept":
+                    J[p] = 1
+            elif isinstance(self.equation[p], np.ndarray) or isinstance(
+                self.equation[p], list
+            ):
+                J[p] = len(self.equation[p]) + int(self.fit_intercept[p])
+            else:
+                raise ValueError("Something unexpected happened")
+        return J
+
     def make_model_array(self, X: Union[np.ndarray], param: int):
         eq = self.equation[param]
         n = X.shape[0]
 
-        # TODO: Add intercept here?
         # TODO: Check difference between np.array and list more explicitly?
-        if eq == "intercept":
+        if isinstance(eq, str) and (eq == "intercept"):
             if not self.fit_intercept[param]:
                 raise ValueError(
                     "fit_intercept[param] is false, but equation says intercept."
                 )
             out = self._make_intercept(n_observations=n)
         else:
-            if eq == "all":
+            if isinstance(eq, str) and (eq == "all"):
                 if isinstance(X, np.ndarray):
                     out = X
                 if HAS_PANDAS and isinstance(X, pd.DataFrame):
@@ -199,9 +212,9 @@ class Estimator(ABC):
             elif isinstance(eq, np.ndarray) | isinstance(eq, list):
                 if isinstance(X, np.ndarray):
                     out = X[:, eq]
-                if HAS_PANDAS and isinstance(pd.DataFrame):
+                if HAS_PANDAS and isinstance(X, pd.DataFrame):
                     out = X.loc[:, eq]
-                if HAS_POLARS and isinstance(pl.DataFrame):
+                if HAS_POLARS and isinstance(X, pl.DataFrame):
                     out = X.select(eq).to_numpy()
             else:
                 raise ValueError("Did not understand equation. Please check.")
@@ -211,7 +224,13 @@ class Estimator(ABC):
 
         return out
 
-    def make_gram(self, x: np.ndarray, w: np.ndarray, param: int) -> np.ndarray:
+    def _is_intercept_only(self, param):
+        if isinstance(self.equation[param], str):
+            return self.equation[param] == "intercept"
+        else:
+            return False
+
+    def _make_x_gram(self, x: np.ndarray, w: np.ndarray, param: int) -> np.ndarray:
         """
         Make the Gram matrix.
 
@@ -228,7 +247,7 @@ class Estimator(ABC):
         elif self.method == "lasso":
             return init_gram(X=x, w=w, forget=self.forget[param])
 
-    def make_y_gram(
+    def _make_y_gram(
         self, x: np.ndarray, y: np.ndarray, w: np.ndarray, param: int
     ) -> np.ndarray:
         """
@@ -245,7 +264,7 @@ class Estimator(ABC):
         """
         return init_y_gram(X=x, y=y, w=w, forget=self.forget[param])
 
-    def update_gram(
+    def _update_x_gram(
         self, gram: np.ndarray, x: np.ndarray, w: np.ndarray, param: int
     ) -> np.ndarray:
         """
@@ -265,7 +284,7 @@ class Estimator(ABC):
         if self.method == "lasso":
             return update_gram(gram, X=x, w=w, forget=self.forget[param])
 
-    def update_y_gram(
+    def _update_y_gram(
         self, gram: np.ndarray, x: np.ndarray, y: np.ndarray, w: np.ndarray, param: int
     ) -> np.ndarray:
         """
