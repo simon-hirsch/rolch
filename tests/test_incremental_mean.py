@@ -26,7 +26,7 @@ def test_incremental_weighted_mean(M, D, forget, loc, scale):
 
     om = IncrementalWeightedMean(forget=forget, axis=0)
 
-    for i in range(1000):
+    for i in range(M):
         om.update_save(rvs[[i]], w[[i]])
         forget_vector = init_forget_vector(forget, i + 1)
         out_numpy[i] = np.average(
