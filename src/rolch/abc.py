@@ -1,6 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 
@@ -14,6 +14,11 @@ from rolch.gram import (
     update_y_gram,
 )
 from rolch.utils import handle_param_dict
+
+if HAS_PANDAS:
+    import pandas as pd
+if HAS_POLARS:
+    import polars as pl
 
 
 class LinkFunction(ABC):
@@ -97,18 +102,43 @@ class Estimator(ABC):
         distribution: Distribution,
         equation: Optional[Dict] = None,
         fit_intercept: Union[bool, Dict] = True,
-        method: Union[str, Dict] = "lasso",
+        method: str = "lasso",
         forget: float = 0.0,
     ):
         self.method = method
-        self.forget = forget
         self.distribution = distribution
-        self.fit_intercept = fit_intercept
-        self.equation = self.preprocess_equation(equation)
+        self.fit_intercept = self.process_attributes(
+            fit_intercept, True, "fit_intercept"
+        )
+        self.forget = self.process_attributes(forget, 0.0, "forget")
+        self.equation = self.process_equation(equation)
 
-    def preprocess_equation(self, equation):
+    def process_attributes(self, attribute: Any, default: Any, name: str) -> None:
+        if isinstance(attribute, dict):
+            for p in range(self.distribution.n_params):
+                if p not in attribute.keys():
+                    warnings.warn(
+                        f"[{self.__class__.__name__}] "
+                        f"No value given for parameter {name} for distribution "
+                        f"parameter {p}. Setting default value {default}.",
+                        RuntimeWarning,
+                        stacklevel=1,
+                    )
+                    if isinstance(default, dict):
+                        attribute[p] = default[p]
+                    else:
+                        attribute[p] = default
+        else:
+            # No warning since we expect that floats/strings/ints are either the defaults
+            # Or given on purpose for all params the ame
+            attribute = {p: attribute for p in range(self.distribution.n_params)}
+
+        setattr(self, name, attribute)
+
+    def process_equation(self, equation):
         if equation is None:
             warnings.warn(
+                f"[{self.__class__.__name__}] "
                 "Equation is not specified. "
                 "Per default, will estimate the first distribution parameter by all covariates found in X. "
                 "All other distribution parameters will be estimated by an intercept."
@@ -123,6 +153,7 @@ class Estimator(ABC):
                 # If not, add intercept.
                 if p not in equation.keys():
                     warnings.warn(
+                        f"[{self.__class__.__name__}] "
                         f"Distribution parameter {p} is not in equation. "
                         f"The parameter will be estimated by an intercept."
                     )
@@ -147,25 +178,38 @@ class Estimator(ABC):
 
     def make_model_array(self, X: Union[np.ndarray], param: int):
         eq = self.equation[param]
+        n = X.shape[0]
 
         # TODO: Add intercept here?
         # TODO: Check difference between np.array and list more explicitly?
-        if eq == "all":
-            if isinstance(X, np.ndarray):
-                return X
-            if HAS_PANDAS and isinstance(X, pd.DataFrame):
-                return X.to_numpy()
-            if HAS_POLARS and isinstance(X, pl.DataFrame):
-                return X.to_numpy()
-        elif eq == "intercept":
-            return np.ones((X.shape[0], 1))
-        elif isinstance(eq, np.ndarray) | isinstance(eq, list):
-            if isinstance(X, np.ndarray):
-                return X[:, eq]
-            if HAS_PANDAS and isinstance(pd.DataFrame):
-                return X.loc[:, eq]
-            if HAS_POLARS and isinstance(pl.DataFrame):
-                return X.select(eq).to_numpy()
+        if eq == "intercept":
+            if not self.fit_intercept[param]:
+                raise ValueError(
+                    "fit_intercept[param] is false, but equation says intercept."
+                )
+            out = self._make_intercept(n_observations=n)
+        else:
+            if eq == "all":
+                if isinstance(X, np.ndarray):
+                    out = X
+                if HAS_PANDAS and isinstance(X, pd.DataFrame):
+                    out = X.to_numpy()
+                if HAS_POLARS and isinstance(X, pl.DataFrame):
+                    out = X.to_numpy()
+            elif isinstance(eq, np.ndarray) | isinstance(eq, list):
+                if isinstance(X, np.ndarray):
+                    out = X[:, eq]
+                if HAS_PANDAS and isinstance(pd.DataFrame):
+                    out = X.loc[:, eq]
+                if HAS_POLARS and isinstance(pl.DataFrame):
+                    out = X.select(eq).to_numpy()
+            else:
+                raise ValueError("Did not understand equation. Please check.")
+
+            if self.fit_intercept[param]:
+                out = np.hstack((self._make_intercept(n), out))
+
+        return out
 
     def make_gram(self, x: np.ndarray, w: np.ndarray, param: int) -> np.ndarray:
         """
@@ -179,9 +223,9 @@ class Estimator(ABC):
         Returns:
             np.ndarray: Gram matrix.
         """
-        if self.method[param] == "ols":
+        if self.method == "ols":
             return init_inverted_gram(X=x, w=w, forget=self.forget[param])
-        elif self.method[param] == "lasso":
+        elif self.method == "lasso":
             return init_gram(X=x, w=w, forget=self.forget[param])
 
     def make_y_gram(
@@ -216,9 +260,9 @@ class Estimator(ABC):
         Returns:
             np.ndarray: Updated Gram matrix.
         """
-        if self.method[param] == "ols":
+        if self.method == "ols":
             return update_inverted_gram(gram, X=x, w=w, forget=self.forget[param])
-        if self.method[param] == "lasso":
+        if self.method == "lasso":
             return update_gram(gram, X=x, w=w, forget=self.forget[param])
 
     def update_y_gram(
