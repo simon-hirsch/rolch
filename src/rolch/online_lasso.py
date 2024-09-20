@@ -44,13 +44,13 @@ class OnlineLasso:
             else:
                 setattr(self, i, attribute)
 
-    def fit(self, y, X, sample_weights=None, beta_bounds=None):
+    def fit(self, y, X, sample_weight=None, beta_bounds=None):
         """Fit the regression model."""
         self.N = X.shape[0]
         self.J = X.shape[1]
 
-        if sample_weights is None:
-            sample_weights = np.ones_like(y)
+        if sample_weight is None:
+            sample_weight = np.ones_like(y)
 
         if beta_bounds is None:
             self.beta_bounds = (np.repeat(-np.inf, self.J), np.repeat(np.inf, self.J))
@@ -63,8 +63,8 @@ class OnlineLasso:
         X_scaled = self.scaler.transform(X)
 
         self.beta_path = np.zeros((self.lambda_n,))
-        self.x_gram = init_gram(X_scaled, sample_weights, self.forget)
-        self.y_gram = init_y_gram(X_scaled, y, sample_weights, self.forget)
+        self.x_gram = init_gram(X_scaled, sample_weight, self.forget)
+        self.y_gram = init_y_gram(X_scaled, y, sample_weight, self.forget)
 
         self.beta_path = np.zeros((self.lambda_n, self.J))
         self.is_regularized = np.repeat(True, self.J)
@@ -102,16 +102,16 @@ class OnlineLasso:
         )
         self.beta = self.beta_path[best_ic, :]
 
-    def update(self, y, X, sample_weights=None):
+    def update(self, y, X, sample_weight=None):
         """Update the regression model"""
         self.N += X.shape[0]
         self.training_length = calculate_effective_training_length(self.forget, self.N)
         self.scaler.partial_fit(X)
         X_scaled = self.scaler.transform(X)
 
-        self.x_gram = update_gram(self.x_gram, X_scaled, self.forget, sample_weights)
+        self.x_gram = update_gram(self.x_gram, X_scaled, self.forget, sample_weight)
         self.y_gram = update_y_gram(
-            self.y_gram, X_scaled, y, self.forget, sample_weights
+            self.y_gram, X_scaled, y, self.forget, sample_weight
         )
 
         intercept = (

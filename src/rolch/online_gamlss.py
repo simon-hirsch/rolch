@@ -305,7 +305,7 @@ class OnlineGamlss(Estimator):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        sample_weights: Optional[np.ndarray] = None,
+        sample_weight: Optional[np.ndarray] = None,
     ):
         """Fit the online GAMLSS model.
 
@@ -318,7 +318,7 @@ class OnlineGamlss(Estimator):
         Args:
             X (np.ndarray): Data Matrix. Currently supporting only numpy, will support pandas and polars in the future.
             y (np.ndarray): Response variable $Y$.
-            sample_weights (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+            sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
             beta_bounds (Dict[int, Tuple], optional): Bounds for the $\beta$ in the coordinate descent algorithm. The user needs to provide a `dict` with a mapping of tuples to distribution parameters 0, 1, 2, and 3 potentially. Defaults to None.
         """
         self.n_obs = y.shape[0]
@@ -327,8 +327,8 @@ class OnlineGamlss(Estimator):
             for p in range(self.distribution.n_params)
         }
 
-        if sample_weights is not None:
-            w = sample_weights  # Align to sklearn API
+        if sample_weight is not None:
+            w = sample_weight  # Align to sklearn API
         else:
             w = np.ones(y.shape[0])
 
@@ -423,7 +423,7 @@ class OnlineGamlss(Estimator):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        sample_weights: Optional[np.ndarray] = None,
+        sample_weight: Optional[np.ndarray] = None,
     ):
         """Update the fit for the online GAMLSS Model.
 
@@ -436,10 +436,10 @@ class OnlineGamlss(Estimator):
         Args:
             X (np.ndarray): Data Matrix. Currently supporting only numpy, will support and pandas in the future.
             y (np.ndarray): Response variable $Y$.
-            sample_weights (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+            sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
         """
-        if sample_weights is not None:
-            w = sample_weights  # Align to sklearn API
+        if sample_weight is not None:
+            w = sample_weight  # Align to sklearn API
         else:
             w = np.ones(y.shape[0])
 
