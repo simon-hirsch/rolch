@@ -27,7 +27,7 @@ dependencies=[
 ]
 
 [project.optional-dependencies]
-tests = ["pytest", "sklearn"]
+tests = ["pytest", "scikit-learn"]
 all = ["rolch[tests]"]
 
 [tool.setuptools.packages.find]
