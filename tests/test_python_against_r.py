@@ -36,7 +36,7 @@ def test_normal_distribution():
         fit_intercept=True,
         rss_tol_inner=10,
     )
-    estimator.fit(X=X y=y)
+    estimator.fit(X=X, y=y)
 
     assert np.allclose(
         estimator.betas[0], coef_R_mu, atol=0.01
