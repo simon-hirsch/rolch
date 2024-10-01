@@ -1,4 +1,4 @@
-# Welcome to `ROLCH`
+# Welcome to `ROLCH` - Regularized Online Learning for Conditional Heteroskedasticity
 
 `ROLCH` is a `Python` package for online distributional learning and online models for conditionally heteroskedastic data. We provide an online implementation of the well-known GAMLSS model using online coordinate descent (OCD).
 
