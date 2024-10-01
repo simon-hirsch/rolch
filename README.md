@@ -35,42 +35,46 @@ import numpy as np
 from sklearn.datasets import load_diabetes
 
 X, y = load_diabetes(return_X_y=True)
-X = np.hstack((np.ones((X.shape[0], 1)), X))
+
+# Model coefficients 
+equation = {
+    0 : "all", # Can also use "intercept" or np.ndarray of integers / booleans
+    1 : "all", 
+    2 : "all", 
+}
 
 # Create the estimator
 online_gamlss_lasso = rolch.OnlineGamlss(
-    distribution=rolch.DistributionT(), 
-    method="lasso"
+    distribution=rolch.DistributionT(),
+    method="lasso",
+    equation=equation,
+    fit_intercept=True,
+    estimation_kwargs={"ic": {i: "bic" for i in range(dist.n_params)}},
 )
 
 # Initial Fit
 online_gamlss_lasso.fit(
-    y[:-11], 
-    X[:-11, :], 
-    X[:-11, :], 
-    X[:-11, :]
+    X=X[:-11, :], 
+    y=y[:-11], 
 )
 print("Coefficients for the first N-11 observations \n")
-print(np.vstack(online_gamlss_lasso.betas).T)
+print(online_gamlss_lasso.betas)
 
 # Update call
 online_gamlss_lasso.update(
-    y[[-11]], 
-    X[[-11], :], 
-    X[[-11], :], 
-    X[[-11], :]
+    X=X[[-11], :], 
+    y=y[[-11]]
 )
 print("\nCoefficients after update call \n")
-print(np.vstack(online_gamlss_lasso.betas).T)
+print(online_gamlss_lasso.betas)
 
 # Prediction for the last 10 observations
 prediction = online_gamlss_lasso.predict(
-    X[-10:, :], 
-    X[-10:, :], 
-    X[-10:, :]
+    X=X[-10:, :]
 )
 
 print("\n Predictions for the last 10 observations")
+# Location, scale and shape (degrees of freedom)
 print(prediction)
 ```
 
@@ -105,4 +109,4 @@ To get started, just create a fork and get going. We will modularize the code ov
 2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`. 
 3) Run `python3 -m build` to build the wheel.
 4) Run `pip install dist/rolch-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
-5) Enjoy.
+5) Enjoy.O

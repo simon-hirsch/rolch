@@ -6,8 +6,7 @@ file = "https://gist.githubusercontent.com/seankross/a412dfbd88b3db70b74b/raw/5f
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
 
 y = mtcars[:, 0]
-X = mtcars[:, [1, 3]]
-X = np.hstack((np.ones((y.shape[0], 1)), X))
+X = mtcars[:, 1:]
 
 
 def test_normal_distribution():
@@ -31,12 +30,13 @@ def test_normal_distribution():
 
     estimator = rolch.OnlineGamlss(
         distribution=rolch.DistributionNormal(),
+        equation={0: np.array([0, 2]), 1: np.array([0, 2])},
         method="ols",
-        do_scale=False,
-        expect_intercept=True,
+        scale_inputs=False,
+        fit_intercept=True,
         rss_tol_inner=10,
     )
-    estimator.fit(y=y, x0=X, x1=X)
+    estimator.fit(X=X, y=y)
 
     assert np.allclose(
         estimator.betas[0], coef_R_mu, atol=0.01

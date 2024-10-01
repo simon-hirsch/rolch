@@ -1,4 +1,4 @@
-from typing import Literal, Tuple, Union
+from typing import Literal, Tuple
 
 import numba as nb
 import numpy as np

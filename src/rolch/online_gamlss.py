@@ -1,8 +1,10 @@
 import copy
+import warnings
 from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 
+from rolch.abc import Distribution, Estimator
 from rolch.coordinate_descent import (
     DEFAULT_ESTIMATOR_KWARGS,
     online_coordinate_descent,
@@ -24,16 +26,19 @@ from rolch.utils import (
 )
 
 
-class OnlineGamlss:
+class OnlineGamlss(Estimator):
     """The online/incremental GAMLSS class."""
 
     def __init__(
         self,
-        distribution,
+        distribution: Distribution,
+        equation: Dict,
         forget: float = 0.0,
         method: str = "ols",
-        do_scale: Union[Dict, bool] = True,
-        expect_intercept: Union[Dict, bool] = True,
+        scale_inputs: bool = True,
+        fit_intercept: Union[bool, Dict] = True,
+        # Less important parameters
+        beta_bounds: Dict[int, Tuple] = None,
         estimation_kwargs: Optional[Dict] = None,
         max_it_outer: int = 30,
         max_it_inner: int = 30,
@@ -47,9 +52,11 @@ class OnlineGamlss:
 
         Args:
             distribution (rolch.Distribution): The parametric distribution
+            equation (Dict): The modelling equation. Follows the schema `{parameter[int]: column_identifier}`, where column_identifier can be either the strings `'all'`, `'intercept'` or a np.array of ints indicating the columns.
             forget (float, optional): The forget factor. Defaults to 0.0.
-            method (str, optional): The estimation method. Defaults to "ols".
-            do_scale (Optional[Dict], optional): Whether to scale the input matrices. Defaults to None, which implies that all inputs will be scaled. Note that the scaler assumes that the first column of each $X$ contains the intercept.
+            method (str, optional): The estimation method. Defaults to `"ols"`.
+            scale_inputs (Optional[Dict], optional): Whether to scale the input matrices. Defaults to True
+            beta_bounds (Dict[int, Tuple]): Dictionary of bounds for the different parameters.
             estimation_kwargs (Optional[Dict], optional): Dictionary of estimation method kwargs. Defaults to None.
             max_it_outer (int, optional): Maximum outer iterations for the RS algorithm. Defaults to 30.
             max_it_inner (int, optional): Maximum inner iterations for the RS algorithm. Defaults to 30.
@@ -59,9 +66,16 @@ class OnlineGamlss:
             rel_tol_inner (float, optional): Relative tolerance on the Deviance in the inner fit. Defaults to 1e-20.
             rss_tol_inner (float, optional): Tolerance for increasing RSS in the inner fit. Defaults to 1.5.
         """
-        self.distribution = distribution
-        self.forget = forget
-        self.method = method  # lasso
+        super().__init__(
+            distribution=distribution,
+            equation=equation,
+            forget=forget,
+            fit_intercept=fit_intercept,
+            method=method,
+        )
+
+        self.scaler = OnlineScaler(do_scale=scale_inputs, intercept=False)
+        self.do_scale = scale_inputs
 
         # These are global for all distribution parameters
         self.max_it_outer = max_it_outer
@@ -72,71 +86,21 @@ class OnlineGamlss:
         self.rel_tol_inner = rel_tol_inner
         self.rss_tol_inner = rss_tol_inner
 
-        handle_param_dict(
-            self=self,
-            param=do_scale,
-            default=True,
-            name="do_scale",
-            n_params=self.distribution.n_params,
-        )
-
-        handle_param_dict(
-            self=self,
-            param=expect_intercept,
-            default=True,
-            name="expect_intercept",
-            n_params=self.distribution.n_params,
-        )
-
+        # More specific args
+        if beta_bounds is not None and self.method != "lasso":
+            warnings.warn(
+                f"[{self.__class__.__name__}] "
+                f"Coefficient bounds can only be used if the estimation method == 'lasso'"
+            )
+        self.beta_bounds = {} if beta_bounds is None else beta_bounds
         for i, attribute in DEFAULT_ESTIMATOR_KWARGS.items():
             if (estimation_kwargs is not None) and (i in estimation_kwargs.keys()):
                 setattr(self, i, estimation_kwargs[i])
             else:
                 setattr(self, i, attribute)
 
-        self.scalers = {
-            i: OnlineScaler(
-                forget=self.forget,
-                intercept=self.expect_intercept[i],
-                do_scale=self.do_scale[i],
-            )
-            for i in range(self.distribution.n_params)
-        }
-
         self.is_regularized = {}
         self.rss = {}
-
-    def _scaler_train(self, X):
-        for i, x in enumerate(X):
-            self.scalers[i].fit(x)
-
-    def _scaler_update(self, X):
-        for i, x in enumerate(X):
-            self.scalers[i].partial_fit(x)
-
-    def _scaler_transform(self, X):
-        return [self.scalers[i].transform(x) for i, x in enumerate(X)]
-
-    def _make_intercept_or_x(self, x, N):
-        if x is not None:
-            # if x.shape[0] != N:
-            #     raise ValueError("X should have the same length as Y.")
-            return x
-        else:
-            return np.ones((N, 1))
-
-    def _make_input_array_list(self, x0, x1, x2, x3):
-        N = x0.shape[0]
-        X = [x0]
-
-        if 2 <= self.distribution.n_params:
-            X.append(self._make_intercept_or_x(x1, N))
-        if 3 <= self.distribution.n_params:
-            X.append(self._make_intercept_or_x(x2, N))
-        if 4 <= self.distribution.n_params:
-            X.append(self._make_intercept_or_x(x3, N))
-
-        return X
 
     def fit_beta(
         self,
@@ -151,7 +115,7 @@ class OnlineGamlss:
         param,
     ):
 
-        f = init_forget_vector(self.forget, self.n_obs)
+        f = init_forget_vector(self.forget[param], self.n_obs)
 
         if self.method == "ols":
             lambda_max = None
@@ -163,7 +127,7 @@ class OnlineGamlss:
 
             rss = np.sum(residuals**2 * w * f) / np.mean(w * f)
 
-        elif (self.method == "lasso") & self.intercept_only[param]:
+        elif (self.method == "lasso") & self._is_intercept_only(param=param):
             lambda_max = None
             lambda_path = None
             beta_path = None
@@ -215,7 +179,7 @@ class OnlineGamlss:
 
             model_params_n = np.sum(~np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
-                self.n_training, model_params_n, rss, self.ic[param]
+                self.n_training[param], model_params_n, rss, self.ic[param]
             )
             beta = beta_path[best_ic, :]
 
@@ -241,7 +205,7 @@ class OnlineGamlss:
     ):
 
         denom = online_mean_update(
-            self.mean_of_weights[param], w, self.forget, self.n_obs
+            self.mean_of_weights[param], w, self.forget[param], self.n_obs
         )
 
         if self.method == "ols":
@@ -255,10 +219,11 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
+                + (1 - self.forget[param])
+                * (self.rss[param] * self.mean_of_weights[param])
             ) / denom
 
-        elif (self.method == "lasso") & self.intercept_only[param]:
+        elif (self.method == "lasso") & self._is_intercept_only(param=param):
             lambda_max = None
             lambda_path = None
             beta_path = None
@@ -279,7 +244,8 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
+                + (1 - self.forget[param])
+                * (self.rss[param] * self.mean_of_weights[param])
             ) / denom
 
         elif self.method == "lasso":
@@ -308,12 +274,13 @@ class OnlineGamlss:
 
             rss = (
                 (residuals**2).flatten() * w
-                + (1 - self.forget) * (self.rss[param] * self.mean_of_weights[param])
+                + (1 - self.forget[param])
+                * (self.rss[param] * self.mean_of_weights[param])
             ) / denom
 
             model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
-                self.n_training, model_params_n, rss, self.ic[param]
+                self.n_training[param], model_params_n, rss, self.ic[param]
             )
 
             self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
@@ -323,19 +290,21 @@ class OnlineGamlss:
 
         return beta, beta_path, rss, lambda_max, lambda_path
 
-    def _make_x_gram_list(self, X, w):
-        """Make the Gramian Matrices G = X.T @ W @ GAMMA @ X"""
-        return [init_gram(x, w, self.forget) for x in X]
+    def _make_initial_fitted_values(self, y: np.ndarray) -> np.ndarray:
+        fv = np.stack(
+            [
+                self.distribution.initial_values(y, param=i)
+                for i in range(self.distribution.n_params)
+            ],
+            axis=1,
+        )
+        return fv
 
     def fit(
         self,
+        X: np.ndarray,
         y: np.ndarray,
-        x0: np.ndarray,
-        x1: Optional[np.ndarray] = None,
-        x2: Optional[np.ndarray] = None,
-        x3: Optional[np.ndarray] = None,
-        sample_weights: Optional[np.ndarray] = None,
-        beta_bounds: Dict[int, Tuple] = None,
+        sample_weight: Optional[np.ndarray] = None,
     ):
         """Fit the online GAMLSS model.
 
@@ -346,66 +315,67 @@ class OnlineGamlss:
             The provision of bounds for the coefficient vectors is only possible for LASSO/coordinate descent estimation.
 
         Args:
+            X (np.ndarray): Data Matrix. Currently supporting only numpy, will support pandas and polars in the future.
             y (np.ndarray): Response variable $Y$.
-            x0 (np.ndarray): Design matrix for the 1st distribution parameter $X_\\mu$
-            x1 (Optional[np.ndarray], optional): Design matrix for the 2nd distribution parameter $X_\\sigma$. Defaults to None.
-            x2 (Optional[np.ndarray], optional): Design matrix for the 3rd distribution parameter $X_\\nu$. Defaults to None.
-            x3 (Optional[np.ndarray], optional): Design matrix for the 4th distribution parameter $X_\\tau$. Defaults to None.
-            sample_weights (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+            sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
             beta_bounds (Dict[int, Tuple], optional): Bounds for the $\beta$ in the coordinate descent algorithm. The user needs to provide a `dict` with a mapping of tuples to distribution parameters 0, 1, 2, and 3 potentially. Defaults to None.
         """
         self.n_obs = y.shape[0]
-        self.n_training = calculate_effective_training_length(self.forget, self.n_obs)
+        self.n_training = {
+            p: calculate_effective_training_length(self.forget[p], self.n_obs)
+            for p in range(self.distribution.n_params)
+        }
 
-        if sample_weights is not None:
-            w = sample_weights  # Align to sklearn API
+        if sample_weight is not None:
+            w = sample_weight  # Align to sklearn API
         else:
             w = np.ones(y.shape[0])
 
-        fv = np.stack(
-            [
-                self.distribution.initial_values(y, param=i)
-                for i in range(self.distribution.n_params)
-            ],
-            axis=1,
-        )
-        X = self._make_input_array_list(x0=x0, x1=x1, x2=x2, x3=x3)
-        self._scaler_train(X)
-        # self.foo = self._scaler_transform(X)
-        X_scaled = self._scaler_transform(X)
-        x_gram = self._make_x_gram_list(X=X_scaled, w=w)
-        y_gram = [np.empty((x.shape[1], 1)) for x in X]
-        beta_path = {i: np.empty((self.lambda_n, x.shape[1])) for i, x in enumerate(X)}
+        fv = self._make_initial_fitted_values(y=y)
+        self.J = self.get_J_from_equation(X=X)
+
+        # Fit scaler and transform
+        self.scaler.fit(X)
+        X_scaled = self.scaler.transform(X)
+        X_dict = {
+            p: self.make_model_array(X_scaled, param=p)
+            for p in range(self.distribution.n_params)
+        }
+        self.X_dict = X_dict
+        self.X_scaled = X_scaled
+
+        beta_path = {
+            p: np.empty((self.lambda_n, self.J[p]))
+            for p in range(self.distribution.n_params)
+        }
         rss = {i: 0 for i in range(self.distribution.n_params)}
 
-        J = {p: x.shape[1] for p, x in enumerate(X)}
-
-        self.intercept_only = {}
-        for p in range(self.distribution.n_params):
-            self.intercept_only[p] = self.expect_intercept[p] == J[p]
-
+        x_gram = {}
+        y_gram = {}
         self.weights = {}
         self.residuals = {}
 
         ## Handle parameter bounds
-        if beta_bounds is None:
+        if self.beta_bounds is None:
             self.beta_bounds = {
-                p: (np.repeat(-np.inf, J[p]), np.repeat(np.inf, J[p]))
+                p: (np.repeat(-np.inf, self.J[p]), np.repeat(np.inf, self.J[p]))
                 for p in range(self.distribution.n_params)
             }
         else:
             for p in set(range(self.distribution.n_params)).difference(
-                set(beta_bounds.keys())
+                set(self.beta_bounds.keys())
             ):
-                beta_bounds[p] = (np.repeat(-np.inf, J[p]), np.repeat(np.inf, J[p]))
-            self.beta_bounds = beta_bounds
+                self.beta_bounds[p] = (
+                    np.repeat(-np.inf, self.J[p]),
+                    np.repeat(np.inf, self.J[p]),
+                )
 
         if self.method == "lasso":
-            for param in range(self.distribution.n_params):
-                is_regularized = np.repeat(True, X[param].shape[1])
-                if self.expect_intercept[p]:
+            for p in range(self.distribution.n_params):
+                is_regularized = np.repeat(True, self.J[p])
+                if self.fit_intercept[p]:
                     is_regularized[0] = False
-                self.is_regularized[param] = is_regularized
+                self.is_regularized[p] = is_regularized
 
         self.beta_iterations = {i: {} for i in range(self.distribution.n_params)}
         self.beta_path_iterations = {i: {} for i in range(self.distribution.n_params)}
@@ -423,6 +393,7 @@ class OnlineGamlss:
         self.sum_of_weights = {}
         self.mean_of_weights = {}
 
+        # TODO: Refactor this. Almost everything can be written into class attributes during fit!
         (
             self.betas,
             self.beta_path,
@@ -435,7 +406,7 @@ class OnlineGamlss:
             self.lambda_path,
             self.lambda_max,
         ) = self._outer_fit(
-            X=X_scaled,
+            X=X_dict,
             y=y,
             w=w,
             x_gram=x_gram,
@@ -447,43 +418,11 @@ class OnlineGamlss:
             fv=fv,
         )
 
-    def update_not_inverted_gram(self, gram, x_new, w_new=1):
-        return (1 - self.forget) * gram + w_new * (x_new.T * x_new)
-
-    def update_y_gram(self, gram, x_new, y_new, w_new=1):
-        return (1 - self.forget) * gram + w_new * (x_new.T * y_new)
-
-    def update_inverted_gram(self, inv_gram, x_new, w_new=1):
-        gamma = 1 - self.forget
-        new_inv_gram = (1 / (gamma)) * (
-            inv_gram
-            - (
-                (w_new * inv_gram * x_new.T * x_new * inv_gram)
-                / (gamma + w_new * x_new * inv_gram * x_new.T)
-            )
-        )
-        return new_inv_gram
-
-    def update_gram(self, gram, x_new, w_new=1):
-        if self.method == "ols":
-            return update_inverted_gram(gram, x_new, self.forget, w_new)
-        else:
-            return self.update_not_inverted_gram(gram, x_new, w_new)
-
-    def make_x_gram(self, X, weights):
-        if self.method == "ols":
-            return init_inverted_gram(X, weights, self.forget)
-        else:
-            return init_gram(X, weights, self.forget)
-
     def update(
         self,
+        X: np.ndarray,
         y: np.ndarray,
-        x0: np.ndarray,
-        x1: Optional[np.ndarray] = None,
-        x2: Optional[np.ndarray] = None,
-        x3: Optional[np.ndarray] = None,
-        sample_weights: Optional[np.ndarray] = None,
+        sample_weight: Optional[np.ndarray] = None,
     ):
         """Update the fit for the online GAMLSS Model.
 
@@ -494,29 +433,31 @@ class OnlineGamlss:
             The `beta_bounds` from the initial fit are still valid for the update.
 
         Args:
+            X (np.ndarray): Data Matrix. Currently supporting only numpy, will support and pandas in the future.
             y (np.ndarray): Response variable $Y$.
-            x0 (np.ndarray): Design matrix for the 1st distribution parameter $X_\\mu$
-            x1 (Optional[np.ndarray], optional): Design matrix for the 2nd distribution parameter $X_\\sigma$. Defaults to None.
-            x2 (Optional[np.ndarray], optional): Design matrix for the 3rd distribution parameter $X_\\nu$. Defaults to None.
-            x3 (Optional[np.ndarray], optional): Design matrix for the 4th distribution parameter $X_\\tau$. Defaults to None.
-            sample_weights (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+            sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
         """
-        if sample_weights is not None:
-            w = sample_weights  # Align to sklearn API
+        if sample_weight is not None:
+            w = sample_weight  # Align to sklearn API
         else:
             w = np.ones(y.shape[0])
 
         self.n_obs += y.shape[0]
-        self.n_training = calculate_effective_training_length(self.forget, self.n_obs)
+        self.n_training = {
+            p: calculate_effective_training_length(self.forget[p], self.n_obs)
+            for p in range(self.distribution.n_params)
+        }
 
         # More efficient to do this?!
         # Since we get better start values
-        fv = self.predict(x0=x0, x1=x1, x2=x2, x3=x3, what="response")
+        fv = self.predict(X, what="response")
 
-        X = self._make_input_array_list(x0=x0, x1=x1, x2=x2, x3=x3)
-
-        self._scaler_update(X=X)
-        X_scaled = self._scaler_transform(X=X)
+        self.scaler.partial_fit(X)
+        X_scaled = self.scaler.transform(X)
+        X_dict = {
+            p: self.make_model_array(X_scaled, param=p)
+            for p in range(self.distribution.n_params)
+        }
 
         ## Reset rss and iterations
         self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
@@ -540,7 +481,7 @@ class OnlineGamlss:
             self.x_gram,
             self.y_gram,
         ) = self._outer_update(
-            X=X_scaled,
+            X=X_dict,
             y=y,
             w=w,
             x_gram=self.x_gram,
@@ -562,7 +503,7 @@ class OnlineGamlss:
     def _outer_update(self, X, y, w, x_gram, y_gram, beta_path, rss, fv):
         ## for new observations:
         global_di = -2 * np.log(self.distribution.pdf(y, fv))
-        global_dev = (1 - self.forget) * self.global_dev + global_di
+        global_dev = (1 - self.forget[0]) * self.global_dev + global_di
         global_dev_old = global_dev + 1000
         iteration_outer = 0
 
@@ -634,7 +575,7 @@ class OnlineGamlss:
         global_dev_old = global_dev + 1000
         iteration_outer = 0
 
-        betas = [np.zeros((self.lambda_n, i.shape[1])) for i in X]
+        betas = {}
 
         while True:
             # Check relative congergence
@@ -763,8 +704,9 @@ class OnlineGamlss:
             wt = np.clip(wt, 1e-10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
             ## Update the X and Y Gramian and the weight
-            x_gram[param] = self.make_x_gram(X[param], w * wt)
-            y_gram[param] = init_y_gram(X[param], wv, w * wt, self.forget)
+
+            x_gram[param] = self._make_x_gram(x=X[param], w=(w * wt), param=param)
+            y_gram[param] = self._make_y_gram(x=X[param], y=wv, w=(w * wt), param=param)
             beta_new, beta_path_new, rss_new, lambda_max_new, lambda_path_new = (
                 self.fit_beta(
                     x_gram[param],
@@ -781,7 +723,7 @@ class OnlineGamlss:
 
             if iteration_inner > 1 or iteration_outer > 1:
 
-                if self.method == "ols" or self.intercept_only[param]:
+                if self.method == "ols" or self._is_intercept_only(param=param):
                     if rss_new > (self.rss_tol_inner * rss):
                         break
                 else:
@@ -845,7 +787,7 @@ class OnlineGamlss:
         y_gram_it = self.y_gram_inner[param]
 
         di = -2 * np.log(self.distribution.pdf(y, fv))
-        dv = (1 - self.forget) * self.global_dev + np.sum(di * w)
+        dv = (1 - self.forget[0]) * self.global_dev + np.sum(di * w)
         olddv = dv + 1
 
         # Use this for the while loop
@@ -872,12 +814,11 @@ class OnlineGamlss:
             wt = np.clip(wt, -1e10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
 
-            x_gram_it = self.update_gram(x_gram[param], X[param], float(w * wt))
-            y_gram_it = self.update_y_gram(
-                y_gram[param],
-                X[param],
-                wv,
-                float(w * wt),
+            x_gram_it = self._update_x_gram(
+                gram=x_gram[param], x=X[param], w=float(w * wt), param=param
+            )
+            y_gram_it = self._update_y_gram(
+                gram=y_gram[param], x=X[param], y=wv, w=float(w * wt), param=param
             )
             beta_new, beta_path_new, rss_new, lambda_max_new, lambda_path_new = (
                 self.update_beta(
@@ -893,7 +834,7 @@ class OnlineGamlss:
                 )
             )
 
-            if self.method == "ols" or self.intercept_only[param]:
+            if self.method == "ols" or self._is_intercept_only(param=param):
                 if rss_new > (self.rss_tol_inner * rss):
                     break
             else:
@@ -913,16 +854,16 @@ class OnlineGamlss:
             fv[:, param] = self.distribution.link_inverse(eta, param=param)
 
             self.sum_of_weights_inner[param] = (
-                np.sum(w * wt) + (1 - self.forget) * self.sum_of_weights[param]
+                np.sum(w * wt) + (1 - self.forget[param]) * self.sum_of_weights[param]
             )
             self.mean_of_weights_inner[param] = (
-                self.sum_of_weights_inner[param] / self.n_training
+                self.sum_of_weights_inner[param] / self.n_training[param]
             )
 
             olddv = dv
 
             di = -2 * np.log(self.distribution.pdf(y, fv))
-            dv = np.sum(di * w) + (1 - self.forget) * self.global_dev
+            dv = np.sum(di * w) + (1 - self.forget[0]) * self.global_dev
 
         return (
             fv,
@@ -938,21 +879,15 @@ class OnlineGamlss:
 
     def predict(
         self,
-        x0: np.ndarray,
-        x1: Optional[np.ndarray] = None,
-        x2: Optional[np.ndarray] = None,
-        x3: Optional[np.ndarray] = None,
+        X: np.ndarray,
         what: str = "response",
         return_contributions: bool = False,
     ) -> np.ndarray:
         """Predict the distibution parameters given input data.
 
         Args:
-            x0 (np.ndarray): Design matrix for the 1st distribution parameter $X_\\mu$
-            x1 (Optional[np.ndarray], optional): Design matrix for the 2nd distribution parameter $X_\\sigma$. Defaults to None.
-            x2 (Optional[np.ndarray], optional): Design matrix for the 3rd distribution parameter $X_\\nu$. Defaults to None.
-            x3 (Optional[np.ndarray], optional): Design matrix for the 4th distribution parameter $X_\\tau$. Defaults to None.
-            what (str, optional): Predict the response or the link. Defaults to "response".
+            X (np.ndarray): Design matrix.
+            what (str, optional): Predict the response or the link. Defaults to "response". Remember the  GAMLSS models $g(\\theta) = X^T\\beta$. Predict `"link"` will output $X^T\\beta$, predict `"response"` will output $g^{-1}(X^T\\beta)$. Usually, you want predict = `"response"`.
             return_contributions (bool, optional): Whether to return a `Tuple[prediction, contributions]` where the contributions of the individual covariates for each distribution parameter's predicted value is specified. Defaults to False.
 
         Raises:
@@ -961,12 +896,17 @@ class OnlineGamlss:
         Returns:
             np.ndarray: Predicted values for the distribution.
         """
-        X = self._make_input_array_list(x0=x0, x1=x1, x2=x2, x3=x3)
-        X_scaled = self._scaler_transform(X=X)
-        prediction = [x @ b.T for x, b in zip(X_scaled, self.betas)]
+        X_scaled = self.scaler.transform(x=X)
+        X_dict = {
+            p: self.make_model_array(X_scaled, p)
+            for p in range(self.distribution.n_params)
+        }
+        prediction = [x @ b.T for x, b in zip(X_dict.values(), self.betas.values())]
 
         if return_contributions:
-            contribution = [x * b.T for x, b in zip(X_scaled, self.betas)]
+            contribution = [
+                x * b.T for x, b in zip(X_dict.values(), self.betas.values())
+            ]
 
         if what == "response":
             prediction = [
