@@ -372,11 +372,11 @@ class OnlineGamlss(Estimator):
                 )
 
         if self.method == "lasso":
-            for param in range(self.distribution.n_params):
-                is_regularized = np.repeat(True, self.J[param])
+            for p in range(self.distribution.n_params):
+                is_regularized = np.repeat(True, self.J[p])
                 if self.fit_intercept[p]:
                     is_regularized[0] = False
-                self.is_regularized[param] = is_regularized
+                self.is_regularized[p] = is_regularized
 
         self.beta_iterations = {i: {} for i in range(self.distribution.n_params)}
         self.beta_path_iterations = {i: {} for i in range(self.distribution.n_params)}
