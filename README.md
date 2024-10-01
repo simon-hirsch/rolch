@@ -48,6 +48,7 @@ online_gamlss_lasso = rolch.OnlineGamlss(
     distribution=rolch.DistributionT(),
     method="lasso",
     equation=equation,
+    fit_intercept=True,
     estimation_kwargs={"ic": {i: "bic" for i in range(dist.n_params)}},
 )
 
