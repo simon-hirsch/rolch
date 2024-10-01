@@ -52,10 +52,9 @@ class OnlineGamlss(Estimator):
 
         Args:
             distribution (rolch.Distribution): The parametric distribution
-            equation (Dict): The modelling equation. Follows the schema {parameter[int]: column_identifier}, where column_identifier can be either the strings 'all', 'intercept' or a np.array of ints indicating the columns.
+            equation (Dict): The modelling equation. Follows the schema `{parameter[int]: column_identifier}`, where column_identifier can be either the strings `'all'`, `'intercept'` or a np.array of ints indicating the columns.
             forget (float, optional): The forget factor. Defaults to 0.0.
-            method (str, optional): The estimation method. Defaults to "ols".
-
+            method (str, optional): The estimation method. Defaults to `"ols"`.
             scale_inputs (Optional[Dict], optional): Whether to scale the input matrices. Defaults to True
             beta_bounds (Dict[int, Tuple]): Dictionary of bounds for the different parameters.
             estimation_kwargs (Optional[Dict], optional): Dictionary of estimation method kwargs. Defaults to None.
@@ -888,7 +887,7 @@ class OnlineGamlss(Estimator):
 
         Args:
             X (np.ndarray): Design matrix.
-            what (str, optional): Predict the response or the link. Defaults to "response".
+            what (str, optional): Predict the response or the link. Defaults to "response". Remember the  GAMLSS models $g(\\theta) = X^T\\beta$. Predict `"link"` will output $X^T\\beta$, predict `"response"` will output $g^{-1}(X^T\\beta)$. Usually, you want predict = `"response"`.
             return_contributions (bool, optional): Whether to return a `Tuple[prediction, contributions]` where the contributions of the individual covariates for each distribution parameter's predicted value is specified. Defaults to False.
 
         Raises:

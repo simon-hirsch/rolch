@@ -23,42 +23,46 @@ import rolch
 import numpy as np
 from sklearn.datasets import load_diabetes
 
-np.set_printoptions(precision=3, suppress=True)
-
-# Load Diabetes data set
-# Add intercept (will not be regularized)
 X, y = load_diabetes(return_X_y=True)
-X = np.hstack((np.ones((X.shape[0], 1)), X))
 
-dist = rolch.DistributionT()
+# Model coefficients 
+equation = {
+    0 : "all", # Can also use "intercept" or np.ndarray of integers / booleans
+    1 : "all", 
+    2 : "all", 
+}
 
-# Initialise the estimator
+# Create the estimator
 online_gamlss_lasso = rolch.OnlineGamlss(
-    distribution=dist, 
-    method="lasso", 
-    estimation_kwargs={"ic" : {i: "bic" for i in range(dist.n_params)}}
+    distribution=rolch.DistributionT(),
+    method="lasso",
+    equation=equation,
+    fit_intercept=True,
+    estimation_kwargs={"ic": {i: "bic" for i in range(dist.n_params)}},
 )
 
-# Fit the model and print coefficients
-# We fit on all but the last data point
+# Initial Fit
 online_gamlss_lasso.fit(
-    y[:-1], 
-    X[:-1, :], 
-    X[:-1, :], 
-    X[:-1, :]
+    X=X[:-11, :], 
+    y=y[:-11], 
 )
+print("Coefficients for the first N-11 observations \n")
+print(online_gamlss_lasso.betas)
 
-print("LASSO Coefficients \n")
-print(np.vstack(online_gamlss_lasso.betas).T)
-
-# Update the fit and print new coefficients
+# Update call
 online_gamlss_lasso.update(
-    y[[-1]], 
-    X[[-1], :], 
-    X[[-1], :], 
-    X[[-1], :]
+    X=X[[-11], :], 
+    y=y[[-11]]
+)
+print("\nCoefficients after update call \n")
+print(online_gamlss_lasso.betas)
+
+# Prediction for the last 10 observations
+prediction = online_gamlss_lasso.predict(
+    X=X[-10:, :]
 )
 
-print("\nCoefficients after update call \n")
-print(np.vstack(online_gamlss_lasso.betas).T)
+print("\n Predictions for the last 10 observations")
+# Location, scale and shape (degrees of freedom)
+print(prediction)
 ```
