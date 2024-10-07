@@ -696,7 +696,7 @@ class OnlineGamlss(Estimator):
             iteration_inner += 1
             eta = self.distribution.link_function(fv[:, param], param=param)
             # if iteration == 1:
-            dr = 1 / self.distribution.link_derivative(eta, param=param)
+            dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
             # mu, sigma, nu vs. fv?
             dl1dp1 = self.distribution.dl1_dp1(y, fv, param=param)
             dl2dp2 = self.distribution.dl2_dp2(y, fv, param=param)
@@ -806,7 +806,7 @@ class OnlineGamlss(Estimator):
 
             iteration_inner += 1
             eta = self.distribution.link_function(fv[:, param], param=param)
-            dr = 1 / self.distribution.link_derivative(eta, param=param)
+            dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
             # mu, sigma, nu vs. fv?
             dl1dp1 = self.distribution.dl1_dp1(y, fv, param=param)
             dl2dp2 = self.distribution.dl2_dp2(y, fv, param=param)
