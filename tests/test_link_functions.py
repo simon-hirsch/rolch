@@ -34,7 +34,7 @@ def test_link_positive_line(linkfun):
 
 @pytest.mark.parametrize("linkfun", SHIFTED_LINKS)
 @pytest.mark.parametrize("value", VALUES)
-def test_link_positive_line(linkfun, value):
+def test_link_positive_shifted_line(linkfun, value):
     """Test links that are shifted. This changes the domain of the links."""
     instance = linkfun(value)
     x = np.linspace(value, 100 + value, M)

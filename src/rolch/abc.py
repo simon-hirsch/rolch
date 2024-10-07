@@ -33,8 +33,13 @@ class LinkFunction(ABC):
         """Calculate the inverse of the link function"""
 
     @abstractmethod
-    def derivative(self, x: np.ndarray) -> np.ndarray:
+    def link_derivative(self, x: np.ndarray) -> np.ndarray:
         """Calculate the first derivative of the link function"""
+        raise NotImplementedError("Currently not implemented. Will be needed for GLMs")
+
+    @abstractmethod
+    def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
+        """Calculate the first derivative for the inverse link function"""
 
 
 class Distribution(ABC):
@@ -66,8 +71,12 @@ class Distribution(ABC):
         """Apply the inverse of the link function for param on y."""
 
     @abstractmethod
-    def link_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+    def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         """Apply the derivative of the link function for param on y."""
+
+    @abstractmethod
+    def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+        """Apply the derivative of the inverse link function for param on y."""
 
     @abstractmethod
     def initial_values(
