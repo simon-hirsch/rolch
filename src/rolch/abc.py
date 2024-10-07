@@ -71,8 +71,12 @@ class Distribution(ABC):
         """Apply the inverse of the link function for param on y."""
 
     @abstractmethod
-    def link_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+    def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         """Apply the derivative of the link function for param on y."""
+
+    @abstractmethod
+    def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+        """Apply the derivative of the inverse link function for param on y."""
 
     @abstractmethod
     def initial_values(
