@@ -113,8 +113,11 @@ class DistributionGamma(Distribution):
     def link_inverse(self, y, param=0):
         return self.links[param].inverse(y)
 
-    def link_derivative(self, y, param=0):
-        return self.links[param].derivative(y)
+    def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+        return self.links[param].link_derivative(y)
+
+    def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+        return self.links[param].inverse_derivative(y)
 
     def initial_values(self, y, param=0, axis=None):
         if param == 0:
