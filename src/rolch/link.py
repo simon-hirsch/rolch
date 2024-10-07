@@ -17,17 +17,20 @@ class LogLink(LinkFunction):
     def __init__(self):
         pass
 
-    def link(self, x):
+    def link(self, x: np.ndarray) -> np.ndarray:
         return np.log(np.fmax(x, LOG_LOWER_BOUND))
 
-    def inverse(self, x):
+    def inverse(self, x: np.ndarray) -> np.ndarray:
         return np.fmax(
             np.exp(np.fmin(x, EXP_UPPER_BOUND)),
             LOG_LOWER_BOUND,
         )
 
-    def derivative(self, x):
+    def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return np.exp(np.fmin(x, EXP_UPPER_BOUND))
+
+    def link_derivative(self, x: np.ndarray) -> np.ndarray:
+        return 1 / x
 
 
 class IdentityLink(LinkFunction):
@@ -40,13 +43,16 @@ class IdentityLink(LinkFunction):
     def __init__(self):
         pass
 
-    def link(self, x):
+    def link(self, x: np.ndarray) -> np.ndarray:
         return x
 
-    def inverse(self, x):
+    def inverse(self, x: np.ndarray) -> np.ndarray:
         return x
 
-    def derivative(self, x):
+    def derivative(self, x: np.ndarray) -> np.ndarray:
+        return np.ones_like(x)
+
+    def link_derivative(self, x: np.ndarray) -> np.ndarray:
         return np.ones_like(x)
 
 
@@ -60,19 +66,22 @@ class LogShiftValueLink(LinkFunction):
     don't fall below 2, hence ensuring that the variance exists.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: float):
         self.value = value
 
-    def link(self, x):
+    def link(self, x: np.ndarray) -> np.ndarray:
         return np.log(x - self.value + LOG_LOWER_BOUND)
 
-    def inverse(self, x):
+    def inverse(self, x: np.ndarray) -> np.ndarray:
         return self.value + np.fmax(
             np.exp(np.fmin(x, EXP_UPPER_BOUND)), LOG_LOWER_BOUND
         )
 
-    def derivative(self, x):
+    def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return np.fmax(np.exp(np.fmin(x, EXP_UPPER_BOUND)), LOG_LOWER_BOUND)
+
+    def link_derivative(self, x: np.ndarray) -> np.ndarray:
+        return super().link_derivative(x)
 
 
 class LogShiftTwoLink(LogShiftValueLink):
@@ -99,14 +108,17 @@ class SqrtLink(LinkFunction):
     def __init__(self):
         pass
 
-    def link(self, x):
+    def link(self, x: np.ndarray) -> np.ndarray:
         return np.sqrt(x)
 
-    def inverse(self, x):
+    def inverse(self, x: np.ndarray) -> np.ndarray:
         return np.power(x, 2)
 
-    def derivative(self, x):
+    def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return 2 * x
+
+    def link_derivative(self, x: np.ndarray) -> np.ndarray:
+        return 1 / (2 * np.sqrt(x))
 
 
 class SqrtShiftValueLink(LinkFunction):
@@ -119,17 +131,20 @@ class SqrtShiftValueLink(LinkFunction):
     don't fall below 2, hence ensuring that the variance exists.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: float):
         self.value = value
 
-    def link(self, x):
+    def link(self, x: np.ndarray) -> np.ndarray:
         return np.sqrt(x - self.value + LOG_LOWER_BOUND)
 
-    def inverse(self, x):
+    def inverse(self, x: np.ndarray) -> np.ndarray:
         return self.value + np.power(np.fmin(x, EXP_UPPER_BOUND), 2)
 
-    def derivative(self, x):
+    def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return 2 * x
+
+    def link_derivative(self, x: np.ndarray) -> np.ndarray:
+        return super().link_derivative(x)
 
 
 class SqrtShiftTwoLink(SqrtShiftValueLink):
@@ -158,14 +173,17 @@ class LogIdentLink(LinkFunction):
     def __init__(self):
         pass
 
-    def link(self, x: np.ndarray):
+    def link(self, x: np.ndarray) -> np.ndarray:
         return np.where(x <= 1, np.log(x), x - 1)
 
-    def inverse(self, x: np.ndarray):
+    def inverse(self, x: np.ndarray) -> np.ndarray:
         return np.where(x <= 0, np.exp(x), x + 1)
 
-    def derivative(self, x: np.ndarray):
+    def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return np.where(x <= 0, np.exp(x), 1)
+
+    def link_derivative(self, x: np.ndarray) -> np.ndarray:
+        return super().link_derivative(x)
 
 
 __all__ = [
