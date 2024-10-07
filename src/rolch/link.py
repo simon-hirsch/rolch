@@ -49,7 +49,7 @@ class IdentityLink(LinkFunction):
     def inverse(self, x: np.ndarray) -> np.ndarray:
         return x
 
-    def derivative(self, x: np.ndarray) -> np.ndarray:
+    def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return np.ones_like(x)
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
