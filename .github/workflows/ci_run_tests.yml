@@ -30,6 +30,8 @@ jobs:
             numpy-version: "1.23"
           - python-version: "3.13"
             numpy-version: "1.25"
+          - python-version: "3.13"
+            numpy-version: "1.26"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
