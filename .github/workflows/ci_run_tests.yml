@@ -41,6 +41,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m ensurepip --upgrade
+          python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           pip install numpy==${{ matrix.numpy-version }}
           pip install flake8 pytest
