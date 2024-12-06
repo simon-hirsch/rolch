@@ -140,7 +140,15 @@ def update_gram(
     Returns:
         np.ndarray: Updated Gramian Matrix.
     """
-    new_gram = (1 - forget) * gram + w * np.outer(X, X)
+    if X.shape[0] == 1:
+        # Single Step Update
+        new_gram = (1 - forget) * gram + w * np.outer(X, X)
+    else:
+        # Batch Update
+        batch_size = X.shape[0]
+        f = init_forget_vector(size=batch_size, forget=forget)
+        weights = np.expand_dims((w * f) ** 0.5, axis=-1)
+        new_gram = gram * (1 - forget) ** batch_size + (X * weights).T @ (X * weights)
     return new_gram
 
 
@@ -163,11 +171,31 @@ def update_y_gram(
     Returns:
         np.ndarray: Updated Gramian Matrix.
     """
-    new_gram = (1 - forget) * gram + w * np.outer(X, y)
+    if X.shape[0] == 1:
+        # Single Update
+        new_gram = (1 - forget) * gram + w * np.outer(X, y)
+    else:
+        # Batch update
+        batch_size = X.shape[0]
+        f = init_forget_vector(size=batch_size, forget=forget)
+        new_gram = gram * (1 - forget) ** batch_size + np.expand_dims(
+            ((X * np.expand_dims((w * f) ** 0.5, axis=-1)).T @ (y * (w * f) ** 0.5)), -1
+        )
     return new_gram
 
 
-@nb.njit()
+@nb.jit()
+def _update_inverted_gram(
+    gram: np.ndarray, X: np.ndarray, forget: float = 0, w: float = 1
+) -> np.ndarray:
+    """Update the inverted Gramian for one step"""
+    gamma = 1 - forget
+    new_gram = (1 / gamma) * (
+        gram - ((w * gram @ np.outer(X, X) @ gram) / (gamma + w * X @ gram @ X.T))
+    )
+    return new_gram
+
+
 def update_inverted_gram(
     gram: np.ndarray, X: np.ndarray, forget: float = 0, w: float = 1
 ) -> np.ndarray:
@@ -185,8 +213,14 @@ def update_inverted_gram(
     Returns:
         np.ndarray: Updated inverted Gramian matrix.
     """
-    gamma = 1 - forget
-    new_gram = (1 / gamma) * (
-        gram - ((w * gram @ np.outer(X, X) @ gram) / (gamma + w * X @ gram @ X.T))
-    )
+    if X.shape[0] == 1:
+        new_gram = _update_inverted_gram(gram, X, forget=forget, w=w)
+    else:
+        new_gram = _update_inverted_gram(
+            gram, X=np.expand_dims(X[0, :], 0), forget=forget, w=w[0]
+        )
+        for i in range(1, X.shape[0]):
+            new_gram = _update_inverted_gram(
+                gram=new_gram, X=np.expand_dims(X[i, :], 0), forget=forget, w=w[i]
+            )
     return new_gram
