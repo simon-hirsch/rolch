@@ -113,9 +113,18 @@ def init_inverted_gram(X: np.ndarray, w: np.ndarray, forget: float = 0) -> np.nd
 
     Returns:
         np.ndarray: Gramian Matrix.
+
+    Raises:
+        ValueError: If the matrix is not invertible (if rank(X.T @ X) < X.shape[0]).
+
     """
-    inv_gram = np.linalg.inv(init_gram(X=X, w=w, forget=forget))
-    return inv_gram
+    gram = init_gram(X=X, w=w, forget=forget)
+    rank = np.linalg.matrix_rank(gram)
+    if rank == gram.shape[0]:
+        inv_gram = np.linalg.inv(gram)
+        return inv_gram
+    else:
+        raise ValueError("Matrix is not invertible.")
 
 
 # TODO (SH): For some reason we switched the syntax in C++ here
