@@ -42,7 +42,7 @@ def test_inverse_rank_deficit(
         choice = np.random.choice(np.arange(D), d)
         XX = np.hstack((X, X[:, choice]))
         with pytest.raises(ValueError):
-            gram_start = init_gram(XX[:-1], w[:-1], forget)
+            gram_start = init_inverted_gram(XX[:-1], w[:-1], forget)
         
 
 @pytest.mark.parametrize("N", N)
