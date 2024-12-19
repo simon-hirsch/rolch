@@ -44,7 +44,7 @@ class OnlineLasso:
             else:
                 setattr(self, i, attribute)
 
-    def fit(self, y, X, sample_weight=None, beta_bounds=None):
+    def fit(self, X, y, sample_weight=None, beta_bounds=None):
         """Fit the regression model."""
         self.N = X.shape[0]
         self.J = X.shape[1]
@@ -102,7 +102,7 @@ class OnlineLasso:
         )
         self.beta = self.beta_path[best_ic, :]
 
-    def update(self, y, X, sample_weight=None):
+    def update(self, X, y, sample_weight=None):
         """Update the regression model"""
         self.N += X.shape[0]
         self.training_length = calculate_effective_training_length(self.forget, self.N)
