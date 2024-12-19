@@ -25,7 +25,21 @@ class OnlineLasso:
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
         estimation_kwargs: Optional[Dict[str, Union[int, float]]] = None,
-    ) -> None:
+    ):
+        """Online LASSO estimator class.
+
+        This class initializes the online linear regression fitted using LASSO. The estimator object provides three main methods,
+        ``estimator.fit(X, y)``, ``estimator.update(X, y)`` and ``estimator.predict(X)``.
+
+        Args:
+            forget (float, optional): Exponential discounting of old observations. Defaults to 0.
+            ic (Literal["aic", "bic", "hqc", "max"], optional): The information criteria for model selection. Defaults to "bic".
+            scale_inputs (bool, optional): Whether to scale the $X$ matrix. Defaults to True.
+            intercept_in_design (bool, optional): Whether the first column of $X$ corresponds to the intercept. In this case, the first beta will not be regularized. Defaults to True.
+            lambda_n (int, optional): Length of the regularization path. Defaults to 100.
+            lambda_eps (float, optional): The largest regularization is determined automatically such that the solution is fully regularized. The smallest regularization depends is taken as $\eps * \lambda^\max$. Defaults to 1e-4.
+            estimation_kwargs (Optional[Dict[str, Union[int, float]]], optional): Dictionary of additional arguments for the online coordinate descent algorithm. Defaults to None.
+        """
         self.ic = ic
         self.forget = forget
         self.lambda_n = lambda_n
@@ -51,7 +65,14 @@ class OnlineLasso:
         sample_weight: Optional[np.ndarray] = None,
         beta_bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
     ) -> None:
-        """Fit the regression model."""
+        """Initial fit of the online LASSO.
+
+        Args:
+            X (np.ndarray): The design matrix $X$.
+            y (np.ndarray): The response vector $y$.
+            sample_weight (Optional[np.ndarray], optional): The sample weights. Defaults to None.
+            beta_bounds (Optional[Tuple[np.ndarray, np.ndarray]], optional): Lower and upper bounds on the coefficient vector. `None` defaults to unconstrained coefficients.. Defaults to None.
+        """
         self.N = X.shape[0]
         self.J = X.shape[1]
 
@@ -114,7 +135,14 @@ class OnlineLasso:
         y: np.ndarray,
         sample_weight: Optional[np.ndarray] = None,
     ) -> None:
-        """Update the regression model"""
+        """Update the regression model.
+
+        Args:
+            X (np.ndarray): The new row of the design matrix $X$. Needs to be of shape 1 x J.
+            y (np.ndarray): The new observation of $y$.
+            sample_weight (Optional[np.ndarray], optional): The weight for the new observations. `None` implies all observations have weight 1. Defaults to None.
+        """
+
         self.N += X.shape[0]
         self.training_length = calculate_effective_training_length(self.forget, self.N)
         self.scaler.partial_fit(X)
@@ -159,13 +187,27 @@ class OnlineLasso:
         self.beta = self.beta_path[best_ic, :]
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Predict using the optimal IC selection."""
+        """Predict using the optimal IC selection.
+
+        Args:
+            X (np.ndarray): The design matrix $X$.
+
+        Returns:
+            np.ndarray: The predictions for the optimal IC.
+        """
         X_scaled = self.scaler.transform(X)
         prediction = X_scaled @ self.beta.T
         return prediction
 
     def predict_path(self, X: np.ndarray) -> np.ndarray:
-        """Predict the full LASSO path."""
+        """Predict the full regularization path.
+
+        Args:
+            X (np.ndarray): The design matrix $X$.
+
+        Returns:
+            np.ndarray: The predictions for the full path.
+        """
         X_scaled = self.scaler.transform(X)
         prediction = X_scaled @ self.beta_path.T
         return prediction
