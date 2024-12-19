@@ -37,7 +37,7 @@ class OnlineLasso:
             scale_inputs (bool, optional): Whether to scale the $X$ matrix. Defaults to True.
             intercept_in_design (bool, optional): Whether the first column of $X$ corresponds to the intercept. In this case, the first beta will not be regularized. Defaults to True.
             lambda_n (int, optional): Length of the regularization path. Defaults to 100.
-            lambda_eps (float, optional): The largest regularization is determined automatically such that the solution is fully regularized. The smallest regularization depends is taken as $\eps * \lambda^\max$. Defaults to 1e-4.
+            lambda_eps (float, optional): The largest regularization is determined automatically such that the solution is fully regularized. The smallest regularization is taken as $\\varepsilon  \\lambda^\max$ and we will use an exponential grid. Defaults to 1e-4.
             estimation_kwargs (Optional[Dict[str, Union[int, float]]], optional): Dictionary of additional arguments for the online coordinate descent algorithm. Defaults to None.
         """
         self.ic = ic
