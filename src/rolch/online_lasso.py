@@ -1,4 +1,4 @@
-from typing import Dict, Literal, Optional
+from typing import Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 
@@ -18,14 +18,14 @@ class OnlineLasso:
 
     def __init__(
         self,
-        forget=0,
+        forget: float = 0,
         ic: Literal["aic", "bic", "hqc", "max"] = "bic",
         scale_inputs: bool = True,
         intercept_in_design: bool = True,
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
-        estimation_kwargs: Optional[Dict] = None,
-    ):
+        estimation_kwargs: Optional[Dict[str, Union[int, float]]] = None,
+    ) -> None:
         self.ic = ic
         self.forget = forget
         self.lambda_n = lambda_n
@@ -44,7 +44,13 @@ class OnlineLasso:
             else:
                 setattr(self, i, attribute)
 
-    def fit(self, X, y, sample_weight=None, beta_bounds=None):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Optional[np.ndarray] = None,
+        beta_bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+    ) -> None:
         """Fit the regression model."""
         self.N = X.shape[0]
         self.J = X.shape[1]
@@ -102,7 +108,12 @@ class OnlineLasso:
         )
         self.beta = self.beta_path[best_ic, :]
 
-    def update(self, X, y, sample_weight=None):
+    def update(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Optional[np.ndarray] = None,
+    ) -> None:
         """Update the regression model"""
         self.N += X.shape[0]
         self.training_length = calculate_effective_training_length(self.forget, self.N)
@@ -147,13 +158,13 @@ class OnlineLasso:
         )
         self.beta = self.beta_path[best_ic, :]
 
-    def predict(self, X):
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """Predict using the optimal IC selection."""
         X_scaled = self.scaler.transform(X)
         prediction = X_scaled @ self.beta.T
         return prediction
 
-    def predict_path(self, X):
+    def predict_path(self, X: np.ndarray) -> np.ndarray:
         """Predict the full LASSO path."""
         X_scaled = self.scaler.transform(X)
         prediction = X_scaled @ self.beta_path.T
