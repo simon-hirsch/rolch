@@ -13,7 +13,6 @@ from rolch.gram import (
     update_inverted_gram,
     update_y_gram,
 )
-from rolch.utils import handle_param_dict
 
 if HAS_PANDAS:
     import pandas as pd
