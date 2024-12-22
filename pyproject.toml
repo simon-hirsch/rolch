@@ -14,14 +14,14 @@ authors = [
 ]
 description = "Methods for online / incremental estimation of distributional regression models"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10, <3.13" # Introduce hard cap on python due to numba
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies=[
-    "scipy >= 1.00, <2.0.0",
+    "scipy >= 1.00, <2.2.0",
     "numpy >= 1.2, <2.0.0",
     "numba >= 0.59.1, < 1.0.0"
 ]
