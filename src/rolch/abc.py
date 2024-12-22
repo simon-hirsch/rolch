@@ -38,8 +38,14 @@ class LinkFunction(ABC):
         raise NotImplementedError("Currently not implemented. Will be needed for GLMs")
 
     @abstractmethod
+    def link_second_derivative(self, x: np.ndarray) -> np.ndarray:
+        """Calculate the second derivative for the link function"""
+        raise NotImplementedError("Currently not implemented.")
+
+    @abstractmethod
     def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         """Calculate the first derivative for the inverse link function"""
+        raise NotImplementedError("Currently not implemented.")
 
 
 class Distribution(ABC):
