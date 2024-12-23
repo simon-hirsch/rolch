@@ -32,6 +32,9 @@ class LogLink(LinkFunction):
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
         return 1 / x
 
+    def link_second_derivative(self, x: np.ndarray) -> np.ndarray:
+        return -1 / x**2
+
 
 class IdentityLink(LinkFunction):
     """
@@ -54,6 +57,9 @@ class IdentityLink(LinkFunction):
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
         return np.ones_like(x)
+
+    def link_second_derivative(self, x: np.ndarray) -> np.ndarray:
+        return np.zeros_like(x)
 
 
 class LogShiftValueLink(LinkFunction):
@@ -81,7 +87,10 @@ class LogShiftValueLink(LinkFunction):
         return np.fmax(np.exp(np.fmin(x, EXP_UPPER_BOUND)), LOG_LOWER_BOUND)
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
-        return super().link_derivative(x)
+        return 1 / (x - self.value)
+
+    def link_second_derivative(self, x: np.ndarray) -> np.ndarray:
+        return -1 / (x - self.value) ** 2
 
 
 class LogShiftTwoLink(LogShiftValueLink):
@@ -120,6 +129,9 @@ class SqrtLink(LinkFunction):
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
         return 1 / (2 * np.sqrt(x))
 
+    def link_second_derivative(self, x) -> np.ndarray:
+        return -1 / (4 * x ** (3 / 2))
+
 
 class SqrtShiftValueLink(LinkFunction):
     """
@@ -144,7 +156,10 @@ class SqrtShiftValueLink(LinkFunction):
         return 2 * x
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
-        return super().link_derivative(x)
+        return 1 / (2 * np.sqrt(x - self.value))
+
+    def link_second_derivative(self, x) -> np.ndarray:
+        return -1 / (4 * (x - self.value) ** (3 / 2))
 
 
 class SqrtShiftTwoLink(SqrtShiftValueLink):
@@ -184,6 +199,9 @@ class LogIdentLink(LinkFunction):
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
         return super().link_derivative(x)
+
+    def link_second_derivative(self, x) -> np.ndarray:
+        return super().link_second_derivative(x)
 
 
 __all__ = [
