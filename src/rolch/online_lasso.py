@@ -1,4 +1,4 @@
-from typing import Dict, Literal, Optional
+from typing import Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 
@@ -18,34 +18,65 @@ class OnlineLasso:
 
     def __init__(
         self,
-        forget=0,
+        forget: float = 0,
         ic: Literal["aic", "bic", "hqc", "max"] = "bic",
         scale_inputs: bool = True,
         intercept_in_design: bool = True,
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
-        estimation_kwargs: Optional[Dict] = None,
+        start_value: str = "previous_fit",
+        tolerance: float = 1e-4,
+        max_iterations: int = 1000,
+        selection: Literal["cyclic", "random"] = "cyclic",
     ):
+        """Online LASSO estimator class.
+
+        This class initializes the online linear regression fitted using LASSO. The estimator object provides three main methods,
+        ``estimator.fit(X, y)``, ``estimator.update(X, y)`` and ``estimator.predict(X)``.
+
+        Args:
+            forget (float, optional): Exponential discounting of old observations. Defaults to 0.
+            ic (Literal["aic", "bic", "hqc", "max"], optional): The information criteria for model selection. Defaults to "bic".
+            scale_inputs (bool, optional): Whether to scale the $X$ matrix. Defaults to True.
+            intercept_in_design (bool, optional): Whether the first column of $X$ corresponds to the intercept. In this case, the first beta will not be regularized. Defaults to True.
+            lambda_n (int, optional): Length of the regularization path. Defaults to 100.
+            lambda_eps (float, optional): The largest regularization is determined automatically such that the solution is fully regularized. The smallest regularization is taken as $\\varepsilon  \\lambda^\max$ and we will use an exponential grid. Defaults to 1e-4.
+            start_value (str, optional): Whether to choose the previous fit or the previous regularization as start value. Defaults to 100.
+            tolerance (float, optional): Tolerance for breaking the CD. Defaults to 1e-4.
+            max_iterations (int, optional): Max number of CD iterations. Defaults to 1000.
+            selection (Literal["cyclic", "random"], optional): Whether to cycle through all coordinates in order or random. For large problems, random might increase convergence. Defaults to 100.
+        """
+
         self.ic = ic
         self.forget = forget
         self.lambda_n = lambda_n
         self.lambda_eps = lambda_eps
+
+        self.start_value = start_value
+        self.tolerance = tolerance
+        self.max_iterations = max_iterations
+        self.selection = selection
+
         self.intercept_in_design = intercept_in_design
         self.scaler = OnlineScaler(
             forget=forget, do_scale=scale_inputs, intercept=intercept_in_design
         )
-        self.intercept = True
 
-        for i, attribute in DEFAULT_ESTIMATOR_KWARGS.items():
-            if (estimation_kwargs is not None) and (i in estimation_kwargs.keys()):
-                setattr(self, i, estimation_kwargs[i])
-            elif i == "lambda_eps":
-                setattr(self, i, estimation_kwargs[i][0])
-            else:
-                setattr(self, i, attribute)
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Optional[np.ndarray] = None,
+        beta_bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+    ) -> None:
+        """Initial fit of the online LASSO.
 
-    def fit(self, y, X, sample_weight=None, beta_bounds=None):
-        """Fit the regression model."""
+        Args:
+            X (np.ndarray): The design matrix $X$.
+            y (np.ndarray): The response vector $y$.
+            sample_weight (Optional[np.ndarray], optional): The sample weights. Defaults to None.
+            beta_bounds (Optional[Tuple[np.ndarray, np.ndarray]], optional): Lower and upper bounds on the coefficient vector. `None` defaults to unconstrained coefficients.. Defaults to None.
+        """
         self.N = X.shape[0]
         self.J = X.shape[1]
 
@@ -102,16 +133,33 @@ class OnlineLasso:
         )
         self.beta = self.beta_path[best_ic, :]
 
-    def update(self, y, X, sample_weight=None):
-        """Update the regression model"""
+    def update(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Optional[np.ndarray] = None,
+    ) -> None:
+        """Update the regression model.
+
+        Args:
+            X (np.ndarray): The new row of the design matrix $X$. Needs to be of shape 1 x J.
+            y (np.ndarray): The new observation of $y$.
+            sample_weight (Optional[np.ndarray], optional): The weight for the new observations. `None` implies all observations have weight 1. Defaults to None.
+        """
+
         self.N += X.shape[0]
         self.training_length = calculate_effective_training_length(self.forget, self.N)
         self.scaler.partial_fit(X)
         X_scaled = self.scaler.transform(X)
 
-        self.x_gram = update_gram(self.x_gram, X_scaled, self.forget, sample_weight)
+        if sample_weight is None:
+            sample_weight = np.ones(y.shape[0])
+
+        self.x_gram = update_gram(
+            self.x_gram, X_scaled, forget=self.forget, w=sample_weight
+        )
         self.y_gram = update_y_gram(
-            self.y_gram, X_scaled, y, self.forget, sample_weight
+            self.y_gram, X_scaled, y, forget=self.forget, w=sample_weight
         )
 
         intercept = (
@@ -147,14 +195,28 @@ class OnlineLasso:
         )
         self.beta = self.beta_path[best_ic, :]
 
-    def predict(self, X):
-        """Predict using the optimal IC selection."""
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """Predict using the optimal IC selection.
+
+        Args:
+            X (np.ndarray): The design matrix $X$.
+
+        Returns:
+            np.ndarray: The predictions for the optimal IC.
+        """
         X_scaled = self.scaler.transform(X)
         prediction = X_scaled @ self.beta.T
         return prediction
 
-    def predict_path(self, X):
-        """Predict the full LASSO path."""
+    def predict_path(self, X: np.ndarray) -> np.ndarray:
+        """Predict the full regularization path.
+
+        Args:
+            X (np.ndarray): The design matrix $X$.
+
+        Returns:
+            np.ndarray: The predictions for the full path.
+        """
         X_scaled = self.scaler.transform(X)
         prediction = X_scaled @ self.beta_path.T
         return prediction
