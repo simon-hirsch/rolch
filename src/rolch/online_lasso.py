@@ -24,7 +24,10 @@ class OnlineLasso:
         intercept_in_design: bool = True,
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
-        estimation_kwargs: Optional[Dict[str, Union[int, float]]] = None,
+        start_value: str = "previous_fit",
+        tolerance: float = 1e-4,
+        max_iterations: int = 1000,
+        selection: Literal["cyclic", "random"] = "cyclic",
     ):
         """Online LASSO estimator class.
 
@@ -38,25 +41,26 @@ class OnlineLasso:
             intercept_in_design (bool, optional): Whether the first column of $X$ corresponds to the intercept. In this case, the first beta will not be regularized. Defaults to True.
             lambda_n (int, optional): Length of the regularization path. Defaults to 100.
             lambda_eps (float, optional): The largest regularization is determined automatically such that the solution is fully regularized. The smallest regularization is taken as $\\varepsilon  \\lambda^\max$ and we will use an exponential grid. Defaults to 1e-4.
-            estimation_kwargs (Optional[Dict[str, Union[int, float]]], optional): Dictionary of additional arguments for the online coordinate descent algorithm. Defaults to None.
+            start_value (str, optional): Whether to choose the previous fit or the previous regularization as start value. Defaults to 100.
+            tolerance (float, optional): Tolerance for breaking the CD. Defaults to 1e-4.
+            max_iterations (int, optional): Max number of CD iterations. Defaults to 1000.
+            selection (Literal["cyclic", "random"], optional): Whether to cycle through all coordinates in order or random. For large problems, random might increase convergence. Defaults to 100.
         """
+
         self.ic = ic
         self.forget = forget
         self.lambda_n = lambda_n
         self.lambda_eps = lambda_eps
+
+        self.start_value = start_value
+        self.tolerance = tolerance
+        self.max_iterations = max_iterations
+        self.selection = selection
+
         self.intercept_in_design = intercept_in_design
         self.scaler = OnlineScaler(
             forget=forget, do_scale=scale_inputs, intercept=intercept_in_design
         )
-        self.intercept = True
-
-        for i, attribute in DEFAULT_ESTIMATOR_KWARGS.items():
-            if (estimation_kwargs is not None) and (i in estimation_kwargs.keys()):
-                setattr(self, i, estimation_kwargs[i])
-            elif i == "lambda_eps":
-                setattr(self, i, estimation_kwargs[i][0])
-            else:
-                setattr(self, i, attribute)
 
     def fit(
         self,
@@ -148,9 +152,14 @@ class OnlineLasso:
         self.scaler.partial_fit(X)
         X_scaled = self.scaler.transform(X)
 
-        self.x_gram = update_gram(self.x_gram, X_scaled, self.forget, sample_weight)
+        if sample_weight is None:
+            sample_weight = np.ones(y.shape[0])
+
+        self.x_gram = update_gram(
+            self.x_gram, X_scaled, forget=self.forget, w=sample_weight
+        )
         self.y_gram = update_y_gram(
-            self.y_gram, X_scaled, y, self.forget, sample_weight
+            self.y_gram, X_scaled, y, forget=self.forget, w=sample_weight
         )
 
         intercept = (
