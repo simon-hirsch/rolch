@@ -23,8 +23,7 @@ from rolch.distributions import (
     DistributionNormal,
     DistributionT,
 )
-from rolch.estimators.online_gamlss import OnlineGamlss
-from rolch.estimators.online_lasso import OnlineLasso
+from rolch.estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
 from rolch.gram import (
     init_forget_vector,
     init_gram,
@@ -59,6 +58,7 @@ __version__ = version("rolch")
 __all__ = [
     "OnlineScaler",
     "OnlineGamlss",
+    "OnlineLinearModel",
     "OnlineLasso",
     "IdentityLink",
     "LogLink",
