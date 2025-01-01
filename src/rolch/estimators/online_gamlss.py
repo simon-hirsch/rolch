@@ -4,7 +4,8 @@ from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 
-from rolch.abc import Distribution, Estimator
+from rolch.abc import Estimator
+from rolch.base import Distribution
 from rolch.coordinate_descent import (
     DEFAULT_ESTIMATOR_KWARGS,
     online_coordinate_descent,

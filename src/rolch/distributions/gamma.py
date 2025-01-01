@@ -2,7 +2,7 @@ import numpy as np
 import scipy.special as spc
 import scipy.stats as st
 
-from rolch.abc import Distribution, LinkFunction
+from rolch.base import Distribution, LinkFunction
 from rolch.link import LogLink
 
 

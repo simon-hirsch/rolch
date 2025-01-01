@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats as st
 
-from rolch.abc import Distribution
+from rolch.base import Distribution
 from rolch.link import IdentityLink, LogLink
 
 

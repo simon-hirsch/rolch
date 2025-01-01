@@ -1,6 +1,6 @@
 import numpy as np
 
-from rolch.abc import LinkFunction
+from rolch.base import LinkFunction
 
 LOG_LOWER_BOUND = 1e-25
 EXP_UPPER_BOUND = 25
