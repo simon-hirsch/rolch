@@ -4,4 +4,9 @@
 
 ::: rolch.OnlineGamlss
 
+## Linear Models
+
+::: rolch.OnlineLinearModel
+
 ::: rolch.OnlineLasso
+
