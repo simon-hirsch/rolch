@@ -34,7 +34,7 @@ class EstimationMethod(ABC):
             raise NotImplementedError("Method does not support non-path-based fitting.")
 
     @abstractmethod
-    def update_beta(self, x_gram, y_gram, is_regularized):
+    def update_beta(self, x_gram, y_gram, beta, is_regularized):
         if self._path_based_method:
             raise NotImplementedError("Method does not support non-path-based fitting.")
 
