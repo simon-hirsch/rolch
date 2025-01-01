@@ -23,6 +23,8 @@ from rolch.distributions import (
     DistributionNormal,
     DistributionT,
 )
+from rolch.estimators.online_gamlss import OnlineGamlss
+from rolch.estimators.online_lasso import OnlineLasso
 from rolch.gram import (
     init_forget_vector,
     init_gram,
@@ -46,8 +48,6 @@ from rolch.link import (
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
 )
-from rolch.online_gamlss import OnlineGamlss
-from rolch.online_lasso import OnlineLasso
 from rolch.scaler import OnlineScaler
 from rolch.utils import (
     calculate_asymptotic_training_length,
