@@ -24,6 +24,18 @@ class OnlineLinearModel:
         method: EstimationMethod | str = "ols",
         ic: Literal["aic", "bic", "hqc", "max"] = "bic",
     ):
+        """The basic linear model for many different estimation techniques.
+
+        Args:
+            forget (float, optional): Exponential discounting of old observations. Defaults to 0.
+            scale_inputs (bool, optional): Whether to scale the $X$ matrix. Defaults to True.
+            fit_intercept (bool, optional): Whether to add an intercept in the estimation. Defaults to True.
+            regularize_intercept (bool, optional): Whether to regularize the intercept. Defaults to False.
+            method (EstimationMethod | str, optional): The estimation method. Can be a string or `EstimationMethod` class. Defaults to "ols".
+            ic (Literal["aic", "bic", "hqc", "max"], optional): The information criteria for model selection. Defaults to "bic".
+        Raises:
+            ValueError: Will raise if you try to regularize the intercept, but not fit it.
+        """
 
         self.forget = forget
         self.method = method
