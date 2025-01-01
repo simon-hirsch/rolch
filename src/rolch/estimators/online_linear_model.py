@@ -40,6 +40,10 @@ class OnlineLinearModel:
             warnings.warn(
                 "Note that you have passed a non-regularized estimation method but want to regularize the intercept. Are you sure?"
             )
+        if self.regularize_intercept and not self.fit_intercept:
+            raise ValueError(
+                "You want to regularize the intercept but not fit an intercept."
+            )
 
     def get_design_matrix(self, X: np.ndarray):
         if self.fit_intercept:
