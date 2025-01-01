@@ -148,7 +148,7 @@ class OnlineLinearModel:
             self.y_gram, X_scaled, y, forget=self.forget, weights=sample_weight
         )
         if self._method._path_based_method:
-            self._method.update_beta_path(
+            self.beta_path = self._method.update_beta_path(
                 x_gram=self.x_gram,
                 y_gram=self.y_gram,
                 beta_path=self.beta_path,
