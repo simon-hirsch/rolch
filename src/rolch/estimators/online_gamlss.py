@@ -1,33 +1,24 @@
 import copy
 import warnings
-from typing import Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 
-from rolch.abc import Estimator
+from rolch import HAS_PANDAS, HAS_POLARS
 from rolch.base import Distribution
-from rolch.coordinate_descent import (
-    DEFAULT_ESTIMATOR_KWARGS,
-    online_coordinate_descent,
-    online_coordinate_descent_path,
-)
-from rolch.gram import (
-    init_forget_vector,
-    init_gram,
-    init_inverted_gram,
-    init_y_gram,
-    update_inverted_gram,
-)
+from rolch.gram import init_forget_vector
 from rolch.information_criteria import select_best_model_by_information_criterion
+from rolch.methods import get_estimation_method
 from rolch.scaler import OnlineScaler
-from rolch.utils import (
-    calculate_effective_training_length,
-    handle_param_dict,
-    online_mean_update,
-)
+from rolch.utils import calculate_effective_training_length, online_mean_update
+
+if HAS_PANDAS:
+    import pandas as pd
+if HAS_POLARS:
+    import polars as pl
 
 
-class OnlineGamlss(Estimator):
+class OnlineGamlss:
     """The online/incremental GAMLSS class."""
 
     def __init__(
@@ -38,9 +29,8 @@ class OnlineGamlss(Estimator):
         method: str = "ols",
         scale_inputs: bool = True,
         fit_intercept: Union[bool, Dict] = True,
-        # Less important parameters
-        beta_bounds: Dict[int, Tuple] = None,
-        estimation_kwargs: Optional[Dict] = None,
+        regularize_intercept: Union[bool, Dict] = False,
+        ic: Union[str, Dict] = "aic",
         max_it_outer: int = 30,
         max_it_inner: int = 30,
         abs_tol_outer: float = 1e-3,
@@ -67,13 +57,17 @@ class OnlineGamlss(Estimator):
             rel_tol_inner (float, optional): Relative tolerance on the Deviance in the inner fit. Defaults to 1e-20.
             rss_tol_inner (float, optional): Tolerance for increasing RSS in the inner fit. Defaults to 1.5.
         """
-        super().__init__(
-            distribution=distribution,
-            equation=equation,
-            forget=forget,
-            fit_intercept=fit_intercept,
-            method=method,
-        )
+
+        self.distribution = distribution
+        self.equation = self._process_equation(equation)
+        self._process_attribute(fit_intercept, True, "fit_intercept")
+        self._process_attribute(regularize_intercept, False, "regularize_intercept")
+        self._process_attribute(forget, default=0.0, name="forget")
+        self._process_attribute(ic, "aic", name="ic")
+
+        # Get the estimation method
+        self._process_attribute(method, default="ols", name="method")
+        self._method = {p: get_estimation_method(m) for p, m in self.method.items()}
 
         self.scaler = OnlineScaler(do_scale=scale_inputs, intercept=False)
         self.do_scale = scale_inputs
@@ -87,21 +81,168 @@ class OnlineGamlss(Estimator):
         self.rel_tol_inner = rel_tol_inner
         self.rss_tol_inner = rss_tol_inner
 
-        # More specific args
-        if beta_bounds is not None and self.method != "lasso":
-            warnings.warn(
-                f"[{self.__class__.__name__}] "
-                f"Coefficient bounds can only be used if the estimation method == 'lasso'"
-            )
-        self.beta_bounds = {} if beta_bounds is None else beta_bounds
-        for i, attribute in DEFAULT_ESTIMATOR_KWARGS.items():
-            if (estimation_kwargs is not None) and (i in estimation_kwargs.keys()):
-                setattr(self, i, estimation_kwargs[i])
-            else:
-                setattr(self, i, attribute)
-
         self.is_regularized = {}
         self.rss = {}
+
+    def _process_attribute(self, attribute: Any, default: Any, name: str) -> None:
+        if isinstance(attribute, dict):
+            for p in range(self.distribution.n_params):
+                if p not in attribute.keys():
+                    warnings.warn(
+                        f"[{self.__class__.__name__}] "
+                        f"No value given for parameter {name} for distribution "
+                        f"parameter {p}. Setting default value {default}.",
+                        RuntimeWarning,
+                        stacklevel=1,
+                    )
+                    if isinstance(default, dict):
+                        attribute[p] = default[p]
+                    else:
+                        attribute[p] = default
+        else:
+            # No warning since we expect that floats/strings/ints are either the defaults
+            # Or given on purpose for all params the ame
+            attribute = {p: attribute for p in range(self.distribution.n_params)}
+
+        setattr(self, name, attribute)
+
+    def _process_equation(self, equation: Dict):
+        """Preprocess the equation object and validate inputs."""
+        if equation is None:
+            warnings.warn(
+                f"[{self.__class__.__name__}] "
+                "Equation is not specified. "
+                "Per default, will estimate the first distribution parameter by all covariates found in X. "
+                "All other distribution parameters will be estimated by an intercept."
+            )
+            equation = {
+                p: "all" if p == 0 else "intercept"
+                for p in range(self.distribution.n_params)
+            }
+        else:
+            for p in range(self.distribution.n_params):
+                # Check that all distribution parameters are in the equation.
+                # If not, add intercept.
+                if p not in equation.keys():
+                    warnings.warn(
+                        f"[{self.__class__.__name__}] "
+                        f"Distribution parameter {p} is not in equation. "
+                        f"The parameter will be estimated by an intercept."
+                    )
+                    equation[p] = "intercept"
+
+                if not (
+                    isinstance(equation[p], np.ndarray)
+                    or (equation[p] in ["all", "intercept"])
+                ):
+                    if not (
+                        isinstance(equation[p], list) and (HAS_PANDAS | HAS_POLARS)
+                    ):
+                        raise ValueError(
+                            "The equation should contain of either: \n"
+                            " - a numpy array of dtype int, \n"
+                            " - a list of string column names \n"
+                            " - or the strings 'all' or 'intercept' \n"
+                            f"you have passed {equation[p]} for the distribution parameter {p}."
+                        )
+
+        return equation
+
+    @staticmethod
+    def _make_intercept(n_observations: int) -> np.ndarray:
+        """Make the intercept series as N x 1 array.
+
+        Args:
+            y (np.ndarray): Response variable $Y$
+
+        Returns:
+            np.ndarray: Intercept array.
+        """
+        return np.ones((n_observations, 1))
+
+    def _is_intercept_only(self, param: int):
+        """Check in the equation whether we model only as intercept"""
+        if isinstance(self.equation[param], str):
+            return self.equation[param] == "intercept"
+        else:
+            return False
+
+    @staticmethod
+    def _add_lags(
+        y: np.ndarray, x: np.ndarray, lags: Union[int, np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Add lagged variables to the response and covariate matrices.
+
+        Args:
+            y (np.ndarray): Response variable.
+            x (np.ndarray): Covariate matrix.
+            lags (Union[int, np.ndarray]): Number of lags to add.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: Tuple containing the updated response and covariate matrices.
+        """
+        if lags == 0:
+            return y, x
+
+        if isinstance(lags, int):
+            lags = np.arange(1, lags + 1, dtype=int)
+
+        max_lag = np.max(lags)
+        lagged = np.stack([np.roll(y, i) for i in lags], axis=1)[max_lag:, :]
+        new_x = np.hstack((x, lagged))[max_lag:, :]
+        new_y = y[max_lag:]
+        return new_y, new_x
+
+    def get_J_from_equation(self, X: np.ndarray):
+        J = {}
+        for p in range(self.distribution.n_params):
+            if isinstance(self.equation[p], str):
+                if self.equation[p] == "all":
+                    J[p] = X.shape[1] + int(self.fit_intercept[p])
+                if self.equation[p] == "intercept":
+                    J[p] = 1
+            elif isinstance(self.equation[p], np.ndarray) or isinstance(
+                self.equation[p], list
+            ):
+                J[p] = len(self.equation[p]) + int(self.fit_intercept[p])
+            else:
+                raise ValueError("Something unexpected happened")
+        return J
+
+    def make_model_array(self, X: Union[np.ndarray], param: int):
+        eq = self.equation[param]
+        n = X.shape[0]
+
+        # TODO: Check difference between np.array and list more explicitly?
+        if isinstance(eq, str) and (eq == "intercept"):
+            if not self.fit_intercept[param]:
+                raise ValueError(
+                    "fit_intercept[param] is false, but equation says intercept."
+                )
+            out = self._make_intercept(n_observations=n)
+        else:
+            if isinstance(eq, str) and (eq == "all"):
+                if isinstance(X, np.ndarray):
+                    out = X
+                if HAS_PANDAS and isinstance(X, pd.DataFrame):
+                    out = X.to_numpy()
+                if HAS_POLARS and isinstance(X, pl.DataFrame):
+                    out = X.to_numpy()
+            elif isinstance(eq, np.ndarray) | isinstance(eq, list):
+                if isinstance(X, np.ndarray):
+                    out = X[:, eq]
+                if HAS_PANDAS and isinstance(X, pd.DataFrame):
+                    out = X.loc[:, eq]
+                if HAS_POLARS and isinstance(X, pl.DataFrame):
+                    out = X.select(eq).to_numpy()
+            else:
+                raise ValueError("Did not understand equation. Please check.")
+
+            if self.fit_intercept[param]:
+                out = np.hstack((self._make_intercept(n), out))
+
+        return out
 
     def fit_beta(
         self,
@@ -110,74 +251,32 @@ class OnlineGamlss(Estimator):
         X,
         y,
         w,
+        beta,
         beta_path,
         iteration_outer,
         iteration_inner,
+        is_regularized,
         param,
     ):
 
         f = init_forget_vector(self.forget[param], self.n_obs)
 
-        if self.method == "ols":
-            lambda_max = None
-            lambda_path = None
-            beta_path = None
-
-            beta = (x_gram @ y_gram).flatten()
+        if not self._method[param]._path_based_method:
+            beta = self._method[param].fit_beta(
+                x_gram=x_gram, y_gram=y_gram, is_regularized=is_regularized
+            )
+            # print(beta)
             residuals = y - X @ beta.T
-
             rss = np.sum(residuals**2 * w * f) / np.mean(w * f)
 
-        elif (self.method == "lasso") & self._is_intercept_only(param=param):
-            lambda_max = None
-            lambda_path = None
-            beta_path = None
-
-            beta = online_coordinate_descent(
-                x_gram,
-                y_gram.flatten(),
-                np.zeros(1),
-                regularization=0.0,
-                is_regularized=np.repeat(True, 1),
-                beta_lower_bound=np.repeat(-np.inf, 1),
-                beta_upper_bound=np.repeat(np.inf, 1),
-                selection="cyclic",
-                tolerance=self.tolerance,
-                max_iterations=self.max_iterations,
-            )[0]
-            residuals = y - X @ beta.T
-
-            rss = np.sum(residuals**2 * w * f, axis=0) / np.mean(w * f)
-
-        elif self.method == "lasso":
-            intercept = (
-                y_gram[~self.is_regularized[param]]
-                / np.diag(x_gram)[~self.is_regularized[param]]
+        else:
+            beta_path = self._method[param].fit_beta_path(
+                x_gram=x_gram, y_gram=y_gram, is_regularized=is_regularized
             )
-            lambda_max = np.max(np.abs(y_gram.flatten() - x_gram[0] * intercept))
-            lambda_path = np.geomspace(
-                lambda_max, lambda_max * self.lambda_eps[param], self.lambda_n
-            )
-            beta_path = online_coordinate_descent_path(
-                x_gram=x_gram,
-                y_gram=y_gram.flatten(),
-                beta_path=beta_path,
-                lambda_path=lambda_path,
-                is_regularized=self.is_regularized[param],
-                beta_lower_bound=self.beta_bounds[param][0],
-                beta_upper_bound=self.beta_bounds[param][1],
-                which_start_value="previous_lambda",
-                selection="cyclic",
-                tolerance=self.tolerance,
-                max_iterations=self.max_iterations,
-            )[0]
-
+            # print(beta_path)
             residuals = y[:, None] - X @ beta_path.T
-
-            rss = np.sum(residuals**2 * w[:, None] * f[:, None], axis=0) / np.mean(
-                w * f
-            )
-
+            rss = np.sum(residuals**2 * w[:, None] * f[:, None], axis=0)
+            rss = rss / np.mean(w * f)
             model_params_n = np.sum(~np.isclose(beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
                 self.n_training[param], model_params_n, rss, self.ic[param]
@@ -190,7 +289,7 @@ class OnlineGamlss(Estimator):
         self.residuals[param] = residuals
         self.weights[param] = w
 
-        return beta, beta_path, rss, lambda_max, lambda_path
+        return beta, beta_path, rss
 
     def update_beta(
         self,
@@ -199,7 +298,9 @@ class OnlineGamlss(Estimator):
         X,
         y,
         w,
+        beta,
         beta_path,
+        is_regularized,
         iteration_outer,
         iteration_inner,
         param,
@@ -209,68 +310,30 @@ class OnlineGamlss(Estimator):
             self.mean_of_weights[param], w, self.forget[param], self.n_obs
         )
 
-        if self.method == "ols":
-            # Not relevant for OLS
-            lambda_max = None
-            lambda_path = None
+        if not self._method[param]._path_based_method:
             beta_path = None
-
-            beta = (x_gram @ y_gram).flatten()
-            residuals = y - X @ beta.T
-
-            rss = (
-                (residuals**2).flatten() * w
-                + (1 - self.forget[param])
-                * (self.rss[param] * self.mean_of_weights[param])
-            ) / denom
-
-        elif (self.method == "lasso") & self._is_intercept_only(param=param):
-            lambda_max = None
-            lambda_path = None
-            beta_path = None
-
-            beta = online_coordinate_descent(
-                x_gram,
-                y_gram.flatten(),
-                np.zeros(1),
-                regularization=0.0,
-                is_regularized=np.repeat(True, 1),
-                beta_lower_bound=np.repeat(-np.inf, 1),
-                beta_upper_bound=np.repeat(np.inf, 1),
-                selection="cyclic",
-                tolerance=self.tolerance,
-                max_iterations=self.max_iterations,
-            )[0]
-            residuals = y - X @ beta.T
-
-            rss = (
-                (residuals**2).flatten() * w
-                + (1 - self.forget[param])
-                * (self.rss[param] * self.mean_of_weights[param])
-            ) / denom
-
-        elif self.method == "lasso":
-            intercept = (
-                y_gram[~self.is_regularized[param]]
-                / np.diag(x_gram)[~self.is_regularized[param]]
-            )
-            lambda_max = np.max(np.abs(y_gram.flatten() - x_gram[0] * intercept))
-            lambda_path = np.geomspace(
-                lambda_max, lambda_max * self.lambda_eps[param], self.lambda_n
-            )
-            beta_path = online_coordinate_descent_path(
+            beta = self._method[param].update_beta(
                 x_gram=x_gram,
-                y_gram=y_gram.flatten(),
+                y_gram=y_gram,
+                beta=beta,
+                is_regularized=is_regularized,
+            )
+            # print(beta)
+            residuals = y - X @ beta.T
+
+            rss = (
+                (residuals**2).flatten() * w
+                + (1 - self.forget[param])
+                * (self.rss[param] * self.mean_of_weights[param])
+            ) / denom
+
+        else:
+            beta_path = self._method[param].update_beta_path(
+                x_gram=x_gram,
+                y_gram=y_gram,
                 beta_path=beta_path,
-                lambda_path=lambda_path,
-                is_regularized=self.is_regularized[param],
-                beta_lower_bound=self.beta_bounds[param][0],
-                beta_upper_bound=self.beta_bounds[param][1],
-                which_start_value=self.start_value,
-                selection="cyclic",
-                tolerance=self.tolerance,
-                max_iterations=self.max_iterations,
-            )[0]
+                is_regularized=is_regularized,
+            )
             residuals = y - X @ beta_path.T
 
             rss = (
@@ -289,7 +352,7 @@ class OnlineGamlss(Estimator):
 
             beta = beta_path[best_ic, :]
 
-        return beta, beta_path, rss, lambda_max, lambda_path
+        return beta, beta_path, rss
 
     def _make_initial_fitted_values(self, y: np.ndarray) -> np.ndarray:
         fv = np.stack(
@@ -345,10 +408,6 @@ class OnlineGamlss(Estimator):
         self.X_dict = X_dict
         self.X_scaled = X_scaled
 
-        beta_path = {
-            p: np.empty((self.lambda_n, self.J[p]))
-            for p in range(self.distribution.n_params)
-        }
         rss = {i: 0 for i in range(self.distribution.n_params)}
 
         x_gram = {}
@@ -356,35 +415,25 @@ class OnlineGamlss(Estimator):
         self.weights = {}
         self.residuals = {}
 
-        ## Handle parameter bounds
-        if self.beta_bounds is None:
-            self.beta_bounds = {
-                p: (np.repeat(-np.inf, self.J[p]), np.repeat(np.inf, self.J[p]))
-                for p in range(self.distribution.n_params)
-            }
-        else:
-            for p in set(range(self.distribution.n_params)).difference(
-                set(self.beta_bounds.keys())
+        for p in range(self.distribution.n_params):
+            is_regularized = np.repeat(True, self.J[p])
+            if self.fit_intercept[p] and not (
+                self.regularize_intercept[p] | self._is_intercept_only(p)
             ):
-                self.beta_bounds[p] = (
-                    np.repeat(-np.inf, self.J[p]),
-                    np.repeat(np.inf, self.J[p]),
-                )
-
-        if self.method == "lasso":
-            for p in range(self.distribution.n_params):
-                is_regularized = np.repeat(True, self.J[p])
-                if self.fit_intercept[p]:
-                    is_regularized[0] = False
-                self.is_regularized[p] = is_regularized
+                is_regularized[0] = False
+            self.is_regularized[p] = is_regularized
 
         self.beta_iterations = {i: {} for i in range(self.distribution.n_params)}
-        self.beta_path_iterations = {i: {} for i in range(self.distribution.n_params)}
-
         self.beta_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
+
+        beta_path = {p: None for p in range(self.distribution.n_params)}
+        self.betas = {p: np.zeros(self.J[p]) for p in range(self.distribution.n_params)}
+
         self.beta_path_iterations_inner = {
             i: {} for i in range(self.distribution.n_params)
         }
+        self.beta_path_iterations = {i: {} for i in range(self.distribution.n_params)}
+
         self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
         self.ic_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
 
@@ -404,18 +453,15 @@ class OnlineGamlss(Estimator):
             self.x_gram,
             self.y_gram,
             self.rss,
-            self.lambda_path,
-            self.lambda_max,
         ) = self._outer_fit(
             X=X_dict,
             y=y,
             w=w,
             x_gram=x_gram,
             y_gram=y_gram,
+            betas=self.betas,
             beta_path=beta_path,
             rss=rss,
-            lambda_max={},
-            lambda_path={},
             fv=fv,
         )
 
@@ -470,9 +516,6 @@ class OnlineGamlss(Estimator):
         self.sum_of_weights_inner = copy.copy(self.sum_of_weights)
         self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
 
-        self.lambda_max_inner = copy.copy(self.lambda_max)
-        self.lambda_path_inner = copy.copy(self.lambda_path)
-
         (
             self.betas,
             self.beta_path,
@@ -497,9 +540,6 @@ class OnlineGamlss(Estimator):
         self.sum_of_weights = copy.copy(self.sum_of_weights_inner)
         self.mean_of_weights = copy.copy(self.mean_of_weights_inner)
         self.rss = copy.copy(self.rss_inner)
-
-        self.lambda_max = copy.copy(self.lambda_max_inner)
-        self.lambda_path = copy.copy(self.lambda_path_inner)
 
     def _outer_update(self, X, y, w, x_gram, y_gram, beta_path, rss, fv):
         ## for new observations:
@@ -543,8 +583,6 @@ class OnlineGamlss(Estimator):
                     self.x_gram_inner[param],
                     self.y_gram_inner[param],
                     self.rss_inner[param],
-                    self.lambda_max_inner[param],
-                    self.lambda_path_inner[param],
                 ) = self._inner_update(
                     beta=betas[param],
                     beta_path=beta_path[param],
@@ -559,8 +597,6 @@ class OnlineGamlss(Estimator):
                     param=param,
                     dv=global_dev,
                     betas=betas,
-                    lambda_max=self.lambda_max_inner,
-                    lambda_path=self.lambda_path_inner,
                 )
             # TODO (SH) Here?!
             # self.x_gram = x_gram
@@ -568,15 +604,12 @@ class OnlineGamlss(Estimator):
 
         return betas, beta_path, fv, global_dev, iteration_outer, x_gram, y_gram
 
-    def _outer_fit(
-        self, X, y, w, x_gram, y_gram, beta_path, rss, lambda_max, lambda_path, fv
-    ):
+    def _outer_fit(self, X, y, w, x_gram, y_gram, betas, beta_path, rss, fv):
+
         global_di = -2 * np.log(self.distribution.pdf(y, fv))
         global_dev = np.sum(w * global_di)
         global_dev_old = global_dev + 1000
         iteration_outer = 0
-
-        betas = {}
 
         while True:
             # Check relative congergence
@@ -612,11 +645,10 @@ class OnlineGamlss(Estimator):
                     x_gram,
                     y_gram,
                     rss[param],
-                    lambda_max[param],
-                    lambda_path[param],
                 ) = self._inner_fit(
                     X=X,
                     y=y,
+                    beta=betas[param],
                     beta_path=beta_path[param],
                     fv=fv,
                     w=w,
@@ -627,25 +659,12 @@ class OnlineGamlss(Estimator):
                     dv=global_dev,
                     betas=betas,
                     rss=rss,
-                    lambda_max=lambda_max,
-                    lambda_path=lambda_path,
                 )
 
                 self.beta_iterations[param][iteration_outer] = betas[param]
                 self.beta_path_iterations[param][iteration_outer] = beta_path[param]
 
-        return (
-            betas,
-            beta_path,
-            fv,
-            global_dev,
-            iteration_outer,
-            x_gram,
-            y_gram,
-            rss,
-            lambda_path,
-            lambda_max,
-        )
+        return (betas, beta_path, fv, global_dev, iteration_outer, x_gram, y_gram, rss)
 
     def _inner_fit(
         self,
@@ -654,6 +673,7 @@ class OnlineGamlss(Estimator):
         w,
         x_gram,
         y_gram,
+        beta,
         beta_path,
         fv,
         iteration_outer,
@@ -661,14 +681,10 @@ class OnlineGamlss(Estimator):
         rss,
         dv,
         betas,
-        lambda_max,
-        lambda_path,
     ):
         if iteration_outer > 1:
             beta = betas[param]
             rss = rss[param]
-            lambda_max = lambda_max[param]
-            lambda_path = lambda_path[param]
 
         di = -2 * np.log(self.distribution.pdf(y, fv))
         dv = np.sum(di * w)
@@ -706,25 +722,29 @@ class OnlineGamlss(Estimator):
             wv = eta + dl1dp1 / (dr * wt)
             ## Update the X and Y Gramian and the weight
 
-            x_gram[param] = self._make_x_gram(x=X[param], w=(w * wt), param=param)
-            y_gram[param] = self._make_y_gram(x=X[param], y=wv, w=(w * wt), param=param)
-            beta_new, beta_path_new, rss_new, lambda_max_new, lambda_path_new = (
-                self.fit_beta(
-                    x_gram[param],
-                    y_gram[param],
-                    X[param],
-                    wv,
-                    wt,
-                    beta_path,
-                    param=param,
-                    iteration_inner=iteration_inner,
-                    iteration_outer=iteration_outer,
-                )
+            x_gram[param] = self._method[param].init_x_gram(
+                X=X[param], weights=(w * wt), forget=self.forget[param]
+            )
+            y_gram[param] = self._method[param].init_y_gram(
+                X=X[param], y=wv, weights=(w * wt), forget=self.forget[param]
+            )
+            beta_new, beta_path_new, rss_new = self.fit_beta(
+                x_gram[param],
+                y_gram[param],
+                X[param],
+                wv,
+                wt,
+                beta=beta,
+                beta_path=beta_path,
+                param=param,
+                iteration_inner=iteration_inner,
+                iteration_outer=iteration_outer,
+                is_regularized=self.is_regularized[param],
             )
 
             if iteration_inner > 1 or iteration_outer > 1:
 
-                if self.method == "ols" or self._is_intercept_only(param=param):
+                if self.method[param] == "ols":
                     if rss_new > (self.rss_tol_inner * rss):
                         break
                 else:
@@ -737,8 +757,6 @@ class OnlineGamlss(Estimator):
             beta = beta_new
             beta_path = beta_path_new
             rss = rss_new
-            lambda_max = lambda_max_new
-            lambda_path = lambda_path_new
 
             eta = X[param] @ beta.T
             fv[:, param] = self.distribution.link_inverse(eta, param=param)
@@ -756,7 +774,7 @@ class OnlineGamlss(Estimator):
                 iteration_inner
             ] = beta_path
 
-        return (fv, dv, beta, beta_path, x_gram, y_gram, rss, lambda_max, lambda_path)
+        return (fv, dv, beta, beta_path, x_gram, y_gram, rss)
 
     def _inner_update(
         self,
@@ -773,14 +791,10 @@ class OnlineGamlss(Estimator):
         dv,
         param,
         betas,
-        lambda_max,
-        lambda_path,
     ):
 
         beta = betas[param]
         rss = rss[param]
-        lambda_max = lambda_max[param]
-        lambda_path = lambda_path[param]
 
         ## TODO REFACTOR: Will be returned if we converge in the first iteration
         ## Will be overwritten if don't converge in the first iteration
@@ -815,27 +829,34 @@ class OnlineGamlss(Estimator):
             wt = np.clip(wt, -1e10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
 
-            x_gram_it = self._update_x_gram(
-                gram=x_gram[param], x=X[param], w=float(w * wt), param=param
+            x_gram_it = self._method[param].update_x_gram(
+                gram=x_gram[param],
+                X=X[param],
+                weights=(w * wt),
+                forget=self.forget[param],
             )
-            y_gram_it = self._update_y_gram(
-                gram=y_gram[param], x=X[param], y=wv, w=float(w * wt), param=param
+            y_gram_it = self._method[param].update_y_gram(
+                gram=y_gram[param],
+                X=X[param],
+                y=wv,
+                weights=(w * wt),
+                forget=self.forget[param],
             )
-            beta_new, beta_path_new, rss_new, lambda_max_new, lambda_path_new = (
-                self.update_beta(
-                    x_gram_it,
-                    y_gram_it,
-                    X[param],
-                    y=wv,
-                    w=wt,
-                    beta_path=beta_path,
-                    iteration_inner=iteration_inner,
-                    iteration_outer=iteration_outer,
-                    param=param,
-                )
+            beta_new, beta_path_new, rss_new = self.update_beta(
+                x_gram_it,
+                y_gram_it,
+                X[param],
+                y=wv,
+                w=wt,
+                beta=beta,
+                beta_path=beta_path,
+                iteration_inner=iteration_inner,
+                iteration_outer=iteration_outer,
+                param=param,
+                is_regularized=self.is_regularized[param],
             )
 
-            if self.method == "ols" or self._is_intercept_only(param=param):
+            if self.method[param] == "ols":
                 if rss_new > (self.rss_tol_inner * rss):
                     break
             else:
@@ -848,8 +869,6 @@ class OnlineGamlss(Estimator):
             beta = beta_new
             beta_path = beta_path_new
             rss = rss_new
-            lambda_max = lambda_max_new
-            lambda_path = lambda_path_new
 
             eta = X[param] @ beta.T
             fv[:, param] = self.distribution.link_inverse(eta, param=param)
@@ -866,17 +885,7 @@ class OnlineGamlss(Estimator):
             di = -2 * np.log(self.distribution.pdf(y, fv))
             dv = np.sum(di * w) + (1 - self.forget[0]) * self.global_dev
 
-        return (
-            fv,
-            dv,
-            beta,
-            beta_path,
-            x_gram_it,
-            y_gram_it,
-            rss,
-            lambda_max,
-            lambda_path,
-        )
+        return (fv, dv, beta, beta_path, x_gram_it, y_gram_it, rss)
 
     def predict(
         self,
