@@ -745,7 +745,6 @@ class OnlineGamlss:
             iteration_inner += 1
             eta = self.distribution.link_function(self.fv[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
-            # mu, sigma, nu vs. self.fv?
             dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
             dl2dp2 = self.distribution.dl2_dp2(y, self.fv, param=param)
             wt = -(dl2dp2 / (dr * dr))
