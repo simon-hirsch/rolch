@@ -295,8 +295,6 @@ class OnlineGamlss:
         X,
         y,
         w,
-        beta,
-        beta_path,
         iteration_outer,
         iteration_inner,
         param,
@@ -311,7 +309,7 @@ class OnlineGamlss:
             beta = self._method[param].update_beta(
                 x_gram=self.x_gram_inner[param],
                 y_gram=self.y_gram_inner[param],
-                beta=beta,
+                beta=self.betas[param],
                 is_regularized=self.is_regularized[param],
             )
             # print(beta)
@@ -327,7 +325,7 @@ class OnlineGamlss:
             beta_path = self._method[param].update_beta_path(
                 x_gram=self.x_gram_inner[param],
                 y_gram=self.y_gram_inner[param],
-                beta_path=beta_path,
+                beta_path=self.beta_path[param],
                 is_regularized=self.is_regularized[param],
             )
             residuals = y - X @ beta_path.T
@@ -802,8 +800,6 @@ class OnlineGamlss:
                 X[param],
                 y=wv,
                 w=wt,
-                beta=beta,
-                beta_path=beta_path,
                 iteration_inner=iteration_inner,
                 iteration_outer=iteration_outer,
                 param=param,
