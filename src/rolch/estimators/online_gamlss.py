@@ -409,8 +409,8 @@ class OnlineGamlss:
 
         rss = {i: 0 for i in range(self.distribution.n_params)}
 
-        x_gram = {}
-        y_gram = {}
+        self.x_gram = {}
+        self.y_gram = {}
         self.weights = {}
         self.residuals = {}
 
