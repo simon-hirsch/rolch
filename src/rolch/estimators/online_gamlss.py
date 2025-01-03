@@ -560,7 +560,6 @@ class OnlineGamlss:
                     iteration_outer=iteration_outer,
                     param=param,
                     dv=global_dev,
-                    betas=betas,
                 )
 
         return global_dev, iteration_outer
@@ -725,10 +724,8 @@ class OnlineGamlss:
         iteration_outer,
         dv,
         param,
-        betas,
     ):
 
-        beta = betas[param]
         rss = rss[param]
 
         di = -2 * np.log(self.distribution.pdf(y, self.fv))
