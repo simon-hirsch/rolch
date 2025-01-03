@@ -348,14 +348,14 @@ class OnlineGamlss:
         return beta, beta_path, rss
 
     def _make_initial_fitted_values(self, y: np.ndarray) -> np.ndarray:
-        fv = np.stack(
+        out = np.stack(
             [
                 self.distribution.initial_values(y, param=i)
                 for i in range(self.distribution.n_params)
             ],
             axis=1,
         )
-        return fv
+        return out
 
     def fit(
         self,
@@ -388,7 +388,7 @@ class OnlineGamlss:
         else:
             w = np.ones(y.shape[0])
 
-        fv = self._make_initial_fitted_values(y=y)
+        self.fv = self._make_initial_fitted_values(y=y)
         self.J = self.get_J_from_equation(X=X)
 
         # Fit scaler and transform
@@ -431,14 +431,12 @@ class OnlineGamlss:
         self.ic_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
 
         # We need to track the sum of weights for each
-        # distribution parameter for
-        # model selection online
+        # distribution parameter for online model selection
         self.sum_of_weights = {}
         self.mean_of_weights = {}
 
         # TODO: Refactor this. Almost everything can be written into class attributes during fit!
         (
-            self.fv,
             self.global_dev,
             self.iteration_outer,
             self.rss,
@@ -447,7 +445,6 @@ class OnlineGamlss:
             y=y,
             w=w,
             rss=rss,
-            fv=fv,
         )
         print("Finished")
 
@@ -483,7 +480,7 @@ class OnlineGamlss:
 
         # More efficient to do this?!
         # Since we get better start values
-        fv = self.predict(X, what="response")
+        self.fv = self.predict(X, what="response")
 
         self.scaler.partial_fit(X)
         X_scaled = self.scaler.transform(X)
@@ -503,18 +500,13 @@ class OnlineGamlss:
         self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
 
         (
-            self.betas,
-            self.beta_path,
-            self.fv,
             self.global_dev,
             self.iteration_outer,
         ) = self._outer_update(
             X=X_dict,
             y=y,
             w=w,
-            fv=fv,
             rss=self.rss,
-            beta_path=self.beta_path,
         )
 
         self.x_gram = copy.copy(self.x_gram_inner)
@@ -523,9 +515,9 @@ class OnlineGamlss:
         self.mean_of_weights = copy.copy(self.mean_of_weights_inner)
         self.rss = copy.copy(self.rss_inner)
 
-    def _outer_update(self, X, y, w, beta_path, rss, fv):
+    def _outer_update(self, X, y, w, rss):
         ## for new observations:
-        global_di = -2 * np.log(self.distribution.pdf(y, fv))
+        global_di = -2 * np.log(self.distribution.pdf(y, self.fv))
         global_dev = (1 - self.forget[0]) * self.global_dev + global_di
         global_dev_old = global_dev + 1000
         iteration_outer = 0
@@ -558,17 +550,11 @@ class OnlineGamlss:
                 self.ic_iterations_inner[param][iteration_outer] = {}
 
                 (
-                    fv,
                     global_dev,
-                    betas[param],
-                    beta_path[param],
                     self.rss_inner[param],
                 ) = self._inner_update(
-                    beta=betas[param],
-                    beta_path=beta_path[param],
                     X=X,
                     y=y,
-                    fv=fv,
                     w=w,
                     rss=rss,
                     iteration_outer=iteration_outer,
@@ -580,11 +566,11 @@ class OnlineGamlss:
             # self.x_gram = x_gram
             # self.y_gram = y_gram
 
-        return betas, beta_path, fv, global_dev, iteration_outer
+        return global_dev, iteration_outer
 
-    def _outer_fit(self, X, y, w, rss, fv):
+    def _outer_fit(self, X, y, w, rss):
 
-        global_di = -2 * np.log(self.distribution.pdf(y, fv))
+        global_di = -2 * np.log(self.distribution.pdf(y, self.fv))
         global_dev = np.sum(w * global_di)
         global_dev_old = global_dev + 1000
         iteration_outer = 0
@@ -616,13 +602,11 @@ class OnlineGamlss:
                 self.ic_iterations_inner[param][iteration_outer] = {}
 
                 (
-                    fv,
                     global_dev,
                     rss[param],
                 ) = self._inner_fit(
                     X=X,
                     y=y,
-                    fv=fv,
                     w=w,
                     param=param,
                     iteration_outer=iteration_outer,
@@ -635,14 +619,13 @@ class OnlineGamlss:
                     param
                 ]
 
-        return (fv, global_dev, iteration_outer, rss)
+        return (global_dev, iteration_outer, rss)
 
     def _inner_fit(
         self,
         X,
         y,
         w,
-        fv,
         iteration_outer,
         param,
         rss,
@@ -651,7 +634,7 @@ class OnlineGamlss:
         if iteration_outer > 1:
             rss = rss[param]
 
-        di = -2 * np.log(self.distribution.pdf(y, fv))
+        di = -2 * np.log(self.distribution.pdf(y, self.fv))
         dv = np.sum(di * w)
         olddv = dv + 1
 
@@ -676,10 +659,10 @@ class OnlineGamlss:
                 break
 
             iteration_inner += 1
-            eta = self.distribution.link_function(fv[:, param], param=param)
+            eta = self.distribution.link_function(self.fv[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
-            dl1dp1 = self.distribution.dl1_dp1(y, fv, param=param)
-            dl2dp2 = self.distribution.dl2_dp2(y, fv, param=param)
+            dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
+            dl2dp2 = self.distribution.dl2_dp2(y, self.fv, param=param)
             wt = -(dl2dp2 / (dr * dr))
             wt = np.clip(wt, 1e-10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
@@ -717,9 +700,9 @@ class OnlineGamlss:
             rss = rss_new
 
             eta = X[param] @ self.betas[param].T
-            fv[:, param] = self.distribution.link_inverse(eta, param=param)
+            self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
 
-            di = -2 * np.log(self.distribution.pdf(y, fv))
+            di = -2 * np.log(self.distribution.pdf(y, self.fv))
             olddv = dv
             dv = np.sum(di * w)
 
@@ -734,17 +717,14 @@ class OnlineGamlss:
                 iteration_inner
             ] = beta_path_new
 
-        return (fv, dv, rss)
+        return (dv, rss)
 
     def _inner_update(
         self,
-        beta,
-        beta_path,
         X,
         y,
         w,
         rss,
-        fv,
         iteration_outer,
         dv,
         param,
@@ -754,7 +734,7 @@ class OnlineGamlss:
         beta = betas[param]
         rss = rss[param]
 
-        di = -2 * np.log(self.distribution.pdf(y, fv))
+        di = -2 * np.log(self.distribution.pdf(y, self.fv))
         dv = (1 - self.forget[0]) * self.global_dev + np.sum(di * w)
         olddv = dv + 1
 
@@ -773,11 +753,11 @@ class OnlineGamlss:
                 break
 
             iteration_inner += 1
-            eta = self.distribution.link_function(fv[:, param], param=param)
+            eta = self.distribution.link_function(self.fv[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
-            # mu, sigma, nu vs. fv?
-            dl1dp1 = self.distribution.dl1_dp1(y, fv, param=param)
-            dl2dp2 = self.distribution.dl2_dp2(y, fv, param=param)
+            # mu, sigma, nu vs. self.fv?
+            dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
+            dl2dp2 = self.distribution.dl2_dp2(y, self.fv, param=param)
             wt = -(dl2dp2 / (dr * dr))
             wt = np.clip(wt, -1e10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
@@ -803,7 +783,7 @@ class OnlineGamlss:
                 iteration_outer=iteration_outer,
                 param=param,
             )
-
+            # Check if the local RSS are decreasing
             if self.method[param] == "ols":
                 if rss_new > (self.rss_tol_inner * rss):
                     break
@@ -814,12 +794,12 @@ class OnlineGamlss:
                 if rss_new[ic_idx] > (self.rss_tol_inner * rss[ic_idx]):
                     break
 
-            beta = beta_new
-            beta_path = beta_path_new
+            self.betas[param] = beta_new
+            self.beta_path[param] = beta_path_new
             rss = rss_new
 
-            eta = X[param] @ beta.T
-            fv[:, param] = self.distribution.link_inverse(eta, param=param)
+            eta = X[param] @ self.betas[param].T
+            self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
 
             self.sum_of_weights_inner[param] = (
                 np.sum(w * wt) + (1 - self.forget[param]) * self.sum_of_weights[param]
@@ -830,10 +810,10 @@ class OnlineGamlss:
 
             olddv = dv
 
-            di = -2 * np.log(self.distribution.pdf(y, fv))
+            di = -2 * np.log(self.distribution.pdf(y, self.fv))
             dv = np.sum(di * w) + (1 - self.forget[0]) * self.global_dev
 
-        return (fv, dv, beta, beta_path, rss)
+        return (dv, rss)
 
     def predict(
         self,
