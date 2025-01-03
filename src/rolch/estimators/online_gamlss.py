@@ -312,7 +312,6 @@ class OnlineGamlss:
                 beta=self.betas[param],
                 is_regularized=self.is_regularized[param],
             )
-            # print(beta)
             residuals = y - X @ beta.T
 
             rss = (
