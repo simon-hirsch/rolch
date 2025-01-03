@@ -38,6 +38,8 @@ class OnlineGamlss:
         rel_tol_outer: float = 1e-5,
         rel_tol_inner: float = 1e-5,
         rss_tol_inner: float = 1.5,
+        verbose: int = 0,
+        debug: bool = False,
     ):
         """Initialise the online GAMLSS Model
 
@@ -49,7 +51,7 @@ class OnlineGamlss:
             scale_inputs (Optional[Dict], optional): Whether to scale the input matrices. Defaults to True
             beta_bounds (Dict[int, Tuple]): Dictionary of bounds for the different parameters.
             estimation_kwargs (Optional[Dict], optional): Dictionary of estimation method kwargs. Defaults to None.
-            max_it_outer (int, optional): Maximum outer iterations for the RS algorithm. Defaults to 30.
+            max_it_outer (int, optional): Maximum Outer iterations for the RS algorithm. Defaults to 30.
             max_it_inner (int, optional): Maximum inner iterations for the RS algorithm. Defaults to 30.
             abs_tol_outer (float, optional): Absolute tolerance on the Deviance in the outer fit. Defaults to 1e-3.
             abs_tol_inner (float, optional): Absolute tolerance on the Deviance in the inner fit. Defaults to 1e-3.
@@ -81,6 +83,9 @@ class OnlineGamlss:
         self.rel_tol_inner = rel_tol_inner
         self.rss_tol_inner = rss_tol_inner
 
+        self.debug = debug
+        self.verbose = verbose
+
         self.is_regularized = {}
 
     @property
@@ -100,6 +105,10 @@ class OnlineGamlss:
     @property
     def coef_path_(self):
         return self.beta_path
+
+    def _print_message(self, message, level=0):
+        if level <= self.verbose:
+            print(f"[{self.__class__.__name__}]", message)
 
     def _process_attribute(self, attribute: Any, default: Any, name: str) -> None:
         if isinstance(attribute, dict):
@@ -415,8 +424,10 @@ class OnlineGamlss:
             p: self.make_model_array(X_scaled, param=p)
             for p in range(self.distribution.n_params)
         }
-        self.X_dict = X_dict
-        self.X_scaled = X_scaled
+
+        if self.debug:
+            self.X_dict = X_dict
+            self.X_scaled = X_scaled
 
         self.rss = {i: 0 for i in range(self.distribution.n_params)}
 
@@ -452,7 +463,8 @@ class OnlineGamlss:
         self.sum_of_weights = {}
         self.mean_of_weights = {}
 
-        # TODO: Refactor this. Almost everything can be written into class attributes during fit!
+        message = "Starting fit call"
+        self._print_message(message=message, level=1)
         (
             self.global_dev,
             self.iteration_outer,
@@ -461,7 +473,8 @@ class OnlineGamlss:
             y=y,
             w=w,
         )
-        print("Finished")
+        message = "Finished fit call"
+        self._print_message(message=message, level=1)
 
     def update(
         self,
@@ -493,8 +506,6 @@ class OnlineGamlss:
             for p in range(self.distribution.n_params)
         }
 
-        # More efficient to do this?!
-        # Since we get better start values
         self.fv = self.predict(X, what="response")
 
         self.scaler.partial_fit(X)
@@ -503,6 +514,10 @@ class OnlineGamlss:
             p: self.make_model_array(X_scaled, param=p)
             for p in range(self.distribution.n_params)
         }
+
+        if self.debug:
+            self.X_dict = X_dict
+            self.X_scaled = X_scaled
 
         ## Reset rss and iterations
         self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
@@ -514,6 +529,8 @@ class OnlineGamlss:
         self.sum_of_weights_inner = copy.copy(self.sum_of_weights)
         self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
 
+        message = "Starting update call"
+        self._print_message(message=message, level=1)
         (
             self.global_dev,
             self.iteration_outer,
@@ -527,6 +544,8 @@ class OnlineGamlss:
         self.y_gram = copy.copy(self.y_gram_inner)
         self.sum_of_weights = copy.copy(self.sum_of_weights_inner)
         self.mean_of_weights = copy.copy(self.mean_of_weights_inner)
+        message = "Finished update call"
+        self._print_message(message=message, level=1)
 
     def _outer_update(self, X, y, w):
         ## for new observations:
@@ -568,6 +587,13 @@ class OnlineGamlss:
                     param=param,
                     dv=global_dev,
                 )
+                message = f"Outer iteration {iteration_outer}: Fitted param {param}: Current LL {global_dev}"
+                self._print_message(message=message, level=2)
+
+            message = (
+                f"Outer iteration {iteration_outer}: Finished: current LL {global_dev}"
+            )
+            self._print_message(message=message, level=1)
 
         return global_dev, iteration_outer
 
@@ -618,6 +644,14 @@ class OnlineGamlss:
                     param
                 ]
 
+                message = f"Outer iteration {iteration_outer}: Fitted param {param}: current LL {global_dev}"
+                self._print_message(message=message, level=2)
+
+            message = (
+                f"Outer iteration {iteration_outer}: Finished. Current LL {global_dev}"
+            )
+            self._print_message(message=message, level=1)
+
         return (global_dev, iteration_outer)
 
     def _inner_fit(
@@ -641,8 +675,8 @@ class OnlineGamlss:
                 break
 
             # We allow for breaking in the inner iteration in
-            # - the 1st outer iteration (iteration_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
-            # - the 2nd outer iteration (iteration_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
+            # - the 1st Outer iteration (iteration_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
+            # - the 2nd Outer iteration (iteration_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
 
             if (abs(olddv - dv) <= self.abs_tol_inner) & (
                 (iteration_inner + iteration_outer) >= 2
@@ -712,6 +746,9 @@ class OnlineGamlss:
             self.beta_path_iterations_inner[param][iteration_outer][
                 iteration_inner
             ] = beta_path_new
+
+            message = f"Outer iteration {iteration_outer}: Fitting Parameter {param}: Inner iteration {iteration_inner}: Current LL {dv}"
+            self._print_message(message=message, level=3)
 
         return dv
 
@@ -801,6 +838,9 @@ class OnlineGamlss:
 
             di = -2 * np.log(self.distribution.pdf(y, self.fv))
             dv = np.sum(di * w) + (1 - self.forget[0]) * self.global_dev
+
+            message = f"Outer iteration {iteration_outer}: Fitting Parameter {param}: Inner iteration {iteration_inner}: Current LL {dv}"
+            self._print_message(message=message, level=3)
 
         return dv
 
