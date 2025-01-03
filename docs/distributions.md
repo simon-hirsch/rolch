@@ -9,7 +9,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ## Base Class
 
-::: rolch.abc.Distribution
+::: rolch.Distribution
 
 ## API Reference
 
