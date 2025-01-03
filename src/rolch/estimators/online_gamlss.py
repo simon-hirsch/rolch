@@ -562,9 +562,6 @@ class OnlineGamlss:
                     dv=global_dev,
                     betas=betas,
                 )
-            # TODO (SH) Here?!
-            # self.x_gram = x_gram
-            # self.y_gram = y_gram
 
         return global_dev, iteration_outer
 
