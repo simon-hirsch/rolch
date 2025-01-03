@@ -85,6 +85,11 @@ class OnlineGamlss:
 
     @staticmethod
     def betas(self):
+        warnings.warn(
+            "OnlineGamlss.betas is depreciated in favour of beta to be consistent with beta_path. "
+            "Alternatively, use OnlineGamlss.coef_ as in sklearn.",
+            DeprecationWarning,
+        )
         return self.beta
 
     @staticmethod
