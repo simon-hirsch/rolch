@@ -90,7 +90,8 @@ class OnlineLinearModel:
         X_scaled = self.scaler.transform(design)
 
         self.is_regularized = np.repeat(True, self.J)
-        self.is_regularized[0] = self.regularize_intercept
+        if self.fit_intercept:
+            self.is_regularized[0] = self.regularize_intercept
 
         self.x_gram = self._method.init_x_gram(
             X_scaled, weights=sample_weight, forget=self.forget
