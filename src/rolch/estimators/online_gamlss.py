@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import numpy as np
 
 from rolch import HAS_PANDAS, HAS_POLARS
-from rolch.base import Distribution
+from rolch.base import Distribution, EstimationMethod
 from rolch.gram import init_forget_vector
 from rolch.information_criteria import select_best_model_by_information_criterion
 from rolch.methods import get_estimation_method
@@ -25,11 +25,13 @@ class OnlineGamlss:
         self,
         distribution: Distribution,
         equation: Dict,
-        forget: float = 0.0,
-        method: str = "ols",
+        forget: float | Dict[int, float] = 0.0,
+        method: Union[
+            str, EstimationMethod, Dict[int, str], Dict[int, EstimationMethod]
+        ] = "ols",
         scale_inputs: bool = True,
-        fit_intercept: Union[bool, Dict] = True,
-        regularize_intercept: Union[bool, Dict] = False,
+        fit_intercept: Union[bool, Dict[int, bool]] = True,
+        regularize_intercept: Union[bool, Dict[int, bool]] = False,
         ic: Union[str, Dict] = "aic",
         max_it_outer: int = 30,
         max_it_inner: int = 30,
@@ -41,25 +43,36 @@ class OnlineGamlss:
         verbose: int = 0,
         debug: bool = False,
     ):
-        """Initialise the online GAMLSS Model
+        """The `OnlineGamlss()` provides the fit, update and predict methods for linear parametric GAMLSS models.
+
+        For a response variable $Y$ which is distributed according to the distribution $\mathcal{F}(\\theta)$
+        with the distribution parameters $\\theta$, we model:
+
+        $$g_k(\\theta_k) = \\eta_k = X_k\\beta_k$$
+
+        where $g_k(\cdot)$ is a link function, which ensures that the predicted distribution parameters are in a
+        sensible range (we don't want, e.g. negative standard deviations), and $\eta_k$ is the predictor (on the
+        space of the link function). The model is fitted using iterative re-weighted least squares (IRLS).
 
         Args:
-            distribution (rolch.Distribution): The parametric distribution
+            distribution (rolch.Distribution): The parametric distribution.
             equation (Dict): The modelling equation. Follows the schema `{parameter[int]: column_identifier}`, where column_identifier can be either the strings `'all'`, `'intercept'` or a np.array of ints indicating the columns.
-            forget (float, optional): The forget factor. Defaults to 0.0.
-            method (str, optional): The estimation method. Defaults to `"ols"`.
-            scale_inputs (Optional[Dict], optional): Whether to scale the input matrices. Defaults to True
-            beta_bounds (Dict[int, Tuple]): Dictionary of bounds for the different parameters.
-            estimation_kwargs (Optional[Dict], optional): Dictionary of estimation method kwargs. Defaults to None.
-            max_it_outer (int, optional): Maximum Outer iterations for the RS algorithm. Defaults to 30.
+            forget (Union[float, Dict[int, float]], optional): The forget factor. Defaults to 0.0.
+            method (Union[str, EstimationMethod, Dict[int, str], Dict[int, EstimationMethod]], optional): The estimation method. Defaults to "ols".
+            scale_inputs (bool, optional): Whether to scale the input matrices. Defaults to True.
+            fit_intercept (Union[bool, Dict[int, bool]], optional): Whether to fit an intercept. Defaults to True.
+            regularize_intercept (Union[bool, Dict[int, bool]], optional): Whether to regularize the intercept. Defaults to False.
+            ic (Union[str, Dict], optional): Information criterion for model selection. Defaults to "aic".
+            max_it_outer (int, optional): Maximum outer iterations for the RS algorithm. Defaults to 30.
             max_it_inner (int, optional): Maximum inner iterations for the RS algorithm. Defaults to 30.
-            abs_tol_outer (float, optional): Absolute tolerance on the Deviance in the outer fit. Defaults to 1e-3.
-            abs_tol_inner (float, optional): Absolute tolerance on the Deviance in the inner fit. Defaults to 1e-3.
-            rel_tol_outer (float, optional): Relative tolerance on the Deviance in the outer fit. Defaults to 1e-20.
-            rel_tol_inner (float, optional): Relative tolerance on the Deviance in the inner fit. Defaults to 1e-20.
+            abs_tol_outer (float, optional): Absolute tolerance on the deviance in the outer fit. Defaults to 1e-3.
+            abs_tol_inner (float, optional): Absolute tolerance on the deviance in the inner fit. Defaults to 1e-3.
+            rel_tol_outer (float, optional): Relative tolerance on the deviance in the outer fit. Defaults to 1e-5.
+            rel_tol_inner (float, optional): Relative tolerance on the deviance in the inner fit. Defaults to 1e-5.
             rss_tol_inner (float, optional): Tolerance for increasing RSS in the inner fit. Defaults to 1.5.
+            verbose (int, optional): Verbosity level. Level 0 will print no messages. Level 1 will print messages according to the start and end of each fit / update call and on finished outer iterations. Level 2 will print messages on each parameter fit in each outer iteration. Level 3 will print messages on each inner iteration. Defaults to 0.
+            debug (bool, optional): Whether to enable debug mode. Defaults to False.
         """
-
         self.distribution = distribution
         self.equation = self._process_equation(equation)
         self._process_attribute(fit_intercept, True, "fit_intercept")
