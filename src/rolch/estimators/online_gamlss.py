@@ -83,20 +83,21 @@ class OnlineGamlss:
 
         self.is_regularized = {}
 
-    @staticmethod
+    @property
     def betas(self):
         warnings.warn(
-            "OnlineGamlss.betas is depreciated in favour of beta to be consistent with beta_path. "
+            "OnlineGamlss.betas is depreciated in favour of OnlineGamlss.beta to be consistent with beta_path. "
             "Alternatively, use OnlineGamlss.coef_ as in sklearn.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.beta
 
-    @staticmethod
+    @property
     def coef_(self):
         return self.beta
 
-    @staticmethod
+    @property
     def coef_path_(self):
         return self.beta_path
 
