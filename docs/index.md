@@ -58,7 +58,7 @@ online_gamlss_lasso = rolch.OnlineGamlss(
     method="lasso",
     equation=equation,
     fit_intercept=True,
-    estimation_kwargs={"ic": {i: "bic" for i in range(dist.n_params)}},
+    ic="bic",
 )
 
 # Initial Fit
