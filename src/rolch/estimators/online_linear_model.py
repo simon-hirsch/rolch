@@ -41,6 +41,7 @@ class OnlineLinearModel(Estimator):
         self.method = method
         self._method = get_estimation_method(self.method)
         self.fit_intercept = fit_intercept
+        self.scale_inputs = scale_inputs
         self.scaler = OnlineScaler(
             forget=forget, do_scale=scale_inputs, intercept=fit_intercept
         )
