@@ -1,8 +1,9 @@
+from abc import ABC
+
 import numpy as np
-from sklearn.base import BaseEstimator
 
 
-class Estimator(BaseEstimator):
+class Estimator(ABC):
 
     def __init__(self):
         self.n_observations: int
