@@ -3,7 +3,7 @@ from typing import Literal, Optional
 
 import numpy as np
 
-from rolch.base import EstimationMethod
+from rolch.base import EstimationMethod, Estimator
 from rolch.design_matrix import add_intercept
 from rolch.information_criteria import select_best_model_by_information_criterion
 from rolch.methods import get_estimation_method
@@ -11,7 +11,7 @@ from rolch.scaler import OnlineScaler
 from rolch.utils import calculate_effective_training_length
 
 
-class OnlineLinearModel:
+class OnlineLinearModel(Estimator):
 
     "Simple Online Linear Regression for the expected value."
 
@@ -77,13 +77,15 @@ class OnlineLinearModel:
             y (np.ndarray): The response vector $y$.
             sample_weight (Optional[np.ndarray], optional): The sample weights. Defaults to None.
         """
-        self.N = X.shape[0]
+        self.n_observations = X.shape[0]
         self.J = X.shape[1] + int(self.fit_intercept)
 
         if sample_weight is None:
             sample_weight = np.ones_like(y)
 
-        self.training_length = calculate_effective_training_length(self.forget, self.N)
+        self.n_training = calculate_effective_training_length(
+            self.forget, self.n_observations
+        )
 
         design = self.get_design_matrix(X=X)
         self.scaler.fit(design)
@@ -110,7 +112,7 @@ class OnlineLinearModel:
             self.rss = np.sum(residuals**2, axis=0)
             n_params = np.sum(~np.isclose(self.beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
-                self.training_length, n_params, self.rss, self.ic
+                self.n_training, n_params, self.rss, self.ic
             )
             self.beta = self.beta_path[best_ic, :]
         else:
@@ -132,8 +134,10 @@ class OnlineLinearModel:
             sample_weight (Optional[np.ndarray], optional): The weight for the new observations. `None` implies all observations have weight 1. Defaults to None.
         """
 
-        self.N += X.shape[0]
-        self.training_length = calculate_effective_training_length(self.forget, self.N)
+        self.n_observations += X.shape[0]
+        self.n_training = calculate_effective_training_length(
+            self.forget, self.n_observations
+        )
 
         design = self.get_design_matrix(X=X)
         self.scaler.partial_fit(design)
@@ -160,7 +164,7 @@ class OnlineLinearModel:
             self.rss = (1 - self.forget) * self.rss + np.sum(residuals**2, axis=0)
             n_params = np.sum(~np.isclose(self.beta_path, 0), axis=1)
             best_ic = select_best_model_by_information_criterion(
-                self.training_length, n_params, self.rss, self.ic
+                self.n_training, n_params, self.rss, self.ic
             )
             self.beta = self.beta_path[best_ic, :]
         else:

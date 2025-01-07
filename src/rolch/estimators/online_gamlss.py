@@ -6,7 +6,7 @@ import numpy as np
 
 from rolch import HAS_PANDAS, HAS_POLARS
 
-from ..base import Distribution, EstimationMethod
+from ..base import Distribution, EstimationMethod, Estimator
 from ..gram import init_forget_vector
 from ..information_criteria import select_best_model_by_information_criterion
 from ..methods import get_estimation_method
@@ -19,7 +19,7 @@ if HAS_POLARS:
     import polars as pl
 
 
-class OnlineGamlss:
+class OnlineGamlss(Estimator):
     """The online/incremental GAMLSS class."""
 
     def __init__(
@@ -111,14 +111,6 @@ class OnlineGamlss:
             stacklevel=2,
         )
         return self.beta
-
-    @property
-    def coef_(self):
-        return self.beta
-
-    @property
-    def coef_path_(self):
-        return self.beta_path
 
     def _print_message(self, message, level=0):
         if level <= self.verbose:
@@ -294,7 +286,7 @@ class OnlineGamlss:
         param,
     ):
 
-        f = init_forget_vector(self.forget[param], self.n_obs)
+        f = init_forget_vector(self.forget[param], self.n_observations)
 
         if not self._method[param]._path_based_method:
             beta_path = None
@@ -341,7 +333,7 @@ class OnlineGamlss:
     ):
 
         denom = online_mean_update(
-            self.mean_of_weights[param], w, self.forget[param], self.n_obs
+            self.mean_of_weights[param], w, self.forget[param], self.n_observations
         )
 
         if not self._method[param]._path_based_method:
@@ -417,9 +409,9 @@ class OnlineGamlss:
             sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
             beta_bounds (Dict[int, Tuple], optional): Bounds for the $\beta$ in the coordinate descent algorithm. The user needs to provide a `dict` with a mapping of tuples to distribution parameters 0, 1, 2, and 3 potentially. Defaults to None.
         """
-        self.n_obs = y.shape[0]
+        self.n_observations = y.shape[0]
         self.n_training = {
-            p: calculate_effective_training_length(self.forget[p], self.n_obs)
+            p: calculate_effective_training_length(self.forget[p], self.n_observations)
             for p in range(self.distribution.n_params)
         }
 
@@ -514,9 +506,9 @@ class OnlineGamlss:
         else:
             w = np.ones(y.shape[0])
 
-        self.n_obs += y.shape[0]
+        self.n_observations += y.shape[0]
         self.n_training = {
-            p: calculate_effective_training_length(self.forget[p], self.n_obs)
+            p: calculate_effective_training_length(self.forget[p], self.n_observations)
             for p in range(self.distribution.n_params)
         }
 

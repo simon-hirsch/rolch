@@ -23,7 +23,8 @@ classifiers = [
 dependencies=[
     "scipy >= 1.00, <2.2.0",
     "numpy >= 1.2, <2.0.0",
-    "numba >= 0.59.1, < 1.0.0"
+    "numba >= 0.59.1, < 1.0.0",
+    "sklearn >= 1.1"
 ]
 
 [project.optional-dependencies]
