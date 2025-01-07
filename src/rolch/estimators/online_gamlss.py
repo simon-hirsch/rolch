@@ -5,12 +5,13 @@ from typing import Any, Dict, Optional, Tuple, Union
 import numpy as np
 
 from rolch import HAS_PANDAS, HAS_POLARS
-from rolch.base import Distribution, EstimationMethod
-from rolch.gram import init_forget_vector
-from rolch.information_criteria import select_best_model_by_information_criterion
-from rolch.methods import get_estimation_method
-from rolch.scaler import OnlineScaler
-from rolch.utils import calculate_effective_training_length, online_mean_update
+
+from ..base import Distribution, EstimationMethod
+from ..gram import init_forget_vector
+from ..information_criteria import select_best_model_by_information_criterion
+from ..methods import get_estimation_method
+from ..scaler import OnlineScaler
+from ..utils import calculate_effective_training_length, online_mean_update
 
 if HAS_PANDAS:
     import pandas as pd
