@@ -12,6 +12,7 @@ from rolch.gram import (
 
 
 class OrdinaryLeastSquaresMethod(EstimationMethod):
+    """Simple ordinary least squares respectively recursive least squares. No fancy parameters possible."""
 
     def __init__(self) -> None:
         super().__init__(
