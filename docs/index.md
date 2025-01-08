@@ -23,8 +23,6 @@ where $g_k(\cdot)$ is a link function, which ensures that the predicted distribu
 
 This allows us to specify very flexible models that consider the conditional behaviour of the variable's volatility, skewness and tail behaviour. A simple example for electricity markets is wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production if the production level is already high since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probabilistic behaviours is the key strength of distributional regression models.
 
-
-
 ## Installation
 
 `ROLCH` is available on the [Python Package Index](https://pypi.org/project/rolch/) and can be installed via `pip`:
@@ -35,8 +33,7 @@ pip install rolch
 
 ## Example
 
-The following few lines give an introduction. We use the `diabetes` data set and model the response variable \(Y\) as Student-\(t\) distributed, where all distribution parameters (location, scale and tail) are modelled conditional on the explanatory variables in \(X\).
-
+The following few lines give an introduction. We use the `diabetes` data set and model the response variable \(Y\) as Student-\(t\) distributed, where all distribution parameters (location, scale and tail) are modelled conditional on the explanatory variables in \(X\). We use LASSO to estimate the coefficients and the Bayesian information criterion to select the best model along a grid of regularization strengths.
 
 ```python
 import rolch
@@ -58,7 +55,7 @@ online_gamlss_lasso = rolch.OnlineGamlss(
     method="lasso",
     equation=equation,
     fit_intercept=True,
-    estimation_kwargs={"ic": {i: "bic" for i in range(dist.n_params)}},
+    ic="bic",
 )
 
 # Initial Fit

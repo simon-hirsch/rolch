@@ -49,7 +49,7 @@ online_gamlss_lasso = rolch.OnlineGamlss(
     method="lasso",
     equation=equation,
     fit_intercept=True,
-    estimation_kwargs={"ic": {i: "bic" for i in range(dist.n_params)}},
+    ic="bic",
 )
 
 # Initial Fit
@@ -58,7 +58,7 @@ online_gamlss_lasso.fit(
     y=y[:-11], 
 )
 print("Coefficients for the first N-11 observations \n")
-print(online_gamlss_lasso.betas)
+print(online_gamlss_lasso.beta)
 
 # Update call
 online_gamlss_lasso.update(
@@ -66,7 +66,7 @@ online_gamlss_lasso.update(
     y=y[[-11]]
 )
 print("\nCoefficients after update call \n")
-print(online_gamlss_lasso.betas)
+print(online_gamlss_lasso.beta)
 
 # Prediction for the last 10 observations
 prediction = online_gamlss_lasso.predict(

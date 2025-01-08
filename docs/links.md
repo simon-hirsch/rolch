@@ -19,7 +19,7 @@ Some link functions implement _shifted_ versions. The shifted link function is i
 
 ## Base Class
 
-::: rolch.abc.LinkFunction
+::: rolch.base.LinkFunction
 
 ## API Reference
 

@@ -12,18 +12,19 @@ if find_spec("pandas") is not None:
 if find_spec("polars") is not None:
     HAS_POLARS = True
 
-from rolch.coordinate_descent import (
+from .coordinate_descent import (
     online_coordinate_descent,
     online_coordinate_descent_path,
     soft_threshold,
 )
-from rolch.distributions import (
+from .distributions import (
     DistributionGamma,
     DistributionJSU,
     DistributionNormal,
     DistributionT,
 )
-from rolch.gram import (
+from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
+from .gram import (
     init_forget_vector,
     init_gram,
     init_inverted_gram,
@@ -32,11 +33,11 @@ from rolch.gram import (
     update_inverted_gram,
     update_y_gram,
 )
-from rolch.information_criteria import (
+from .information_criteria import (
     information_criterion,
     select_best_model_by_information_criterion,
 )
-from rolch.link import (
+from .link import (
     IdentityLink,
     LogIdentLink,
     LogLink,
@@ -46,10 +47,9 @@ from rolch.link import (
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
 )
-from rolch.online_gamlss import OnlineGamlss
-from rolch.online_lasso import OnlineLasso
-from rolch.scaler import OnlineScaler
-from rolch.utils import (
+from .methods import LassoPathMethod, OrdinaryLeastSquaresMethod
+from .scaler import OnlineScaler
+from .utils import (
     calculate_asymptotic_training_length,
     calculate_effective_training_length,
 )
@@ -59,7 +59,10 @@ __version__ = version("rolch")
 __all__ = [
     "OnlineScaler",
     "OnlineGamlss",
+    "OnlineLinearModel",
     "OnlineLasso",
+    "LassoPathMethod",
+    "OrdinaryLeastSquaresMethod",
     "IdentityLink",
     "LogLink",
     "LogIdentLink",
