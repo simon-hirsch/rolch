@@ -12,7 +12,15 @@ def information_criterion(
     """Calcuate the information criteria.
 
     The information criteria are calculated from the Resdiual Sum of Squares $RSS$. The function provides the
-    calculation of Akaikes IC, the bayesian IC and the Harman-Quinn IC.
+    calculation of Akaike's IC, the Bayesian IC and the Hannan-Quinn IC.
+
+    +---------+------------------------------------+--------------------------+
+    | `ic`    | Information Criterion              | Formula                  |
+    +=========+====================================+==========================+
+    | `"aic"` | Akaike's Information Criterion     | $- 2l + 2\log(n)$        |
+    | `"bic"` | Bayesian Information Criterion     | $- 2l + 2p\log(n)$       |
+    | `"hqc"` | Hannan-Quinn Information Criterion | $- 2l + 2p\log(\log(n))$ |
+    +---------+------------------------------------+--------------------------+
 
     Args:
         n_observations (Union[int, np.ndarray]): Number of observations
@@ -58,6 +66,15 @@ def select_best_model_by_information_criterion(
     criterion: Literal["aic", "bic", "hqc", "max"],
 ) -> int:
     """Calculates the information criterion and returns the model with the best (lowest) IC.
+
+    +---------+------------------------------------+--------------------------+
+    | `ic`    | Information Criterion              | Formula                  |
+    +=========+====================================+==========================+
+    | `"aic"` | Akaike's Information Criterion     | $- 2l + 2\log(n)$        |
+    | `"bic"` | Bayesian Information Criterion     | $- 2l + 2p\log(n)$       |
+    | `"hqc"` | Hannan-Quinn Information Criterion | $- 2l + 2p\log(\log(n))$ |
+    | `"max"` | Select the largest model           |                          |
+    +---------+------------------------------------+--------------------------+
 
     !!! note
         The information criterion `max` will always return the largest model.
