@@ -234,9 +234,21 @@ class OnlineGamlss(Estimator):
                     J[p] = X.shape[1] + int(self.fit_intercept[p])
                 if self.equation[p] == "intercept":
                     J[p] = 1
-            elif isinstance(self.equation[p], np.ndarray) or isinstance(
-                self.equation[p], list
-            ):
+            elif isinstance(self.equation[p], np.ndarray):
+                if np.issubdtype(self.equation[p].dtype, bool):
+                    if self.equation[p].shape[0] != X.shape[1]:
+                        raise ValueError(f"Shape does not match for param {p}.")
+                    J[p] = np.sum(self.equation[p]) + int(self.fit_intercept[p])
+                elif np.issubdtype(self.equation[p].dtype, np.integer):
+                    if self.equation[p].max() >= X.shape[1]:
+                        raise ValueError(f"Shape does not match for param {p}.")
+                    J[p] = self.equation[p].shape[0] + int(self.fit_intercept[p])
+                else:
+                    raise ValueError(
+                        "If you pass a np.ndarray in the equation, "
+                        "please make sure it is of dtype bool or int."
+                    )
+            elif isinstance(self.equation[p], list):
                 J[p] = len(self.equation[p]) + int(self.fit_intercept[p])
             else:
                 raise ValueError("Something unexpected happened")
