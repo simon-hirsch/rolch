@@ -2,7 +2,7 @@
 *.ruff_cache*
 *__pycache__*
 .ipynb_checkpoints
-.git/* 
+.git/*
 dist
 dist_old
 development
@@ -18,3 +18,7 @@ presentation/*
 .coverage
 build.txt
 gist.githubusercontent*
+.direnv/*
+.venv/*
+.envrc
+default.nix
