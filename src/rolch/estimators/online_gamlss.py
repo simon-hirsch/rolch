@@ -30,7 +30,7 @@ class OnlineGamlss(Estimator):
         method: Union[
             str, EstimationMethod, Dict[int, str], Dict[int, EstimationMethod]
         ] = "ols",
-        scale_inputs: bool = True,
+        scale_inputs: bool | np.ndarray = True,
         fit_intercept: Union[bool, Dict[int, bool]] = True,
         regularize_intercept: Union[bool, Dict[int, bool]] = False,
         ic: Union[str, Dict] = "aic",
@@ -85,7 +85,7 @@ class OnlineGamlss(Estimator):
         self._process_attribute(method, default="ols", name="method")
         self._method = {p: get_estimation_method(m) for p, m in self.method.items()}
 
-        self.scaler = OnlineScaler(do_scale=scale_inputs, intercept=False)
+        self.scaler = OnlineScaler(to_scale=scale_inputs)
         self.do_scale = scale_inputs
 
         # These are global for all distribution parameters
