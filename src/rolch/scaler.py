@@ -12,6 +12,16 @@ class OnlineScaler:
         forget: float = 0.0,
         to_scale: bool | np.ndarray = True,
     ):
+        """The online scaler allows for incremental updating and scaling of matrices.
+
+        Args:
+            forget (float, optional): The forget factor. Older observations will be exponentially discounted. Defaults to 0.0.
+            to_scale (bool | np.ndarray, optional): The variables to scale.
+                `True` implies all variables will be scaled.
+                `False` implies no variables will be scaled.
+                An `np.ndarray` of type `bool` or `int` implies that the columns `X[:, to_scale]` will be scaled, all other columns will not be scaled.
+                Defaults to True.
+        """
         self.forget = forget
         self.to_scale = to_scale
 
@@ -37,7 +47,12 @@ class OnlineScaler:
         self.n_observations = X.shape[0]
         self.n_asymmptotic = calculate_asymptotic_training_length(self.forget)
 
-    def fit(self, X: np.ndarray):
+    def fit(self, X: np.ndarray) -> None:
+        """Fit the OnlineScaler() Object for the first time.
+
+        Args:
+            X (np.ndarray): Matrix of covariates X.
+        """
         self._prepare_estimator(X)
         if self._do_scale:
             # Calculate the mean of each column of x_init and assing it to self.m
@@ -48,11 +63,16 @@ class OnlineScaler:
         else:
             pass
 
-    def update(self, X: np.ndarray):
+    def update(self, X: np.ndarray) -> None:
         """Wrapper for partial_fit to align API."""
         self.partial_fit(X)
 
-    def partial_fit(self, X: np.ndarray):
+    def partial_fit(self, X: np.ndarray) -> None:
+        """Update the `OnlineScaler()` for new rows of X.
+
+        Args:
+            X (np.ndarray): New data for X.
+        """
         # Loop over all rows of new X
         if self._do_scale:
             for i in range(X.shape[0]):
@@ -78,7 +98,15 @@ class OnlineScaler:
         else:
             pass
 
-    def transform(self, X: np.ndarray):
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        """Transform X to a mean-std scaled matrix.
+
+        Args:
+            X (np.ndarray): X matrix for covariates.
+
+        Returns:
+            np.ndarray: Scaled X matrix.
+        """
         if self._do_scale:
             out = np.copy(X)
             out[:, self._selection] = (X[:, self._selection] - self.m) / np.sqrt(self.v)
@@ -86,7 +114,15 @@ class OnlineScaler:
         else:
             return X
 
-    def inverse_transform(self, X: np.ndarray):
+    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
+        """Back-transform a scaled X matrix to the original domain.
+
+        Args:
+            X (np.ndarray): Scaled X matrix.
+
+        Returns:
+            np.ndarray: Scaled back to the original scale.
+        """
         if self._do_scale:
             out = np.copy(X)
             out[:, self._selection] = X[:, self._selection] * np.sqrt(self.v) + self.m
