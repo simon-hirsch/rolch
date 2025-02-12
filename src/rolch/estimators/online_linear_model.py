@@ -18,7 +18,7 @@ class OnlineLinearModel(Estimator):
     def __init__(
         self,
         forget: float = 0,
-        scale_inputs: bool = True,
+        scale_inputs: bool | np.ndarray = True,
         fit_intercept: bool = True,
         regularize_intercept: bool = False,
         method: EstimationMethod | str = "ols",
@@ -42,9 +42,7 @@ class OnlineLinearModel(Estimator):
         self._method = get_estimation_method(self.method)
         self.fit_intercept = fit_intercept
         self.scale_inputs = scale_inputs
-        self.scaler = OnlineScaler(
-            forget=forget, do_scale=scale_inputs, intercept=fit_intercept
-        )
+        self.scaler = OnlineScaler(forget=forget, to_scale=scale_inputs)
 
         self.regularize_intercept = regularize_intercept
         self.ic = ic
@@ -88,9 +86,9 @@ class OnlineLinearModel(Estimator):
             self.forget, self.n_observations
         )
 
-        design = self.get_design_matrix(X=X)
-        self.scaler.fit(design)
-        X_scaled = self.scaler.transform(design)
+        self.scaler.fit(X)
+        X_scaled = self.scaler.transform(X)
+        X_scaled = self.get_design_matrix(X=X_scaled)
 
         self.is_regularized = np.repeat(True, self.J)
         if self.fit_intercept:
@@ -140,9 +138,9 @@ class OnlineLinearModel(Estimator):
             self.forget, self.n_observations
         )
 
-        design = self.get_design_matrix(X=X)
-        self.scaler.partial_fit(design)
-        X_scaled = self.scaler.transform(design)
+        self.scaler.partial_fit(X)
+        X_scaled = self.scaler.transform(X)
+        X_scaled = self.get_design_matrix(X=X_scaled)
 
         if sample_weight is None:
             sample_weight = np.ones(y.shape[0])
@@ -185,8 +183,8 @@ class OnlineLinearModel(Estimator):
         Returns:
             np.ndarray: The predictions for the optimal IC.
         """
-        design = self.get_design_matrix(X=X)
-        design = self.scaler.transform(design)
+        design = self.scaler.transform(X)
+        design = self.get_design_matrix(X=design)
         prediction = design @ self.beta.T
         return prediction
 
@@ -200,8 +198,8 @@ class OnlineLinearModel(Estimator):
             np.ndarray: The predictions for the full path.
         """
 
-        design = self.get_design_matrix(X=X)
-        design = self.scaler.transform(design)
+        design = self.scaler.transform(X)
+        design = self.get_design_matrix(X=design)
         prediction = design @ self.beta_path.T
         return prediction
         return prediction
