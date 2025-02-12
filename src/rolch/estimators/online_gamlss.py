@@ -869,7 +869,7 @@ class OnlineGamlss(Estimator):
         Returns:
             np.ndarray: Predicted values for the distribution.
         """
-        X_scaled = self.scaler.transform(x=X)
+        X_scaled = self.scaler.transform(X=X)
         X_dict = {
             p: self.make_model_array(X_scaled, p)
             for p in range(self.distribution.n_params)
