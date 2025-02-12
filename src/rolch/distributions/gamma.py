@@ -121,7 +121,7 @@ class DistributionGamma(Distribution):
 
     def initial_values(self, y, param=0, axis=None):
         if param == 0:
-            return (y + np.mean(y, axis=None)) / 2
+            return np.repeat(np.mean(y, axis=None), y.shape[0])
         if param == 1:
             return np.ones_like(y)
 
