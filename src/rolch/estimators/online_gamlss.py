@@ -55,6 +55,20 @@ class OnlineGamlss(Estimator):
         sensible range (we don't want, e.g. negative standard deviations), and $\eta_k$ is the predictor (on the
         space of the link function). The model is fitted using iterative re-weighted least squares (IRLS).
 
+
+        !!! note Tips and Tricks
+            If you're facing issues with non-convergence and/or matrix inversion problems, please enable the `debug` mode and increase the
+            logging level by increasing `verbose`.
+            In debug mode, the estimator will save the weights, working vectors, derivatives each iteration in a
+            according dictionary, i.e. self._debug_weights.
+            The keys are composed of a tuple of ints of `(parameter, outer_iteration, inner_iteration)`.
+            Very small and/or very large weights (implicitly second derivatives) can be a sign that either start values are not chosen appropriately or
+            that the distributional assumption does not fit the data well.
+
+        !!! warning Debug Mode
+            Please don't use debug more for production models since it saves the `X` matrix and its scaled counterpart, so you will get large
+            estimator objects.
+
         Args:
             distribution (rolch.Distribution): The parametric distribution.
             equation (Dict): The modelling equation. Follows the schema `{parameter[int]: column_identifier}`, where column_identifier can be either the strings `'all'`, `'intercept'` or a np.array of ints indicating the columns.
@@ -72,7 +86,18 @@ class OnlineGamlss(Estimator):
             rel_tol_inner (float, optional): Relative tolerance on the deviance in the inner fit. Defaults to 1e-5.
             rss_tol_inner (float, optional): Tolerance for increasing RSS in the inner fit. Defaults to 1.5.
             verbose (int, optional): Verbosity level. Level 0 will print no messages. Level 1 will print messages according to the start and end of each fit / update call and on finished outer iterations. Level 2 will print messages on each parameter fit in each outer iteration. Level 3 will print messages on each inner iteration. Defaults to 0.
-            debug (bool, optional): Whether to enable debug mode. Defaults to False.
+            debug (bool, optional): Enable debug mode. Debug mode will save additional data to the estimator object.
+                Currently, we save
+
+                    * self._debug_X_dict
+                    * self._debug_X_scaled
+                    * self._debug_weights
+                    * self._debug_working_vectors
+                    * self._debug_dl1dlp1
+                    * self._debug_dl2dlp2
+                    * self._debug_eta
+
+                to the the estimator. Debug mode works in batch and online settings. Note that debug mode is not recommended for production use. Defaults to False.
         """
         self.distribution = distribution
         self.equation = self._process_equation(equation)
@@ -444,8 +469,13 @@ class OnlineGamlss(Estimator):
         }
 
         if self.debug:
-            self.X_dict = X_dict
-            self.X_scaled = X_scaled
+            self._debug_X_dict = X_dict
+            self._debug_X_scaled = X_scaled
+            self._debug_weights = {}
+            self._debug_working_vectors = {}
+            self._debug_dl1dlp1 = {}
+            self._debug_dl2dlp2 = {}
+            self._debug_eta = {}
 
         self.rss = {i: 0 for i in range(self.distribution.n_params)}
 
@@ -534,8 +564,13 @@ class OnlineGamlss(Estimator):
         }
 
         if self.debug:
-            self.X_dict = X_dict
-            self.X_scaled = X_scaled
+            self._debug_X_dict = X_dict
+            self._debug_X_scaled = X_scaled
+            self._debug_weights = {}
+            self._debug_working_vectors = {}
+            self._debug_dl1dlp1 = {}
+            self._debug_dl2dlp2 = {}
+            self._debug_eta = {}
 
         ## Reset rss and iterations
         self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
@@ -715,6 +750,14 @@ class OnlineGamlss(Estimator):
             wt = np.clip(wt, 1e-10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
 
+            if self.debug:
+                key = (param, iteration_outer, iteration_outer)
+                self._debug_weights[key] = wt
+                self._debug_working_vectors[key] = wv
+                self._debug_dl1dlp1[key] = dl1dp1
+                self._debug_dl2dlp2[key] = dl2dp2
+                self._debug_eta[key] = eta
+
             ## Update the X and Y Gramian and the weight
             self.x_gram[param] = self._method[param].init_x_gram(
                 X=X[param], weights=(w * wt), forget=self.forget[param]
@@ -805,6 +848,14 @@ class OnlineGamlss(Estimator):
             wt = -(dl2dp2 / (dr * dr))
             wt = np.clip(wt, -1e10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
+
+            if self.debug:
+                key = (param, iteration_outer, iteration_outer)
+                self._debug_weights[key] = wt
+                self._debug_working_vectors[key] = wv
+                self._debug_dl1dlp1[key] = dl1dp1
+                self._debug_dl2dlp2[key] = dl2dp2
+                self._debug_eta[key] = eta
 
             self.x_gram_inner[param] = self._method[param].update_x_gram(
                 gram=self.x_gram[param],
