@@ -65,6 +65,10 @@ class OnlineGamlss(Estimator):
             Very small and/or very large weights (implicitly second derivatives) can be a sign that either start values are not chosen appropriately or
             that the distributional assumption does not fit the data well.
 
+        !!! warning Debug Mode
+            Please don't use debug more for production models since it saves the `X` matrix and its scaled counterpart, so you will get large
+            estimator objects.
+
         Args:
             distribution (rolch.Distribution): The parametric distribution.
             equation (Dict): The modelling equation. Follows the schema `{parameter[int]: column_identifier}`, where column_identifier can be either the strings `'all'`, `'intercept'` or a np.array of ints indicating the columns.
