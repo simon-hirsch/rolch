@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import load_diabetes
 from sklearn.linear_model import lasso_path
 
-import rolch
+from rolch import online_coordinate_descent_path
 
 
 def test_coordinate_descent():
@@ -29,7 +29,7 @@ def test_coordinate_descent():
     is_regularized = np.repeat(True, J)
     beta_path = np.zeros((lambda_n, J))
 
-    rolch_lasso_path = rolch.online_coordinate_descent_path(
+    rolch_lasso_path = online_coordinate_descent_path(
         x_gram=x_gram,
         y_gram=y_gram,
         beta_path=beta_path,
@@ -72,7 +72,7 @@ def test_coordinate_descent_bounds():
     is_regularized = np.repeat(True, J)
     beta_path = np.zeros((lambda_n, J))
 
-    rolch_lasso_path_positive = rolch.online_coordinate_descent_path(
+    rolch_lasso_path_positive = online_coordinate_descent_path(
         x_gram=x_gram,
         y_gram=y_gram,
         beta_path=beta_path,
@@ -86,7 +86,7 @@ def test_coordinate_descent_bounds():
         max_iterations=1000,
     )[0]
 
-    rolch_lasso_path_negative = rolch.online_coordinate_descent_path(
+    rolch_lasso_path_negative = online_coordinate_descent_path(
         x_gram=x_gram,
         y_gram=y_gram,
         beta_path=beta_path,
