@@ -89,7 +89,6 @@ class DistributionT(Distribution):
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
     ) -> np.ndarray:
-        _, sigma, nu = self.theta_to_params(theta)
         if sorted(params) == [0, 1]:
             # d2l/(dm ds)
             return np.zeros_like(y)
@@ -100,6 +99,7 @@ class DistributionT(Distribution):
 
         if sorted(params) == [1, 2]:
             # d2l / (dm dn)
+            _, sigma, nu = self.theta_to_params(theta)
             return 2 / (sigma * (nu + 3) * (nu + 1))
 
     def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
