@@ -1,7 +1,9 @@
+from typing import Tuple
+
 import numpy as np
 import scipy.stats as st
 
-from rolch.base import Distribution
+from rolch.base import Distribution, LinkFunction
 from rolch.link import IdentityLink, LogLink
 
 
@@ -18,11 +20,11 @@ class DistributionJSU(Distribution):
 
     def __init__(
         self,
-        loc_link=IdentityLink(),
-        scale_link=LogLink(),
-        shape_link=IdentityLink(),
-        tail_link=LogLink(),
-    ):
+        loc_link: LinkFunction = IdentityLink(),
+        scale_link: LinkFunction = LogLink(),
+        shape_link: LinkFunction = IdentityLink(),
+        tail_link: LinkFunction = LogLink(),
+    ) -> None:
         self.n_params = 4
         self.loc_link = loc_link
         self.scale_link = scale_link
@@ -35,14 +37,16 @@ class DistributionJSU(Distribution):
             self.tail_link,  # tail
         ]
 
-    def theta_to_params(self, theta):
+    def theta_to_params(
+        self, theta: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         mu = theta[:, 0]
         sigma = theta[:, 1]
         nu = theta[:, 2]
         tau = theta[:, 3]
         return mu, sigma, nu, tau
 
-    def dl1_dp1(self, y, theta, param=0):
+    def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         mu, sigma, nu, tau = self.theta_to_params(theta)
 
         if param == 0:
@@ -77,7 +81,7 @@ class DistributionJSU(Distribution):
             dldt = (1 + r * nu - r * r) / tau
             return dldt
 
-    def dl2_dp2(self, y, theta, param=0):
+    def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         mu, sigma, nu, tau = self.theta_to_params(theta)
         if param == 0:
             # MU
@@ -87,7 +91,6 @@ class DistributionJSU(Distribution):
                 (r * tau) / (sigma * np.sqrt(z * z + 1))
             )
             d2ldm2 = -dldm * dldm
-            # d2ldm2 = np.max(1e-15, d2ldm2)
             return d2ldm2
 
         if param == 1:
@@ -98,7 +101,6 @@ class DistributionJSU(Distribution):
                 (r * tau * z) / (sigma * np.sqrt(z * z + 1))
             )
             d2ldd2 = -(dldd * dldd)
-            # d2ldd2 = np.max(d2ldd2, -1e-15)
             return d2ldd2
 
         if param == 2:
@@ -106,17 +108,18 @@ class DistributionJSU(Distribution):
             z = (y - mu) / sigma
             r = nu + tau * np.arcsinh(z)
             d2ldv2 = -(r * r)
-            # d2ldv2 = np.max(d2ldv2 < -1e-15)
             return d2ldv2
+
         if param == 3:
             z = (y - mu) / sigma
             r = nu + tau * np.arcsinh(z)
             dldt = (1 + r * nu - r * r) / tau
             d2ldt2 = -dldt * dldt
-            # d2ldt2 = np.max(d2ldt2, -1e-15)
             return d2ldt2
 
-    def dl2_dpp(self, y, theta, params=(0, 1)):
+    def dl2_dpp(
+        self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
+    ) -> np.ndarray:
         mu, sigma, nu, tau = self.theta_to_params(theta)
         if sorted(params) == [0, 1]:
             z = (y - mu) / sigma
@@ -178,10 +181,10 @@ class DistributionJSU(Distribution):
             d2ldvdt = -(dldv * dldt)
             return d2ldvdt
 
-    def link_function(self, y, param=0):
+    def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         return self.links[param].link(y)
 
-    def link_inverse(self, y, param=0):
+    def link_inverse(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         return self.links[param].inverse(y)
 
     def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
@@ -190,17 +193,19 @@ class DistributionJSU(Distribution):
     def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         return self.links[param].inverse_derivative(y)
 
-    def initial_values(self, y, param=0, axis=None):
+    def initial_values(
+        self, y: np.ndarray, param: int = 0, axis: int = None
+    ) -> np.ndarray:
         if param == 0:
-            return np.repeat(np.mean(y, axis=None), y.shape[0])
+            return np.repeat(np.mean(y, axis=axis), y.shape[0])
         if param == 1:
-            return np.repeat(np.std(y, axis=None), y.shape[0])
+            return np.repeat(np.std(y, axis=axis), y.shape[0])
         if param == 2:
             return np.full_like(y, 0)
         if param == 3:
             return np.full_like(y, 10)
 
-    def cdf(self, y, theta):
+    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         mu, sigma, nu, tau = self.theta_to_params(theta)
         return st.johnsonsu(
             loc=mu,
@@ -209,7 +214,7 @@ class DistributionJSU(Distribution):
             b=tau,
         ).cdf(y)
 
-    def pdf(self, y, theta):
+    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         mu, sigma, nu, tau = self.theta_to_params(theta)
         return st.johnsonsu(
             loc=mu,
@@ -218,7 +223,7 @@ class DistributionJSU(Distribution):
             b=tau,
         ).pdf(y)
 
-    def ppf(self, q, theta):
+    def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
         mu, sigma, nu, tau = self.theta_to_params(theta)
         return st.johnsonsu(
             loc=mu,
@@ -227,7 +232,7 @@ class DistributionJSU(Distribution):
             b=tau,
         ).ppf(q)
 
-    def rvs(self, size, theta):
+    def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
         mu, sigma, nu, tau = self.theta_to_params(theta)
         return (
             st.johnsonsu(

@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import scipy.special as spc
 import scipy.stats as st
@@ -27,7 +29,6 @@ class DistributionGamma(Distribution):
     $$
     f(x, \\alpha, \\beta) = \\frac{\\beta^\\alpha x^{\\alpha - 1} \exp[-\\beta x]}{\Gamma(\\alpha)}
     $$
-
     with the paramters $\\alpha, \\beta >0$. The parameters can be mapped as follows:
     $$
     \\alpha = 1/\sigma^2 \Leftrightarrow \sigma = \sqrt{1 / \\alpha}
@@ -37,31 +38,32 @@ class DistributionGamma(Distribution):
     \\beta = 1/(\sigma^2\mu).
     $$
 
-
     Args:
         loc_link (LinkFunction, optional): The link function for $\mu$. Defaults to LogLink().
         scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LogLink().
     """
 
     def __init__(
-        self, loc_link: LinkFunction = LogLink(), scale_link: LinkFunction = LogLink()
-    ):
-        self.loc_link = loc_link
-        self.scale_link = scale_link
-        # Set up links as dict
-        self.links = {0: self.loc_link, 1: self.scale_link}
-        # Set distribution params
-        self.n_params = 2
-        self.corresponding_gamlss = "GA"
-        self.scipy_dist = st.gamma
+        self,
+        loc_link: LinkFunction = LogLink(),
+        scale_link: LinkFunction = LogLink(),
+    ) -> None:
+        self.loc_link: LinkFunction = loc_link
+        self.scale_link: LinkFunction = scale_link
+        self.links: dict[int, LinkFunction] = {0: self.loc_link, 1: self.scale_link}
+        self.n_params: int = 2
+        self.corresponding_gamlss: str = "GA"
+        self.scipy_dist: st.rv_continuous = st.gamma
 
-    def theta_to_params(self, theta):
+    def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         mu = theta[:, 0]
         sigma = theta[:, 1]
         return mu, sigma
 
     @staticmethod
-    def gamlss_to_scipy(mu: np.ndarray, sigma: np.ndarray):
+    def gamlss_to_scipy(
+        mu: np.ndarray, sigma: np.ndarray
+    ) -> Tuple[np.ndarray, int, np.ndarray]:
         """Map GAMLSS Parameters to scipy parameters.
 
         Args:
@@ -77,7 +79,7 @@ class DistributionGamma(Distribution):
         scale = 1 / beta
         return alpha, loc, scale
 
-    def dl1_dp1(self, y, theta, param=0):
+    def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         mu, sigma = self.theta_to_params(theta)
 
         if param == 0:
@@ -93,7 +95,7 @@ class DistributionGamma(Distribution):
                 + spc.digamma(1 / (sigma**2))
             )
 
-    def dl2_dp2(self, y, theta, param=0):
+    def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         mu, sigma = self.theta_to_params(theta)
         if param == 0:
             # MU
@@ -103,14 +105,16 @@ class DistributionGamma(Distribution):
             # SIGMA
             return (4 / sigma**4) - (4 / sigma**6) * spc.polygamma(1, (1 / sigma**2))
 
-    def dl2_dpp(self, y, theta, params=(0, 1)):
+    def dl2_dpp(
+        self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
+    ) -> np.ndarray:
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
 
-    def link_function(self, y, param=0):
+    def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         return self.links[param].link(y)
 
-    def link_inverse(self, y, param=0):
+    def link_inverse(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         return self.links[param].inverse(y)
 
     def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
@@ -119,25 +123,27 @@ class DistributionGamma(Distribution):
     def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         return self.links[param].inverse_derivative(y)
 
-    def initial_values(self, y, param=0, axis=None):
+    def initial_values(
+        self, y: np.ndarray, param: int = 0, axis: int = None
+    ) -> np.ndarray:
         if param == 0:
             return np.repeat(np.mean(y, axis=None), y.shape[0])
         if param == 1:
             return np.ones_like(y)
 
-    def cdf(self, y, theta):
+    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         mu, sigma = self.theta_to_params(theta)
         return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).cdf(y)
 
-    def pdf(self, y, theta):
+    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         mu, sigma = self.theta_to_params(theta)
         return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).pdf(y)
 
-    def ppf(self, q, theta):
+    def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
         mu, sigma = self.theta_to_params(theta)
         return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).ppf(q)
 
-    def rvs(self, size, theta):
+    def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
         mu, sigma = self.theta_to_params(theta)
         return (
             self.scipy_dist(*self.gamlss_to_scipy(mu, sigma))

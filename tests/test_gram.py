@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import scipy.stats as st
 
-from rolch.gram import (
+from rolch import (
     init_gram,
     init_inverted_gram,
     init_y_gram,
@@ -30,20 +30,19 @@ RANDOM_WEIGHTS = [True, False]
 FORGET = [0, 0.0001, 0.001, 0.01, 0.1]
 BATCH_SIZE = [10, 25]
 
+
 @pytest.mark.parametrize("N", N)
 @pytest.mark.parametrize("D", D)
 @pytest.mark.parametrize("random_weights", RANDOM_WEIGHTS)
 @pytest.mark.parametrize("forget", FORGET)
-def test_inverse_rank_deficit(
-    N, D, random_weights, forget
-):
+def test_inverse_rank_deficit(N, D, random_weights, forget):
     X, _, w = make_x_y_w(N, D, random_weights=random_weights)
-    for d in range(1, D+1):
+    for d in range(1, D + 1):
         choice = np.random.choice(np.arange(D), d)
         XX = np.hstack((X, X[:, choice]))
         with pytest.raises(ValueError):
-            gram_start = init_inverted_gram(XX[:-1], w[:-1], forget)
-        
+            _ = init_inverted_gram(XX[:-1], w[:-1], forget)
+
 
 @pytest.mark.parametrize("N", N)
 @pytest.mark.parametrize("D", D)

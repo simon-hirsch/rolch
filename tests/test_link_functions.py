@@ -4,11 +4,23 @@
 import numpy as np
 import pytest
 
-import rolch
+from rolch import (
+    IdentityLink,
+    LogIdentLink,
+    LogLink,
+    LogShiftValueLink,
+    SqrtLink,
+    SqrtShiftValueLink,
+)
 
-REAL_LINE_LINKS = [rolch.IdentityLink]
-POSITIVE_LINE_LINKS = [rolch.LogLink, rolch.SqrtLink, rolch.LogIdentLink]
-SHIFTED_LINKS = [rolch.LogShiftValueLink, rolch.SqrtShiftValueLink]
+# We don't test
+# - LogShiftTwoLink
+# - SqrtShiftTwoLink
+# at the moment since they derive from the ShiftValueLink
+
+REAL_LINE_LINKS = [IdentityLink]
+POSITIVE_LINE_LINKS = [LogLink, SqrtLink, LogIdentLink]
+SHIFTED_LINKS = [LogShiftValueLink, SqrtShiftValueLink]
 VALUES = np.array([2, 5, 10, 25, 100])
 M = 10000
 

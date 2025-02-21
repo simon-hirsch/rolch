@@ -32,4 +32,3 @@ def get_estimation_method(method: EstimationMethod | str):
     else:
         raise ValueError("Method not recognized")
     return out
-    return out
