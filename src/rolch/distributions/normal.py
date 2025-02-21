@@ -15,10 +15,11 @@ class DistributionNormal(Distribution):
         loc_link: LinkFunction = IdentityLink(),
         scale_link: LinkFunction = LogLink(),
     ) -> None:
-        self.n_params: int = 2
         self.loc_link: LinkFunction = loc_link
         self.scale_link: LinkFunction = scale_link
         self.links: list[LinkFunction] = [self.loc_link, self.scale_link]
+
+    n_params = 2
 
     def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         mu = theta[:, 0]

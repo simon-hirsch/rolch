@@ -51,9 +51,10 @@ class DistributionGamma(Distribution):
         self.loc_link: LinkFunction = loc_link
         self.scale_link: LinkFunction = scale_link
         self.links: dict[int, LinkFunction] = {0: self.loc_link, 1: self.scale_link}
-        self.n_params: int = 2
         self.corresponding_gamlss: str = "GA"
         self.scipy_dist: st.rv_continuous = st.gamma
+
+    n_params = 4
 
     def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         mu = theta[:, 0]

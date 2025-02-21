@@ -17,7 +17,6 @@ class DistributionT(Distribution):
         scale_link: LinkFunction = LogLink(),
         tail_link: LinkFunction = LogShiftTwoLink(),
     ) -> None:
-        self.n_params: int = 3
         self.loc_link: LinkFunction = loc_link
         self.scale_link: LinkFunction = scale_link
         self.tail_link: LinkFunction = tail_link
@@ -26,6 +25,8 @@ class DistributionT(Distribution):
             self.scale_link,
             self.tail_link,
         ]
+
+    n_params: int = 3
 
     def theta_to_params(
         self, theta: np.ndarray

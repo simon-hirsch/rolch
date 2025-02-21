@@ -25,7 +25,6 @@ class DistributionJSU(Distribution):
         shape_link: LinkFunction = IdentityLink(),
         tail_link: LinkFunction = LogLink(),
     ) -> None:
-        self.n_params = 4
         self.loc_link = loc_link
         self.scale_link = scale_link
         self.shape_link = shape_link
@@ -36,6 +35,8 @@ class DistributionJSU(Distribution):
             self.shape_link,  # skew
             self.tail_link,  # tail
         ]
+
+    n_params = 4
 
     def theta_to_params(
         self, theta: np.ndarray

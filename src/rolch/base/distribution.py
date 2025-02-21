@@ -6,6 +6,12 @@ import numpy as np
 
 class Distribution(ABC):
 
+    @property
+    @abstractmethod
+    def n_params(self) -> int:
+        """Each subclass must define 'n_params'."""
+        pass
+
     @abstractmethod
     def theta_to_params(self, theta: np.ndarray) -> Tuple:
         """Take the fitted values and return tuple of vectors for distribution parameters."""
