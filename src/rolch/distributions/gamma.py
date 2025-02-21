@@ -47,7 +47,7 @@ class DistributionGamma(Distribution):
         self,
         loc_link: LinkFunction = LogLink(),
         scale_link: LinkFunction = LogLink(),
-    ):
+    ) -> None:
         self.loc_link: LinkFunction = loc_link
         self.scale_link: LinkFunction = scale_link
         self.links: dict[int, LinkFunction] = {0: self.loc_link, 1: self.scale_link}
