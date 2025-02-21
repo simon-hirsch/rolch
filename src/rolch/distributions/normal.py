@@ -14,7 +14,7 @@ class DistributionNormal(Distribution):
         self,
         loc_link: LinkFunction = IdentityLink(),
         scale_link: LinkFunction = LogLink(),
-    ):
+    ) -> None:
         self.n_params: int = 2
         self.loc_link: LinkFunction = loc_link
         self.scale_link: LinkFunction = scale_link
