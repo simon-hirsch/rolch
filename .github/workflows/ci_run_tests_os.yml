@@ -2,7 +2,7 @@ name: Automated Tests for OS
 on:
   push:
     branches:    
-      - '**'            # matches every branch
+      - main            # only run on pushes to main
       - '!gh-pages'     # excludes gh-pages
   pull_request:
     branches:    
