@@ -27,6 +27,12 @@ class DistributionT(Distribution):
         ]
 
     n_params: int = 3
+    distribution_support = (-np.inf, np.inf)
+    parameter_support = {
+        0: (-np.inf, np.inf),
+        1: (np.nextafter(0, 1), np.inf),
+        2: (np.nextafter(0, 1), np.inf),
+    }
 
     def theta_to_params(
         self, theta: np.ndarray

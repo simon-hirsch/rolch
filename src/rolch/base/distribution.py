@@ -12,6 +12,18 @@ class Distribution(ABC):
         """Each subclass must define 'n_params'."""
         pass
 
+    @property
+    @abstractmethod
+    def distribution_support(self) -> Tuple[float, float]:
+        """The support of the distribution."""
+        pass
+
+    @property
+    @abstractmethod
+    def parameter_support(self) -> dict:
+        """The support of each parameter of the distribution."""
+        pass
+
     @abstractmethod
     def theta_to_params(self, theta: np.ndarray) -> Tuple:
         """Take the fitted values and return tuple of vectors for distribution parameters."""

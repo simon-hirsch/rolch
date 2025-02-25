@@ -56,6 +56,12 @@ class DistributionGamma(Distribution):
 
     n_params = 4
 
+    distribution_support = (np.nextafter(0, 1), np.inf)
+    parameter_support = {
+        0: (np.nextafter(0, 1), np.inf),
+        1: (np.nextafter(0, 1), np.inf),
+    }
+
     def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         mu = theta[:, 0]
         sigma = theta[:, 1]

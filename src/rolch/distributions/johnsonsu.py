@@ -38,6 +38,14 @@ class DistributionJSU(Distribution):
 
     n_params = 4
 
+    distribution_support = (-np.inf, np.inf)
+    parameter_support = {
+        0: (-np.inf, np.inf),
+        1: (np.nextafter(0, 1), np.inf),
+        2: (-np.inf, np.inf),
+        3: (np.nextafter(0, 1), np.inf),
+    }
+
     def theta_to_params(
         self, theta: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
