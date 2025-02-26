@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Tuple
 
 import numpy as np
 
@@ -9,7 +9,7 @@ class LinkFunction(ABC):
 
     @property
     @abstractmethod
-    def link_support(self) -> Dict[int, float]:
+    def link_support(self) -> Tuple[float, float]:
         """The support of the distribution."""
         pass
 

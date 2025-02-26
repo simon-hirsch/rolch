@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import scipy.special as sp
@@ -12,21 +12,6 @@ from rolch.link import IdentityLink, LogLink, LogShiftTwoLink
 class DistributionT(Distribution, ScipyMixin):
     """Corresponds to GAMLSS TF() and scipy.stats.t()"""
 
-    def __init__(
-        self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
-        tail_link: LinkFunction = LogShiftTwoLink(),
-    ) -> None:
-        self.loc_link: LinkFunction = loc_link
-        self.scale_link: LinkFunction = scale_link
-        self.tail_link: LinkFunction = tail_link
-        self.links: List[LinkFunction] = [
-            self.loc_link,
-            self.scale_link,
-            self.tail_link,
-        ]
-
     parameter_names = {0: "mu", 1: "sigma", 2: "nu"}
     parameter_support = {
         0: (-np.inf, np.inf),
@@ -38,6 +23,22 @@ class DistributionT(Distribution, ScipyMixin):
     # Scipy distribution and parameter mapping rolch -> scipy
     scipy_dist = st.t
     scipy_names = {"mu": "loc", "sigma": "scale", "nu": "df"}
+
+    def __init__(
+        self,
+        loc_link: LinkFunction = IdentityLink(),
+        scale_link: LinkFunction = LogLink(),
+        tail_link: LinkFunction = LogShiftTwoLink(),
+    ) -> None:
+        self.loc_link: LinkFunction = loc_link
+        self.scale_link: LinkFunction = scale_link
+        self.tail_link: LinkFunction = tail_link
+        self.links: Dict[LinkFunction] = {
+            0: self.loc_link,
+            1: self.scale_link,
+            2: self.tail_link,
+        }
+        self._validate_links()
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)

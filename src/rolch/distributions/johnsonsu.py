@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import scipy.stats as st
@@ -19,24 +19,6 @@ class DistributionJSU(Distribution, ScipyMixin):
     3 : Tail behaviour
     """
 
-    def __init__(
-        self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
-        skew_link: LinkFunction = IdentityLink(),
-        tail_link: LinkFunction = LogLink(),
-    ) -> None:
-        self.loc_link = loc_link
-        self.scale_link = scale_link
-        self.skew_link = skew_link
-        self.tail_link = tail_link
-        self.links = [
-            self.loc_link,
-            self.scale_link,
-            self.skew_link,
-            self.tail_link,
-        ]
-
     parameter_names = {0: "mu", 1: "sigma", 2: "nu", 3: "tau"}
     parameter_support = {
         0: (-np.inf, np.inf),
@@ -49,6 +31,25 @@ class DistributionJSU(Distribution, ScipyMixin):
     # Scipy equivalent and parameter mapping rolch -> scipy
     scipy_dist = st.johnsonsu
     scipy_names = {"mu": "loc", "sigma": "scale", "nu": "a", "tau": "b"}
+
+    def __init__(
+        self,
+        loc_link: LinkFunction = IdentityLink(),
+        scale_link: LinkFunction = LogLink(),
+        skew_link: LinkFunction = IdentityLink(),
+        tail_link: LinkFunction = LogLink(),
+    ) -> None:
+        self.loc_link = loc_link
+        self.scale_link = scale_link
+        self.skew_link = skew_link
+        self.tail_link = tail_link
+        self.links: Dict[int, LinkFunction] = {
+            0: self.loc_link,
+            1: self.scale_link,
+            2: self.skew_link,
+            3: self.tail_link,
+        }
+        self._validate_links()
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)

@@ -44,6 +44,18 @@ class DistributionGamma(Distribution, ScipyMixin):
         scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LogLink().
     """
 
+    parameter_names = {0: "mu", 1: "sigma"}
+    parameter_support = {
+        0: (np.nextafter(0, 1), np.inf),
+        1: (np.nextafter(0, 1), np.inf),
+    }
+    distribution_support = (np.nextafter(0, 1), np.inf)
+    # Scipy equivalent and parameter mapping rolch -> scipy
+    scipy_dist = st.gamma
+    # Theta columns do not map 1:1 to scipy parameters for gamma
+    # So we have to overload theta_to_scipy_params
+    scipy_names = {}
+
     def __init__(
         self,
         loc_link: LinkFunction = LogLink(),
@@ -53,19 +65,7 @@ class DistributionGamma(Distribution, ScipyMixin):
         self.scale_link: LinkFunction = scale_link
         self.links: dict[int, LinkFunction] = {0: self.loc_link, 1: self.scale_link}
         self.corresponding_gamlss: str = "GA"
-
-    parameter_names = {0: "mu", 1: "sigma"}
-    parameter_support = {
-        0: (np.nextafter(0, 1), np.inf),
-        1: (np.nextafter(0, 1), np.inf),
-    }
-    distribution_support = (np.nextafter(0, 1), np.inf)
-
-    # Scipy equivalent and parameter mapping rolch -> scipy
-    scipy_dist = st.gamma
-    # Theta columns do not map 1:1 to scipy parameters for gamma
-    # So we have to overload theta_to_scipy_params
-    scipy_names = {}
+        self._validate_links()
 
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
         """Map GAMLSS Parameters to scipy parameters.

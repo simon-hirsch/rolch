@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import scipy.stats as st
@@ -11,15 +11,6 @@ from rolch.link import IdentityLink, LogLink
 class DistributionNormal(Distribution, ScipyMixin):
     """Corresponds to GAMLSS NO() and scipy.stats.norm()"""
 
-    def __init__(
-        self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
-    ) -> None:
-        self.loc_link: LinkFunction = loc_link
-        self.scale_link: LinkFunction = scale_link
-        self.links: list[LinkFunction] = [self.loc_link, self.scale_link]
-
     parameter_names = {0: "mu", 1: "sigma"}
     parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
     distribution_support = (-np.inf, np.inf)
@@ -27,6 +18,19 @@ class DistributionNormal(Distribution, ScipyMixin):
     # Scipy equivalent and parameter mapping rolch -> scipy
     scipy_dist = st.norm
     scipy_names = {"mu": "loc", "sigma": "scale"}
+
+    def __init__(
+        self,
+        loc_link: LinkFunction = IdentityLink(),
+        scale_link: LinkFunction = LogLink(),
+    ) -> None:
+        self.loc_link: LinkFunction = loc_link
+        self.scale_link: LinkFunction = scale_link
+        self.links: Dict[int, LinkFunction] = {
+            0: self.loc_link,
+            1: self.scale_link,
+        }
+        self._validate_links()
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)

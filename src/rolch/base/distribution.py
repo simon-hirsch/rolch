@@ -47,6 +47,17 @@ class Distribution(ABC):
     ) -> np.ndarray:
         """Take the first derivative of the likelihood function with respect to both parameters."""
 
+    def _validate_links(self):
+        for param, link in self.links.items():
+            if link.link_support[0] < self.parameter_support[param][0]:
+                raise ValueError(
+                    f"Lower bound of parameter support {param} does not match link function."
+                )
+            if link.link_support[1] > self.parameter_support[param][1]:
+                raise ValueError(
+                    f"Upper bound of parameter support {param} does not match link function."
+                )
+
     def _validate_dln_dpn_inputs(
         self, y: np.ndarray, theta: np.ndarray, param: int
     ) -> None:
