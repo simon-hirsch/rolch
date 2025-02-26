@@ -1,10 +1,17 @@
 from abc import ABC, abstractmethod
+from typing import Dict
 
 import numpy as np
 
 
 class LinkFunction(ABC):
     """The base class for the link functions."""
+
+    @property
+    @abstractmethod
+    def link_support(self) -> Dict[int, float]:
+        """The support of the distribution."""
+        pass
 
     @abstractmethod
     def link(self, x: np.ndarray) -> np.ndarray:
