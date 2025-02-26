@@ -115,6 +115,7 @@ class DistributionGamma(Distribution):
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
     ) -> np.ndarray:
+        self._validate_dl2_dpp_inputs(y, theta, params)
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
 

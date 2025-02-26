@@ -129,6 +129,7 @@ class DistributionJSU(Distribution):
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
     ) -> np.ndarray:
+        self._validate_dl2_dpp_inputs(y, theta, params)
         mu, sigma, nu, tau = self.theta_to_params(theta)
         if sorted(params) == [0, 1]:
             z = (y - mu) / sigma

@@ -42,6 +42,12 @@ class Distribution(ABC):
     ) -> np.ndarray:
         """Take the first derivative of the likelihood function with respect to both parameters."""
 
+    def _validate_dl2_dpp_inputs(
+        self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int]
+    ) -> None:
+        if params[0] == params[1]:
+            raise ValueError("Cross derivatives must use different parameters.")
+
     @abstractmethod
     def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         """Apply the link function for param on y."""
