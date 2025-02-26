@@ -42,9 +42,21 @@ class Distribution(ABC):
     ) -> np.ndarray:
         """Take the first derivative of the likelihood function with respect to both parameters."""
 
+    def _validate_dln_dpn_inputs(
+        self, y: np.ndarray, theta: np.ndarray, param: int
+    ) -> None:
+        if param >= self.n_params:
+            raise ValueError(
+                f"{self.__class__.__name__} has only {self.n_params} distribution parameters.\nYou have passed {param}. Please remember we start counting at 0."
+            )
+
     def _validate_dl2_dpp_inputs(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int]
     ) -> None:
+        if max(params) >= self.n_params:
+            raise ValueError(
+                f"{self.__class__.__name__} has only {self.n_params} distribution parameters.\nYou have passed {params}. Please remember we start counting at 0."
+            )
         if params[0] == params[1]:
             raise ValueError("Cross derivatives must use different parameters.")
 

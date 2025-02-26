@@ -56,6 +56,7 @@ class DistributionJSU(Distribution):
         return mu, sigma, nu, tau
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma, nu, tau = self.theta_to_params(theta)
 
         if param == 0:
@@ -91,6 +92,7 @@ class DistributionJSU(Distribution):
             return dldt
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma, nu, tau = self.theta_to_params(theta)
         if param == 0:
             # MU

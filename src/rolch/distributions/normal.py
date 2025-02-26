@@ -30,6 +30,7 @@ class DistributionNormal(Distribution):
         return mu, sigma
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma = self.theta_to_params(theta)
 
         if param == 0:
@@ -39,6 +40,7 @@ class DistributionNormal(Distribution):
             return ((y - mu) ** 2 - sigma**2) / (sigma**3)
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         _, sigma = self.theta_to_params(theta)
         if param == 0:
             # MU

@@ -87,6 +87,7 @@ class DistributionGamma(Distribution):
         return alpha, loc, scale
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma = self.theta_to_params(theta)
 
         if param == 0:
@@ -103,6 +104,7 @@ class DistributionGamma(Distribution):
             )
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma = self.theta_to_params(theta)
         if param == 0:
             # MU
