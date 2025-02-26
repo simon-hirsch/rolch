@@ -22,18 +22,18 @@ class DistributionJSU(Distribution):
         self,
         loc_link: LinkFunction = IdentityLink(),
         scale_link: LinkFunction = LogLink(),
-        shape_link: LinkFunction = IdentityLink(),
+        skew_link: LinkFunction = IdentityLink(),
         tail_link: LinkFunction = LogLink(),
     ) -> None:
         self.loc_link = loc_link
         self.scale_link = scale_link
-        self.shape_link = shape_link
+        self.skew_link = skew_link
         self.tail_link = tail_link
         self.links = [
             self.loc_link,
             self.scale_link,
-            self.shape_link,  # skew
-            self.tail_link,  # tail
+            self.skew_link,
+            self.tail_link,
         ]
 
     n_params = 4
