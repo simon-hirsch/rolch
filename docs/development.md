@@ -2,7 +2,7 @@
 
 First of all, we're happy that you want to take the time to contribute to this package and extending it. Thanks!
 
-This page is trying to give some guidance on how to write additional link functions or distributions and some of the ideas underlying the [`LinkFunction`][rolch.base.LinkFunction], the [`Distribution`][rolch.base.Distribution] and the `ScipyMixin` classes. 
+This page is trying to give some guidance on how to write additional link functions or distributions and some of the ideas underlying the [`LinkFunction`][rolch.base.LinkFunction], the [`Distribution`][rolch.base.Distribution] and the `ScipyMixin` classes.
 
 ## Writing Link Functions
 
