@@ -5,10 +5,11 @@ import scipy.special as spc
 import scipy.stats as st
 
 from rolch.base import Distribution, LinkFunction
+from rolch.base.scipymixin import ScipyMixin
 from rolch.link import LogLink
 
 
-class DistributionGamma(Distribution):
+class DistributionGamma(Distribution, ScipyMixin):
     """The Gamma Distribution for GAMLSS.
 
     The distribution function is defined as in GAMLSS as:
@@ -52,22 +53,19 @@ class DistributionGamma(Distribution):
         self.scale_link: LinkFunction = scale_link
         self.links: dict[int, LinkFunction] = {0: self.loc_link, 1: self.scale_link}
         self.corresponding_gamlss: str = "GA"
-        self.scipy_dist: st.rv_continuous = st.gamma
 
-    distribution_support = (np.nextafter(0, 1), np.inf)
-
-    n_params = 2
+    parameter_names = {0: "mu", 1: "sigma"}
     parameter_support = {
         0: (np.nextafter(0, 1), np.inf),
         1: (np.nextafter(0, 1), np.inf),
     }
-    # Theta columns do not map 1:1 to scipy parameters, to we have to overload theta_to_scipy_params
-    scipy_parameters = {"a": 0, "loc": 0, "scale": 0}
+    distribution_support = (np.nextafter(0, 1), np.inf)
 
-    def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        mu = theta[:, 0]
-        sigma = theta[:, 1]
-        return mu, sigma
+    # Scipy equivalent and parameter mapping rolch -> scipy
+    scipy_dist = st.gamma
+    # Theta columns do not map 1:1 to scipy parameters for gamma
+    # So we have to overload theta_to_scipy_params
+    scipy_names = {}
 
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
         """Map GAMLSS Parameters to scipy parameters.
@@ -119,18 +117,6 @@ class DistributionGamma(Distribution):
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
 
-    def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].link(y)
-
-    def link_inverse(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].inverse(y)
-
-    def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].link_derivative(y)
-
-    def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].inverse_derivative(y)
-
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: int = None
     ) -> np.ndarray:
@@ -138,19 +124,3 @@ class DistributionGamma(Distribution):
             return np.repeat(np.mean(y, axis=None), y.shape[0])
         if param == 1:
             return np.ones_like(y)
-
-    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
-
-    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
-
-    def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
-
-    def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        return (
-            self.scipy_dist(**self.theta_to_scipy_params(theta))
-            .rvs((size, theta.shape[0]))
-            .T
-        )

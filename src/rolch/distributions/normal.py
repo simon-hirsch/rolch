@@ -4,10 +4,11 @@ import numpy as np
 import scipy.stats as st
 
 from rolch.base import Distribution, LinkFunction
+from rolch.base.scipymixin import ScipyMixin
 from rolch.link import IdentityLink, LogLink
 
 
-class DistributionNormal(Distribution):
+class DistributionNormal(Distribution, ScipyMixin):
     """Corresponds to GAMLSS NO() and scipy.stats.norm()"""
 
     def __init__(
@@ -18,17 +19,14 @@ class DistributionNormal(Distribution):
         self.loc_link: LinkFunction = loc_link
         self.scale_link: LinkFunction = scale_link
         self.links: list[LinkFunction] = [self.loc_link, self.scale_link]
-        self.scipy_dist: st.rv_continuous = st.norm
 
-    distribution_support = (-np.inf, np.inf)
-    n_params = 2
+    parameter_names = {0: "mu", 1: "sigma"}
     parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
-    scipy_parameters = {"loc": 0, "scale": 1}
+    distribution_support = (-np.inf, np.inf)
 
-    def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        mu = theta[:, 0]
-        sigma = theta[:, 1]
-        return mu, sigma
+    # Scipy equivalent and parameter mapping rolch -> scipy
+    scipy_dist = st.norm
+    scipy_names = {"mu": "loc", "sigma": "scale"}
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -58,18 +56,6 @@ class DistributionNormal(Distribution):
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
 
-    def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].link(y)
-
-    def link_inverse(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].inverse(y)
-
-    def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].link_derivative(y)
-
-    def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].inverse_derivative(y)
-
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Union[int, None] = None
     ) -> np.ndarray:
@@ -77,19 +63,3 @@ class DistributionNormal(Distribution):
             return np.repeat(np.mean(y, axis=axis), y.shape[0])
         if param == 1:
             return np.repeat(np.std(y, axis=axis), y.shape[0])
-
-    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
-
-    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
-
-    def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
-
-    def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        return (
-            self.scipy_dist(**self.theta_to_scipy_params(theta))
-            .rvs((size, theta.shape[0]))
-            .T
-        )

@@ -7,10 +7,19 @@ import numpy as np
 class Distribution(ABC):
 
     @property
-    @abstractmethod
     def n_params(self) -> int:
         """Each subclass must define 'n_params'."""
+        return len(self.parameter_names)
+
+    @property
+    @abstractmethod
+    def parameter_names(self) -> dict:
+        """Parameter name for each column of theta."""
         pass
+
+    def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, ...]:
+        """Take the fitted values and return tuple of vectors for distribution parameters."""
+        return tuple(theta[:, i] for i in range(self.n_params))
 
     @property
     @abstractmethod
@@ -23,22 +32,6 @@ class Distribution(ABC):
     def parameter_support(self) -> dict:
         """The support of each parameter of the distribution."""
         pass
-
-    @property
-    @abstractmethod
-    def scipy_parameters(self) -> Tuple[str]:
-        """The names of the parameters in the scipy.stats distribution and the corresponding column in theta."""
-        pass
-
-    def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
-        params = {}
-        for name, index in self.scipy_parameters.items():
-            params[name] = theta[:, index]
-        return params
-
-    @abstractmethod
-    def theta_to_params(self, theta: np.ndarray) -> Tuple:
-        """Take the fitted values and return tuple of vectors for distribution parameters."""
 
     @abstractmethod
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int) -> np.ndarray:
@@ -72,40 +65,24 @@ class Distribution(ABC):
         if params[0] == params[1]:
             raise ValueError("Cross derivatives must use different parameters.")
 
-    @abstractmethod
     def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         """Apply the link function for param on y."""
+        return self.links[param].link(y)
 
-    @abstractmethod
     def link_inverse(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         """Apply the inverse of the link function for param on y."""
+        return self.links[param].inverse(y)
 
-    @abstractmethod
     def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         """Apply the derivative of the link function for param on y."""
+        return self.links[param].link_derivative(y)
 
-    @abstractmethod
     def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
         """Apply the derivative of the inverse link function for param on y."""
+        return self.links[param].inverse_derivative(y)
 
     @abstractmethod
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: int = None
     ) -> np.ndarray:
         """Calculate the initial values for the GAMLSS fit."""
-
-    @abstractmethod
-    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        """The cumulative density function."""
-
-    @abstractmethod
-    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        """The density function."""
-
-    @abstractmethod
-    def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        """The percentage point or quantile function of the distribution."""
-
-    @abstractmethod
-    def rvs(self, size: Union[int, Tuple], theta: np.ndarray) -> np.ndarray:
-        """Draw random samples of shape size."""
