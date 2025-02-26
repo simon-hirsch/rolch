@@ -3,12 +3,15 @@ import pytest
 import numpy as np
 from rolch.distributions.studentt import DistributionT
 
+PARAM = np.arange(DistributionT().n_params)
 
-def test_dl2_dpp_raises_value_error():
+
+@pytest.mark.parametrize("param", PARAM)
+def test_dl2_dpp_raises_value_error(param):
     dist = DistributionT()
     y = np.array([1, 2, 3])
     theta = np.array([[0, 1, 2], [1, 2, 3], [2, 3, 4]])
     with pytest.raises(
         ValueError, match="Cross derivatives must use different parameters."
     ):
-        dist.dl2_dpp(y, theta, (1, 1))
+        dist.dl2_dpp(y, theta, (param, param))
