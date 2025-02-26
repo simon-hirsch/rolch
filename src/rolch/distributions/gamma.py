@@ -54,7 +54,7 @@ class DistributionGamma(Distribution):
         self.corresponding_gamlss: str = "GA"
         self.scipy_dist: st.rv_continuous = st.gamma
 
-    n_params = 4
+    n_params = 2
 
     distribution_support = (np.nextafter(0, 1), np.inf)
     parameter_support = {
