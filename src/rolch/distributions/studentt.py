@@ -25,14 +25,17 @@ class DistributionT(Distribution):
             self.scale_link,
             self.tail_link,
         ]
+        self.scipy_dist: st.rv_continuous = st.t
+
+    distribution_support = (-np.inf, np.inf)
 
     n_params: int = 3
-    distribution_support = (-np.inf, np.inf)
     parameter_support = {
         0: (-np.inf, np.inf),
         1: (np.nextafter(0, 1), np.inf),
         2: (np.nextafter(0, 1), np.inf),
     }
+    scipy_parameters = {"loc": 0, "scale": 1, "df": 2}
 
     def theta_to_params(
         self, theta: np.ndarray
@@ -135,17 +138,17 @@ class DistributionT(Distribution):
             return np.full_like(y, 10)
 
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).cdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
 
     def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).pdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
 
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).ppf(q)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).rvs((size, theta.shape[0])).T
+        return (
+            self.scipy_dist(**self.theta_to_scipy_params(theta))
+            .rvs((size, theta.shape[0]))
+            .T
+        )

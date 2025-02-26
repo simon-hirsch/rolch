@@ -23,7 +23,7 @@ class DistributionGamma(Distribution):
 
         This parameterization is different to the `scipy.stats.gamma(alpha, loc, scale)` parameterization.
 
-        We can use `DistributionGamma().gamlss_to_scipy(mu, sigma)` to map the distribution parameters to scipy.
+        We can use `DistributionGamma().theta_to_scipy_params(theta)` to map the distribution parameters to scipy.
 
     The `scipy.stats.gamma()` distribution is defined as:
     $$
@@ -54,37 +54,35 @@ class DistributionGamma(Distribution):
         self.corresponding_gamlss: str = "GA"
         self.scipy_dist: st.rv_continuous = st.gamma
 
-    n_params = 2
-
     distribution_support = (np.nextafter(0, 1), np.inf)
+
+    n_params = 2
     parameter_support = {
         0: (np.nextafter(0, 1), np.inf),
         1: (np.nextafter(0, 1), np.inf),
     }
+    # Theta columns do not map 1:1 to scipy parameters, to we have to overload theta_to_scipy_params
+    scipy_parameters = {"a": 0, "loc": 0, "scale": 0}
 
     def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         mu = theta[:, 0]
         sigma = theta[:, 1]
         return mu, sigma
 
-    @staticmethod
-    def gamlss_to_scipy(
-        mu: np.ndarray, sigma: np.ndarray
-    ) -> Tuple[np.ndarray, int, np.ndarray]:
+    def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
         """Map GAMLSS Parameters to scipy parameters.
 
         Args:
-            mu (np.ndarray): mu parameter
-            sigma (np.ndarray): sigma parameter
+            theta (np.ndarray): parameters
 
         Returns:
-            tuple: Tuple of (alpha, loc, scale) for scipy.stats.gamma(alpha, loc, scale)
+            dict: Dict of (a, loc, scale) for scipy.stats.gamma(a, loc, scale)
         """
-        alpha = 1 / sigma**2
+        mu = theta[:, 0]
+        sigma = theta[:, 1]
         beta = 1 / (sigma**2 * mu)
-        loc = 0
-        scale = 1 / beta
-        return alpha, loc, scale
+        params = {"a": 1 / sigma**2, "loc": 0, "scale": 1 / beta}
+        return params
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -142,21 +140,17 @@ class DistributionGamma(Distribution):
             return np.ones_like(y)
 
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
-        return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).cdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
 
     def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
-        return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).pdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
 
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
-        return self.scipy_dist(*self.gamlss_to_scipy(mu, sigma)).ppf(q)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
         return (
-            self.scipy_dist(*self.gamlss_to_scipy(mu, sigma))
+            self.scipy_dist(**self.theta_to_scipy_params(theta))
             .rvs((size, theta.shape[0]))
             .T
         )

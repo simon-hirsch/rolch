@@ -24,6 +24,18 @@ class Distribution(ABC):
         """The support of each parameter of the distribution."""
         pass
 
+    @property
+    @abstractmethod
+    def scipy_parameters(self) -> Tuple[str]:
+        """The names of the parameters in the scipy.stats distribution and the corresponding column in theta."""
+        pass
+
+    def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
+        params = {}
+        for name, index in self.scipy_parameters.items():
+            params[name] = theta[:, index]
+        return params
+
     @abstractmethod
     def theta_to_params(self, theta: np.ndarray) -> Tuple:
         """Take the fitted values and return tuple of vectors for distribution parameters."""

@@ -35,6 +35,7 @@ class DistributionJSU(Distribution):
             self.skew_link,
             self.tail_link,
         ]
+        self.scipy_dist: st.rv_continuous = st.johnsonsu
 
     n_params = 4
 
@@ -45,6 +46,7 @@ class DistributionJSU(Distribution):
         2: (-np.inf, np.inf),
         3: (np.nextafter(0, 1), np.inf),
     }
+    scipy_parameters = {"loc": 0, "scale": 1, "a": 2, "b": 3}
 
     def theta_to_params(
         self, theta: np.ndarray
@@ -218,41 +220,17 @@ class DistributionJSU(Distribution):
             return np.full_like(y, 10)
 
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu, tau = self.theta_to_params(theta)
-        return st.johnsonsu(
-            loc=mu,
-            scale=sigma,
-            a=nu,
-            b=tau,
-        ).cdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
 
     def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu, tau = self.theta_to_params(theta)
-        return st.johnsonsu(
-            loc=mu,
-            scale=sigma,
-            a=nu,
-            b=tau,
-        ).pdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
 
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu, tau = self.theta_to_params(theta)
-        return st.johnsonsu(
-            loc=mu,
-            scale=sigma,
-            a=nu,
-            b=tau,
-        ).ppf(q)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu, tau = self.theta_to_params(theta)
         return (
-            st.johnsonsu(
-                loc=mu,
-                scale=sigma,
-                a=nu,
-                b=tau,
-            )
+            self.scipy_dist(**self.theta_to_scipy_params(theta))
             .rvs((size, theta.shape[0]))
             .T
         )

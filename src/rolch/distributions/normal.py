@@ -18,11 +18,12 @@ class DistributionNormal(Distribution):
         self.loc_link: LinkFunction = loc_link
         self.scale_link: LinkFunction = scale_link
         self.links: list[LinkFunction] = [self.loc_link, self.scale_link]
-
-    n_params = 2
+        self.scipy_dist: st.rv_continuous = st.norm
 
     distribution_support = (-np.inf, np.inf)
+    n_params = 2
     parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
+    scipy_parameters = {"loc": 0, "scale": 1}
 
     def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         mu = theta[:, 0]
@@ -78,17 +79,17 @@ class DistributionNormal(Distribution):
             return np.repeat(np.std(y, axis=axis), y.shape[0])
 
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
-        return st.norm(mu, sigma).cdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
 
     def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
-        return st.norm(mu, sigma).pdf(y)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
 
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
-        return st.norm(mu, sigma).ppf(q)
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
-        return st.norm(mu, sigma).rvs((size, theta.shape[0])).T
+        return (
+            self.scipy_dist(**self.theta_to_scipy_params(theta))
+            .rvs((size, theta.shape[0]))
+            .T
+        )
