@@ -1,7 +1,6 @@
 import copy
 
-from rolch.base import EstimationMethod
-
+from ..base import EstimationMethod
 from .lasso_path import LassoPathMethod
 from .recursive_least_squares import OrdinaryLeastSquaresMethod
 

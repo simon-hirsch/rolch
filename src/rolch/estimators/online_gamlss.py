@@ -4,9 +4,9 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 
-from rolch import HAS_PANDAS, HAS_POLARS
-
+from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, Estimator
+from ..error import OutOfSupportError
 from ..gram import init_forget_vector
 from ..information_criteria import select_best_model_by_information_criterion
 from ..methods import get_estimation_method
@@ -416,6 +416,46 @@ class OnlineGamlss(Estimator):
 
         return beta, beta_path, rss
 
+    def _validate_inputs(self, X: np.ndarray, y: np.ndarray):
+        """Validate the input matrices X and y.
+
+        Args:
+            X (np.ndarray): Input matrix $X$
+            y (np.ndarray): Response vector $y$.
+
+        Raises:
+            OutOfSupportError: If the values of $y$ are below the range of the distribution.
+            OutOfSupportError: If the values of $y$ are beyond the range of the distribution.
+            ValueError: If `X` and `y` are not the same length.
+            ValueError: If `X` or `y` contain NaN values.
+            ValueError: If `X` or `y` contain infinite values.
+        """
+        if np.any(y < self.distribution.distribution_support[0]):
+            raise OutOfSupportError(
+                message=(
+                    "y contains values below the distribution's support. "
+                    f"The smallest value in y is {np.min(y)}. "
+                    f"The support of the distribution is {str(self.distribution.distribution_support)}."
+                )
+            )
+        if np.any(y > self.distribution.distribution_support[1]):
+            raise OutOfSupportError(
+                message=(
+                    "Y contains values larger than the distribution's support. "
+                    f"The smallest value in y is {np.max(y)}. "
+                    f"The support of the distribution is {str(self.distribution.distribution_support)}."
+                ),
+            )
+
+        if y.shape[0] != X.shape[0]:
+            raise ValueError("X and y should have the same length.")
+
+        if np.any(np.isnan(y)) or np.any(np.isnan(X)):
+            raise ValueError("X and y should not contain Nan.")
+
+        if not (np.all(np.isfinite(y)) & np.all(np.isfinite(X))):
+            raise ValueError("X and y should contain only finite values.")
+
     def _make_initial_fitted_values(self, y: np.ndarray) -> np.ndarray:
         out = np.stack(
             [
@@ -446,6 +486,8 @@ class OnlineGamlss(Estimator):
             sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
             beta_bounds (Dict[int, Tuple], optional): Bounds for the $\beta$ in the coordinate descent algorithm. The user needs to provide a `dict` with a mapping of tuples to distribution parameters 0, 1, 2, and 3 potentially. Defaults to None.
         """
+
+        self._validate_inputs(X, y)
         self.n_observations = y.shape[0]
         self.n_training = {
             p: calculate_effective_training_length(self.forget[p], self.n_observations)
@@ -543,6 +585,8 @@ class OnlineGamlss(Estimator):
             y (np.ndarray): Response variable $Y$.
             sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
         """
+
+        self._validate_inputs(X, y)
         if sample_weight is not None:
             w = sample_weight  # Align to sklearn API
         else:

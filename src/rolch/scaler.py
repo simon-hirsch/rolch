@@ -1,6 +1,6 @@
 import numpy as np
 
-from rolch.utils import (
+from .utils import (
     calculate_asymptotic_training_length,
     calculate_effective_training_length,
 )

@@ -3,12 +3,12 @@ from typing import Literal, Optional
 
 import numpy as np
 
-from rolch.base import EstimationMethod, Estimator
-from rolch.design_matrix import add_intercept
-from rolch.information_criteria import select_best_model_by_information_criterion
-from rolch.methods import get_estimation_method
-from rolch.scaler import OnlineScaler
-from rolch.utils import calculate_effective_training_length
+from ..base import EstimationMethod, Estimator
+from ..design_matrix import add_intercept
+from ..information_criteria import select_best_model_by_information_criterion
+from ..methods import get_estimation_method
+from ..scaler import OnlineScaler
+from ..utils import calculate_effective_training_length
 
 
 class OnlineLinearModel(Estimator):

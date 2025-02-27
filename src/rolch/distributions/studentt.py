@@ -1,15 +1,29 @@
-from typing import List, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import scipy.special as sp
 import scipy.stats as st
 
-from rolch.base import Distribution, LinkFunction
-from rolch.link import IdentityLink, LogLink, LogShiftTwoLink
+from ..base import Distribution, LinkFunction, ScipyMixin
+from ..link import IdentityLink, LogLink, LogShiftTwoLink
 
 
-class DistributionT(Distribution):
+class DistributionT(ScipyMixin, Distribution):
     """Corresponds to GAMLSS TF() and scipy.stats.t()"""
+
+    corresponding_gamlss: str = "TF"
+
+    parameter_names = {0: "mu", 1: "sigma", 2: "nu"}
+    parameter_support = {
+        0: (-np.inf, np.inf),
+        1: (np.nextafter(0, 1), np.inf),
+        2: (np.nextafter(0, 1), np.inf),
+    }
+    distribution_support = (-np.inf, np.inf)
+
+    # Scipy distribution and parameter mapping rolch -> scipy
+    scipy_dist = st.t
+    scipy_names = {"mu": "loc", "sigma": "scale", "nu": "df"}
 
     def __init__(
         self,
@@ -17,25 +31,16 @@ class DistributionT(Distribution):
         scale_link: LinkFunction = LogLink(),
         tail_link: LinkFunction = LogShiftTwoLink(),
     ) -> None:
-        self.n_params: int = 3
-        self.loc_link: LinkFunction = loc_link
-        self.scale_link: LinkFunction = scale_link
-        self.tail_link: LinkFunction = tail_link
-        self.links: List[LinkFunction] = [
-            self.loc_link,
-            self.scale_link,
-            self.tail_link,
-        ]
-
-    def theta_to_params(
-        self, theta: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        mu = theta[:, 0]
-        sigma = theta[:, 1]
-        nu = theta[:, 2]
-        return mu, sigma, nu
+        super().__init__(
+            links={
+                0: loc_link,
+                1: scale_link,
+                2: tail_link,
+            }
+        )
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma, nu = self.theta_to_params(theta)
 
         if param == 0:
@@ -66,6 +71,7 @@ class DistributionT(Distribution):
             ) / 2
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         _, sigma, nu = self.theta_to_params(theta)
         if param == 0:
             # MU
@@ -89,6 +95,7 @@ class DistributionT(Distribution):
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
     ) -> np.ndarray:
+        self._validate_dl2_dpp_inputs(y, theta, params)
         if sorted(params) == [0, 1]:
             # d2l/(dm ds)
             return np.zeros_like(y)
@@ -102,20 +109,8 @@ class DistributionT(Distribution):
             _, sigma, nu = self.theta_to_params(theta)
             return 2 / (sigma * (nu + 3) * (nu + 1))
 
-    def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].link(y)
-
-    def link_inverse(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].inverse(y)
-
-    def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].link_derivative(y)
-
-    def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
-        return self.links[param].inverse_derivative(y)
-
     def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: int = None
+        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
         if param == 0:
             return np.repeat(np.mean(y, axis=axis), y.shape[0])
@@ -123,19 +118,3 @@ class DistributionT(Distribution):
             return np.repeat(np.std(y, axis=axis), y.shape[0])
         if param == 2:
             return np.full_like(y, 10)
-
-    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).cdf(y)
-
-    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).pdf(y)
-
-    def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).ppf(q)
-
-    def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        mu, sigma, nu = self.theta_to_params(theta)
-        return st.t(nu, mu, sigma).rvs((size, theta.shape[0])).T
