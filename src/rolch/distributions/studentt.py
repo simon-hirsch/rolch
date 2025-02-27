@@ -4,8 +4,7 @@ import numpy as np
 import scipy.special as sp
 import scipy.stats as st
 
-from rolch.base import Distribution, LinkFunction
-from rolch.base.scipymixin import ScipyMixin
+from rolch.base import Distribution, LinkFunction, ScipyMixin
 from rolch.link import IdentityLink, LogLink, LogShiftTwoLink
 
 
