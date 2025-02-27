@@ -7,7 +7,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import IdentityLink, LogLink
 
 
-class DistributionNormal(Distribution, ScipyMixin):
+class DistributionNormal(ScipyMixin, Distribution):
     """Corresponds to GAMLSS NO() and scipy.stats.norm()"""
 
     corresponding_gamlss: str = "NO"

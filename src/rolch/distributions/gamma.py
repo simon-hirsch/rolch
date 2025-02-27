@@ -8,7 +8,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import LogLink
 
 
-class DistributionGamma(Distribution, ScipyMixin):
+class DistributionGamma(ScipyMixin, Distribution):
     """The Gamma Distribution for GAMLSS.
 
     The distribution function is defined as in GAMLSS as:
