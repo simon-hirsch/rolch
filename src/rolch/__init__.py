@@ -23,6 +23,7 @@ from .distributions import (
     DistributionNormal,
     DistributionT,
 )
+from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
 from .gram import (
     init_forget_vector,
@@ -59,6 +60,7 @@ __version__ = version("rolch")
 
 __all__ = [
     "OutOfSupportWarning",
+    "OutOfSupportError",
     "OnlineScaler",
     "OnlineGamlss",
     "OnlineLinearModel",
