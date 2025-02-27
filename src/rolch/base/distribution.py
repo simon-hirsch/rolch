@@ -1,6 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Tuple, Union
+from typing import Tuple
 
 import numpy as np
 import scipy.stats as st
