@@ -1,8 +1,11 @@
+import warnings
 from abc import ABC, abstractmethod
 from typing import Tuple, Union
 
 import numpy as np
 import scipy.stats as st
+
+from ..warnings import OutOfSupportWarning
 
 
 class Distribution(ABC):
@@ -51,12 +54,14 @@ class Distribution(ABC):
     def _validate_links(self):
         for param, link in self.links.items():
             if link.link_support[0] < self.parameter_support[param][0]:
-                raise ValueError(
-                    f"Lower bound of parameter support {param} does not match link function."
+                warnings.warn(
+                    message=f"Lower bound of link function is smaller than the parameter support for parameter {param} ",
+                    category=OutOfSupportWarning,
                 )
             if link.link_support[1] > self.parameter_support[param][1]:
-                raise ValueError(
-                    f"Upper bound of parameter support {param} does not match link function."
+                warnings.warn(
+                    message=f"Upper bound of link function is larger than the parameter support for parameter {param} ",
+                    category=OutOfSupportWarning,
                 )
 
     def _validate_dln_dpn_inputs(

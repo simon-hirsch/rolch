@@ -2,7 +2,6 @@ from itertools import product
 
 import numpy as np
 import pytest
-
 import rolch
 
 DISTRIBUTIONS = [
