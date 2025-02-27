@@ -2,8 +2,8 @@ from typing import Literal
 
 import numpy as np
 
-from rolch.estimators.online_linear_model import OnlineLinearModel
-from rolch.methods import LassoPathMethod
+from ..estimators.online_linear_model import OnlineLinearModel
+from ..methods import LassoPathMethod
 
 
 class OnlineLasso(OnlineLinearModel):

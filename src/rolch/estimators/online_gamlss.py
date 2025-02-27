@@ -4,8 +4,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 
-from rolch import HAS_PANDAS, HAS_POLARS
-
+from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, Estimator
 from ..gram import init_forget_vector
 from ..information_criteria import select_best_model_by_information_criterion

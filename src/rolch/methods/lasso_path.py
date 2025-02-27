@@ -2,9 +2,9 @@ from typing import Literal
 
 import numpy as np
 
-from rolch.base import EstimationMethod
-from rolch.coordinate_descent import online_coordinate_descent_path
-from rolch.gram import init_gram, init_y_gram, update_gram, update_y_gram
+from ..base import EstimationMethod
+from ..coordinate_descent import online_coordinate_descent_path
+from ..gram import init_gram, init_y_gram, update_gram, update_y_gram
 
 
 class LassoPathMethod(EstimationMethod):
