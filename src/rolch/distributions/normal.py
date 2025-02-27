@@ -3,8 +3,8 @@ from typing import Dict, Tuple, Union
 import numpy as np
 import scipy.stats as st
 
-from rolch.base import Distribution, LinkFunction, ScipyMixin
-from rolch.link import IdentityLink, LogLink
+from ..base import Distribution, LinkFunction, ScipyMixin
+from ..link import IdentityLink, LogLink
 
 
 class DistributionNormal(Distribution, ScipyMixin):
@@ -23,13 +23,12 @@ class DistributionNormal(Distribution, ScipyMixin):
         loc_link: LinkFunction = IdentityLink(),
         scale_link: LinkFunction = LogLink(),
     ) -> None:
-        self.loc_link: LinkFunction = loc_link
-        self.scale_link: LinkFunction = scale_link
-        self.links: Dict[int, LinkFunction] = {
-            0: self.loc_link,
-            1: self.scale_link,
-        }
-        self._validate_links()
+        super().__init__(
+            links={
+                0: loc_link,
+                1: scale_link,
+            }
+        )
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)

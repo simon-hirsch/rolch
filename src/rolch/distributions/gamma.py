@@ -4,8 +4,8 @@ import numpy as np
 import scipy.special as spc
 import scipy.stats as st
 
-from rolch.base import Distribution, LinkFunction, ScipyMixin
-from rolch.link import LogLink
+from ..base import Distribution, LinkFunction, ScipyMixin
+from ..link import LogLink
 
 
 class DistributionGamma(Distribution, ScipyMixin):
@@ -60,11 +60,8 @@ class DistributionGamma(Distribution, ScipyMixin):
         loc_link: LinkFunction = LogLink(),
         scale_link: LinkFunction = LogLink(),
     ) -> None:
-        self.loc_link: LinkFunction = loc_link
-        self.scale_link: LinkFunction = scale_link
-        self.links: dict[int, LinkFunction] = {0: self.loc_link, 1: self.scale_link}
         self.corresponding_gamlss: str = "GA"
-        self._validate_links()
+        super().__init__(links={0: loc_link, 1: scale_link})
 
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
         """Map GAMLSS Parameters to scipy parameters.

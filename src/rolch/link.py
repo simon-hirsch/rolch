@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from rolch.base import LinkFunction
+from .base import LinkFunction
 
 LOG_LOWER_BOUND = 1e-25
 EXP_UPPER_BOUND = 25

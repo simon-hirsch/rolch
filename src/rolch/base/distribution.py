@@ -1,14 +1,19 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import scipy.stats as st
 
 from ..warnings import OutOfSupportWarning
+from .link import LinkFunction
 
 
 class Distribution(ABC):
+
+    def __init__(self, links: dict[int, LinkFunction]) -> None:
+        self.links = links
+        self._validate_links()
 
     @property
     def n_params(self) -> int:
@@ -100,12 +105,18 @@ class Distribution(ABC):
 
     @abstractmethod
     def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: int = None
+        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
         """Calculate the initial values for the GAMLSS fit."""
 
 
 class ScipyMixin(ABC):
+
+    @property
+    @abstractmethod
+    def parameter_names(self) -> dict:
+        """Parameter name for each column of theta."""
+        pass
 
     @property
     @abstractmethod

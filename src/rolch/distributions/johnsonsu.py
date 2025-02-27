@@ -3,8 +3,8 @@ from typing import Dict, Tuple
 import numpy as np
 import scipy.stats as st
 
-from rolch.base import Distribution, LinkFunction, ScipyMixin
-from rolch.link import IdentityLink, LogLink
+from ..base import Distribution, LinkFunction, ScipyMixin
+from ..link import IdentityLink, LogLink
 
 
 class DistributionJSU(Distribution, ScipyMixin):
@@ -38,17 +38,14 @@ class DistributionJSU(Distribution, ScipyMixin):
         skew_link: LinkFunction = IdentityLink(),
         tail_link: LinkFunction = LogLink(),
     ) -> None:
-        self.loc_link = loc_link
-        self.scale_link = scale_link
-        self.skew_link = skew_link
-        self.tail_link = tail_link
-        self.links: Dict[int, LinkFunction] = {
-            0: self.loc_link,
-            1: self.scale_link,
-            2: self.skew_link,
-            3: self.tail_link,
-        }
-        self._validate_links()
+        super().__init__(
+            links={
+                0: loc_link,
+                1: scale_link,
+                2: skew_link,
+                3: tail_link,
+            }
+        )
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
