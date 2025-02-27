@@ -417,6 +417,19 @@ class OnlineGamlss(Estimator):
         return beta, beta_path, rss
 
     def _validate_inputs(self, X: np.ndarray, y: np.ndarray):
+        """Validate the input matrices X and y.
+
+        Args:
+            X (np.ndarray): Input matrix $X$
+            y (np.ndarray): Response vector $y$.
+
+        Raises:
+            OutOfSupportError: If the values of $y$ are below the range of the distribution.
+            OutOfSupportError: If the values of $y$ are beyond the range of the distribution.
+            ValueError: If `X` and `y` are not the same length.
+            ValueError: If `X` or `y` contain NaN values.
+            ValueError: If `X` or `y` contain infinite values.
+        """
         if np.any(y < self.distribution.distribution_support[0]):
             raise OutOfSupportError(
                 message=(
