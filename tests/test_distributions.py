@@ -2,6 +2,7 @@ from itertools import product
 
 import numpy as np
 import pytest
+
 import rolch
 
 DISTRIBUTIONS = [
@@ -12,7 +13,11 @@ DISTRIBUTIONS = [
 @pytest.mark.parametrize("distribution", DISTRIBUTIONS)
 def test_raise_error_cross_derivative(distribution):
     n_params = distribution.n_params
-    y = np.array([1, 2, 3, 2, 1])
+    # We just want some values here on a reasonable space to ensure that
+    # We can test the raise of the derivative
+    lower = np.clip(distribution.distribution_support[0], -1e3, 1e3)
+    upper = np.clip(distribution.distribution_support[1], -1e3, 1e3)
+    y = np.random.uniform(low=lower, high=upper, size=1000)
     theta = np.hstack(
         [distribution.initial_values(y, param=p)[:, None] for p in range(n_params)]
     )
