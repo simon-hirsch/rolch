@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import scipy.special as spc
@@ -114,7 +114,7 @@ class DistributionGamma(Distribution, ScipyMixin):
             return np.zeros_like(y)
 
     def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: int = None
+        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
         if param == 0:
             return np.repeat(np.mean(y, axis=None), y.shape[0])

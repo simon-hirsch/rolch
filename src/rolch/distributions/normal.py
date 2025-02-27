@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Union
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import scipy.stats as st
@@ -59,7 +59,7 @@ class DistributionNormal(Distribution, ScipyMixin):
             return np.zeros_like(y)
 
     def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Union[int, None] = None
+        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
         if param == 0:
             return np.repeat(np.mean(y, axis=axis), y.shape[0])
