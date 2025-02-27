@@ -114,6 +114,71 @@ class Distribution(ABC):
     ) -> np.ndarray:
         """Calculate the initial values for the GAMLSS fit."""
 
+    @abstractmethod
+    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Compute the cumulative distribution function (CDF) for the given data.
+
+        Parameters:
+            y (np.ndarray): The data points at which to evaluate the CDF.
+            theta (np.ndarray): The parameters of the distribution.
+
+        Returns:
+            np.ndarray: The CDF evaluated at the given data points.
+        """
+
+    @abstractmethod
+    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Compute the probability density function (PDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the PDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of PDF values corresponding to the data points in `y`.
+        """
+
+    @abstractmethod
+    def pmf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Compute the probability mass function (PMF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the PDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of PMF values corresponding to the data points in `y`.
+        """
+
+    @abstractmethod
+    def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Percent Point Function (Inverse of CDF).
+
+        Parameters:
+            q (np.ndarray): Quantiles.
+            theta (np.ndarray): Distribution parameters.
+
+        Returns:
+            np.ndarray: The quantile corresponding to the given probabilities.
+        """
+
+    @abstractmethod
+    def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
+        """
+        Generate random variates of given size and parameters.
+
+        Parameters:
+            size (int): The number of random variates to generate.
+            theta (np.ndarray): The parameters for the distribution.
+
+        Returns:
+            np.ndarray: A 2D array of random variates with shape (theta.shape[0], size).
+        """
+
 
 class ScipyMixin(ABC):
 
@@ -158,55 +223,20 @@ class ScipyMixin(ABC):
         return params
 
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        """
-        Compute the cumulative distribution function (CDF) for the given data.
-
-        Parameters:
-            y (np.ndarray): The data points at which to evaluate the CDF.
-            theta (np.ndarray): The parameters of the distribution.
-
-        Returns:
-            np.ndarray: The CDF evaluated at the given data points.
-        """
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
 
     def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        """
-        Compute the probability density function (PDF) for the given data points.
-
-        Parameters:
-            y (np.ndarray): An array of data points at which to evaluate the PDF.
-            theta (np.ndarray): An array of parameters for the distribution.
-
-        Returns:
-            np.ndarray: An array of PDF values corresponding to the data points in `y`.
-        """
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
 
+    def pmf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        raise NotImplementedError(
+            "PMF is not implemented for continuous distributions."
+        )
+
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
-        """
-        Percent Point Function (Inverse of CDF).
-
-        Parameters:
-            q (np.ndarray): Quantiles.
-            theta (np.ndarray): Distribution parameters.
-
-        Returns:
-            np.ndarray: The quantile corresponding to the given probabilities.
-        """
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
-        """
-        Generate random variates of given size and parameters.
-
-        Parameters:
-            size (int): The number of random variates to generate.
-            theta (np.ndarray): The parameters for the distribution.
-
-        Returns:
-            np.ndarray: A 2D array of random variates with shape (theta.shape[0], size).
-        """
         return (
             self.scipy_dist(**self.theta_to_scipy_params(theta))
             .rvs((size, theta.shape[0]))
