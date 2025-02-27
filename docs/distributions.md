@@ -11,6 +11,8 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ::: rolch.base.Distribution
 
+::: rolch.base.ScipyMixin
+
 ## API Reference
 
 ::: rolch.DistributionNormal

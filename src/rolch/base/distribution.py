@@ -1,6 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import scipy.stats as st
@@ -135,7 +135,18 @@ class ScipyMixin(ABC):
         """The names of the parameters in the scipy.stats distribution and the corresponding column in theta."""
         pass
 
-    def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
+    def theta_to_scipy_params(self, theta: np.ndarray) -> Dict[str, np.ndarray]:
+        """Maps $\\theta$ to the `scipy` parameters.
+
+        Args:
+            theta (np.ndarray): $\\theta$ as estimated by `OnlineGamlss()` estimator
+
+        Raises:
+            ValueError: If we don't define the `scipy_names` attribute.
+
+        Returns:
+            dict: Dictionary that can be unrolled into scipy distribution class as in `st.some_dist(**return_value)`
+        """
         if not self.scipy_names:
             raise ValueError(
                 f"{self.__class__.__name__} has no scipy_names defined. To use theta_to_scipy_params Please define them in the subclass. Or override this method in the subclass if there is no 1:1 mapping between theta columns and scipy params."
@@ -147,15 +158,55 @@ class ScipyMixin(ABC):
         return params
 
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Compute the cumulative distribution function (CDF) for the given data.
+
+        Parameters:
+            y (np.ndarray): The data points at which to evaluate the CDF.
+            theta (np.ndarray): The parameters of the distribution.
+
+        Returns:
+            np.ndarray: The CDF evaluated at the given data points.
+        """
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
 
     def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Compute the probability density function (PDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the PDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of PDF values corresponding to the data points in `y`.
+        """
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).pdf(y)
 
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Percent Point Function (Inverse of CDF).
+
+        Parameters:
+            q (np.ndarray): Quantiles.
+            theta (np.ndarray): Distribution parameters.
+
+        Returns:
+            np.ndarray: The quantile corresponding to the given probabilities.
+        """
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
+        """
+        Generate random variates of given size and parameters.
+
+        Parameters:
+            size (int): The number of random variates to generate.
+            theta (np.ndarray): The parameters for the distribution.
+
+        Returns:
+            np.ndarray: A 2D array of random variates with shape (theta.shape[0], size).
+        """
         return (
             self.scipy_dist(**self.theta_to_scipy_params(theta))
             .rvs((size, theta.shape[0]))
