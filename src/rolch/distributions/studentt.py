@@ -11,6 +11,8 @@ from ..link import IdentityLink, LogLink, LogShiftTwoLink
 class DistributionT(Distribution, ScipyMixin):
     """Corresponds to GAMLSS TF() and scipy.stats.t()"""
 
+    corresponding_gamlss: str = "TF"
+
     parameter_names = {0: "mu", 1: "sigma", 2: "nu"}
     parameter_support = {
         0: (-np.inf, np.inf),

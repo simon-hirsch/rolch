@@ -16,15 +16,20 @@ class Distribution(ABC):
         self._validate_links()
 
     @property
-    def n_params(self) -> int:
-        """Each subclass must define 'n_params'."""
-        return len(self.parameter_names)
+    def corresponding_gamlss(self) -> str | None:
+        """The name of the corresponding implementation in 'gamlss.dist' R package."""
+        pass
 
     @property
     @abstractmethod
     def parameter_names(self) -> dict:
         """Parameter name for each column of theta."""
         pass
+
+    @property
+    def n_params(self) -> int:
+        """Each subclass must define 'n_params'."""
+        return len(self.parameter_names)
 
     def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, ...]:
         """Take the fitted values and return tuple of vectors for distribution parameters."""

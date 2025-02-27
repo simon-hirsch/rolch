@@ -43,6 +43,8 @@ class DistributionGamma(Distribution, ScipyMixin):
         scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LogLink().
     """
 
+    corresponding_gamlss: str = "GA"
+
     parameter_names = {0: "mu", 1: "sigma"}
     parameter_support = {
         0: (np.nextafter(0, 1), np.inf),
@@ -60,7 +62,6 @@ class DistributionGamma(Distribution, ScipyMixin):
         loc_link: LinkFunction = LogLink(),
         scale_link: LinkFunction = LogLink(),
     ) -> None:
-        self.corresponding_gamlss: str = "GA"
         super().__init__(links={0: loc_link, 1: scale_link})
 
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:

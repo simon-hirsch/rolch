@@ -18,6 +18,8 @@ class DistributionJSU(Distribution, ScipyMixin):
     3 : Tail behaviour
     """
 
+    corresponding_gamlss: str = "JSUo"
+
     parameter_names = {0: "mu", 1: "sigma", 2: "nu", 3: "tau"}
     parameter_support = {
         0: (-np.inf, np.inf),

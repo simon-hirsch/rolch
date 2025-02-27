@@ -10,6 +10,8 @@ from ..link import IdentityLink, LogLink
 class DistributionNormal(Distribution, ScipyMixin):
     """Corresponds to GAMLSS NO() and scipy.stats.norm()"""
 
+    corresponding_gamlss: str = "NO"
+
     parameter_names = {0: "mu", 1: "sigma"}
     parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
     distribution_support = (-np.inf, np.inf)
