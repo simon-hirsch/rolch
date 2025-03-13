@@ -11,10 +11,23 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 | Distribution         | Description                                      | `scipy` Equivalent          |
 |----------------------|--------------------------------------------------|---------------------------|
-| [`DistributionNormal`](#rolch.DistributionNormal) | Normal (Gaussian) distribution | `scipy.stats.norm` |
+| [`DistributionNormal`](#rolch.DistributionNormal) | Gaussian (mean and standard deviation) | `scipy.stats.norm` |
+| [`DistributionNormalMeanVariance`](#rolch.DistributionNormalMeanVariance) | Gaussian (mean and variance) | `scipy.stats.norm` |
 | [`DistributionT`](#rolch.DistributionT)           | Student's T distribution       | `scipy.stats.t`     |
 | [`DistributionJSU`](#rolch.DistributionJSU)       | Johnson's SU distribution      | `scipy.stats.johnsonsu` |
 | [`DistributionGamma`](#rolch.DistributionGamma)   | Gamma distribution             | `scipy.stats.gamma` |
+
+## API Reference
+
+::: rolch.DistributionNormal
+
+::: rolch.DistributionNormalMeanVariance
+
+::: rolch.DistributionT
+
+::: rolch.DistributionJSU
+
+::: rolch.DistributionGamma
 
 
 ## Base Class
@@ -22,13 +35,3 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ::: rolch.base.Distribution
 
 ::: rolch.base.ScipyMixin
-
-## API Reference
-
-::: rolch.DistributionNormal
-
-::: rolch.DistributionT
-
-::: rolch.DistributionJSU
-
-::: rolch.DistributionGamma

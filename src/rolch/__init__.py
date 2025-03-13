@@ -21,6 +21,7 @@ from .distributions import (
     DistributionGamma,
     DistributionJSU,
     DistributionNormal,
+    DistributionNormalMeanVariance,
     DistributionT,
 )
 from .error import OutOfSupportError
@@ -76,6 +77,7 @@ __all__ = [
     "SqrtShiftValueLink",
     "SqrtShiftTwoLink",
     "DistributionNormal",
+    "DistributionNormalMeanVariance",
     "DistributionT",
     "DistributionJSU",
     "DistributionGamma",
