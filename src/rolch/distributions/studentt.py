@@ -30,7 +30,9 @@ class DistributionT(ScipyMixin, Distribution):
         loc_link: LinkFunction = IdentityLink(),
         scale_link: LinkFunction = LogLink(),
         tail_link: LinkFunction = LogShiftTwoLink(),
+        dof_guesstimate: float = 10,
     ) -> None:
+        self.dof_guesstimate = dof_guesstimate
         super().__init__(
             links={
                 0: loc_link,
@@ -117,4 +119,4 @@ class DistributionT(ScipyMixin, Distribution):
         if param == 1:
             return np.repeat(np.std(y, axis=axis), y.shape[0])
         if param == 2:
-            return np.full_like(y, 10)
+            return np.full_like(y, self.dof_guesstimate)
