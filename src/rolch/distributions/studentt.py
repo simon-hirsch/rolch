@@ -32,6 +32,18 @@ class DistributionT(ScipyMixin, Distribution):
         tail_link: LinkFunction = LogShiftTwoLink(),
         dof_guesstimate: float = 10,
     ) -> None:
+        """The student-t distribution. The PDF of the student-t distribution is given by:
+        $$
+            f(y; \\mu, \\sigma, \\nu) = \\frac{\\Gamma((\\nu + 1) / 2)}{\\Gamma(\\nu / 2) \\sqrt{\\nu \\pi \\sigma^2}} \\left(1 + \\frac{(y - \\mu)^2}{\\nu \\sigma^2}\\right)^{-(\\nu + 1) / 2}
+        $$
+        where $\\mu$ is the location parameter, $\\sigma$ is the scale parameter and $\\nu$ is the shape parameter.
+
+        Args:
+            loc_link (LinkFunction, optional): Link for the location parameter. Defaults to IdentityLink().
+            scale_link (LinkFunction, optional): Link for the scale parameter. Defaults to LogLink().
+            tail_link (LinkFunction, optional): Link for the tail parameter. Defaults to LogShiftTwoLink().
+            dof_guesstimate (float, optional): Initial guess for the (conditional) degrees of freedom. Defaults to 10.
+        """
         self.dof_guesstimate = dof_guesstimate
         super().__init__(
             links={
