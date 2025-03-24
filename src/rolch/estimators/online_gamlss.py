@@ -1004,3 +1004,25 @@ class OnlineGamlss(Estimator):
             return (prediction, contribution)
         else:
             return prediction
+
+    def predict_quantile(
+        self,
+        X: np.ndarray,
+        quantile: float | np.ndarray,
+    ) -> np.ndarray:
+        """Predict the quantile(s) of the distribution.
+
+        Args:
+            X (np.ndarray): Covariate matrix $X$. Shape should be (n_samples, n_features).
+            quantile (float | np.ndarray): Quantile(s) to predict.
+
+        Returns:
+            np.ndarray: Predicted quantile(s) of the distribution. Shape will be (n_samples, n_quantiles).
+        """
+        theta = self.predict(X, what="response")
+        if isinstance(quantile, np.ndarray):
+            quantile_pred = self.distribution.ppf(quantile[:, None], theta).T
+        else:
+            quantile_pred = self.distribution.ppf(quantile, theta).reshape(-1, 1)
+
+        return quantile_pred
