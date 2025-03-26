@@ -32,7 +32,7 @@ jobs:
           python -m pip install --upgrade setuptools
           pip install numpy
           pip install flake8 pytest
-          pip install pytest-xdist
+          pip install "pytest-xdist"
           if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
       - name: Build package
         run: python -m build --wheel
