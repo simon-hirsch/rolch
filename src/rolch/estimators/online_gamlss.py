@@ -1,11 +1,12 @@
 import copy
 import warnings
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
 from .. import HAS_PANDAS, HAS_POLARS
-from ..base import Distribution, EstimationMethod, Estimator
+from ..base import Distribution, EstimationMethod, Estimator, TransformationCallback
+from ..design_matrix import add_intercept, add_lags, make_intercept, make_lags
 from ..error import OutOfSupportError
 from ..gram import init_forget_vector
 from ..information_criteria import select_best_model_by_information_criterion
@@ -26,6 +27,9 @@ class OnlineGamlss(Estimator):
         self,
         distribution: Distribution,
         equation: Dict,
+        autoregression_y: Dict[int, int] | int | None = 0,
+        autoregression_theta: Dict[int, int] | int | None = 0,
+        residual_effects: Dict[int, List[TransformationCallback]] | List | None = None,
         forget: float | Dict[int, float] = 0.0,
         method: Union[
             str, EstimationMethod, Dict[int, str], Dict[int, EstimationMethod]
@@ -105,6 +109,18 @@ class OnlineGamlss(Estimator):
         self._process_attribute(regularize_intercept, False, "regularize_intercept")
         self._process_attribute(forget, default=0.0, name="forget")
         self._process_attribute(ic, "aic", name="ic")
+        self._process_attribute(autoregression_theta, 0, name="autoregression_theta")
+        self._process_attribute(autoregression_y, 0, name="autoregression_y")
+        self._process_attribute(residual_effects, [], name="residual_effects")
+        self.max_ar_term_theta = max(self.autoregression_theta.values())
+        self.max_ar_term_y = max(self.autoregression_y.values())
+        self.max_re_term = max(
+            [c.max_lag for p in self.residual_effects.values() for c in p]
+            + [0]  # Add zero to ensure that we have at least zero lags
+        )
+        self.max_lag = max(self.max_ar_term_y, self.max_ar_term_theta, self.max_re_term)
+        self.min_lag = min(self.max_ar_term_y, self.max_ar_term_theta, self.max_re_term)
+        self.is_time_series = self.max_lag > 0
 
         # Get the estimation method
         self._process_attribute(method, default="ols", name="method")
@@ -156,6 +172,9 @@ class OnlineGamlss(Estimator):
                         attribute[p] = default[p]
                     else:
                         attribute[p] = default
+        elif attribute is None:
+            attribute = {p: default for p in range(self.distribution.n_params)}
+
         else:
             # No warning since we expect that floats/strings/ints are either the defaults
             # Or given on purpose for all params the ame
@@ -205,18 +224,6 @@ class OnlineGamlss(Estimator):
 
         return equation
 
-    @staticmethod
-    def _make_intercept(n_observations: int) -> np.ndarray:
-        """Make the intercept series as N x 1 array.
-
-        Args:
-            y (np.ndarray): Response variable $Y$
-
-        Returns:
-            np.ndarray: Intercept array.
-        """
-        return np.ones((n_observations, 1))
-
     def _is_intercept_only(self, param: int):
         """Check in the equation whether we model only as intercept"""
         if isinstance(self.equation[param], str):
@@ -224,34 +231,9 @@ class OnlineGamlss(Estimator):
         else:
             return False
 
-    @staticmethod
-    def _add_lags(
-        y: np.ndarray, x: np.ndarray, lags: Union[int, np.ndarray]
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Add lagged variables to the response and covariate matrices.
-
-        Args:
-            y (np.ndarray): Response variable.
-            x (np.ndarray): Covariate matrix.
-            lags (Union[int, np.ndarray]): Number of lags to add.
-
-        Returns:
-            Tuple[np.ndarray, np.ndarray]: Tuple containing the updated response and covariate matrices.
-        """
-        if lags == 0:
-            return y, x
-
-        if isinstance(lags, int):
-            lags = np.arange(1, lags + 1, dtype=int)
-
-        max_lag = np.max(lags)
-        lagged = np.stack([np.roll(y, i) for i in lags], axis=1)[max_lag:, :]
-        new_x = np.hstack((x, lagged))[max_lag:, :]
-        new_y = y[max_lag:]
-        return new_y, new_x
-
-    def get_J_from_equation(self, X: np.ndarray):
+    def get_J_from_equation(
+        self, X: np.ndarray, is_first_iteration: bool
+    ) -> Dict[int, int]:
         J = {}
         for p in range(self.distribution.n_params):
             if isinstance(self.equation[p], str):
@@ -277,9 +259,25 @@ class OnlineGamlss(Estimator):
                 J[p] = len(self.equation[p]) + int(self.fit_intercept[p])
             else:
                 raise ValueError("Something unexpected happened")
+
+            # Add the MA and AR terms here!
+            if self.autoregression_theta[p] > 0 and not is_first_iteration:
+                J[p] += self.autoregression_theta[p]
+            if self.autoregression_y[p] > 0 and not is_first_iteration:
+                J[p] += self.autoregression_y[p]
+            if self.residual_effects[p]:
+                J[p] += sum([c.J for c in self.residual_effects[p]])
+
         return J
 
-    def make_model_array(self, X: Union[np.ndarray], param: int):
+    # TODO We dont need to pass the fitted values as we have self.fv
+    def make_model_array(
+        self,
+        X: Union[np.ndarray],
+        y: np.ndarray | None = None,
+        param: int = 0,
+        inner_iteration: int = 0,
+    ):
         eq = self.equation[param]
         n = X.shape[0]
 
@@ -289,7 +287,7 @@ class OnlineGamlss(Estimator):
                 raise ValueError(
                     "fit_intercept[param] is false, but equation says intercept."
                 )
-            out = self._make_intercept(n_observations=n)
+            out = make_intercept(n_observations=n)
         else:
             if isinstance(eq, str) and (eq == "all"):
                 if isinstance(X, np.ndarray):
@@ -302,14 +300,99 @@ class OnlineGamlss(Estimator):
                 if isinstance(X, np.ndarray):
                     out = X[:, eq]
                 if HAS_PANDAS and isinstance(X, pd.DataFrame):
-                    out = X.loc[:, eq]
+                    out = X.loc[:, eq].to_numpy()
                 if HAS_POLARS and isinstance(X, pl.DataFrame):
                     out = X.select(eq).to_numpy()
             else:
                 raise ValueError("Did not understand equation. Please check.")
 
             if self.fit_intercept[param]:
-                out = np.hstack((self._make_intercept(n), out))
+                out = add_intercept(out)
+
+        if self.max_lag > 0:
+            fv_forward_filled = np.vstack(
+                (self.fv[np.zeros(self.max_lag, dtype=int), :], self.fv)
+            )
+        if self.autoregression_y[param] > 0 and y is None:
+            raise ValueError(
+                "You need to pass the y values to make the autoregressive terms."
+            )
+        if (self.autoregression_y[param] > 0) and (inner_iteration > 0):
+            out = add_lags(X=out, y=y, lags=self.autoregression_y[param])
+        if (self.autoregression_theta[param] > 0) and (inner_iteration > 0):
+            out = add_lags(
+                X=out,
+                y=fv_forward_filled[:, param],
+                lags=self.autoregression_theta[param],
+            )
+        if self.residual_effects[param]:
+            for c in self.residual_effects[param]:
+                out = np.hstack((out, c(y - fv_forward_filled[:, 0])))
+
+        out_x = out[self.max_lag :, :]
+        return out_x
+
+    # TODO We don't need to pass fitted_values as we have self.fv
+    def make_model_array_update(
+        self,
+        X: Union[np.ndarray],
+        y: np.ndarray | None = None,
+        param: int = 0,
+    ):
+        eq = self.equation[param]
+        n = X.shape[0]
+
+        # TODO: Check difference between np.array and list more explicitly?
+        if isinstance(eq, str) and (eq == "intercept"):
+            if not self.fit_intercept[param]:
+                raise ValueError(
+                    "fit_intercept[param] is false, but equation says intercept."
+                )
+            out = make_intercept(n_observations=n)
+        else:
+            if isinstance(eq, str) and (eq == "all"):
+                if isinstance(X, np.ndarray):
+                    out = X
+                if HAS_PANDAS and isinstance(X, pd.DataFrame):
+                    out = X.to_numpy()
+                if HAS_POLARS and isinstance(X, pl.DataFrame):
+                    out = X.to_numpy()
+            elif isinstance(eq, np.ndarray) | isinstance(eq, list):
+                if isinstance(X, np.ndarray):
+                    out = X[:, eq]
+                if HAS_PANDAS and isinstance(X, pd.DataFrame):
+                    out = X.loc[:, eq].to_numpy()
+                if HAS_POLARS and isinstance(X, pl.DataFrame):
+                    out = X.select(eq).to_numpy()
+            else:
+                raise ValueError("Did not understand equation. Please check.")
+
+            if self.fit_intercept[param]:
+                out = np.hstack((make_intercept(n), out))
+
+        if self.max_lag > 0:
+            if y is None:
+                y = np.repeat(0, X.shape[0])
+                fv = np.full((X.shape[0], self.distribution.n_params), 0)
+            y_hist = np.concatenate((self.history["y"], y))
+            fv_hist = np.vstack((self.history["theta"], fv))
+            r_hist = y_hist - fv_hist[:, 0]
+
+        if (self.autoregression_y[param] > 0) and (param == 0):
+            lagged = make_lags(y=y_hist, lags=self.autoregression_y[param])
+            out = np.hstack((out, np.expand_dims(lagged[-out.shape[0], :], 0)))
+        if (self.autoregression_theta[param] > 0) and (param >= 1):
+            lagged = make_lags(
+                y=fv_hist[:, param], lags=self.autoregression_theta[param]
+            )
+            out = np.hstack((out, np.expand_dims(lagged[-out.shape[0], :], 0)))
+        if self.residual_effects[param]:
+            for c in self.residual_effects[param]:
+                out = np.hstack((out, np.expand_dims(c(r_hist)[-out.shape[0], :], 0)))
+
+        # We have this above (contrary to the non-update)
+        # out_x = out[self.max_lag :, :]
+        # out_y = y[self.max_lag :]
 
         return out
 
@@ -323,7 +406,7 @@ class OnlineGamlss(Estimator):
         param,
     ):
 
-        f = init_forget_vector(self.forget[param], self.n_observations)
+        f = init_forget_vector(self.forget[param], y.shape[0])
 
         if not self._method[param]._path_based_method:
             beta_path = None
@@ -488,27 +571,25 @@ class OnlineGamlss(Estimator):
         """
 
         self._validate_inputs(X, y)
-        self.n_observations = y.shape[0]
+        self.n_observations = y.shape[0] - self.max_lag
         self.n_training = {
             p: calculate_effective_training_length(self.forget[p], self.n_observations)
             for p in range(self.distribution.n_params)
         }
 
         if sample_weight is not None:
-            w = sample_weight  # Align to sklearn API
+            w = sample_weight[self.max_lag :]  # Align to sklearn API
         else:
-            w = np.ones(y.shape[0])
+            w = np.ones(y.shape[0] - self.max_lag)
 
         self.fv = self._make_initial_fitted_values(y=y)
-        self.J = self.get_J_from_equation(X=X)
+        self.fv = self.fv[self.max_lag :, :]
+        self.J = self.get_J_from_equation(X=X, is_first_iteration=True)
 
         # Fit scaler and transform
         self.scaler.fit(X)
         X_scaled = self.scaler.transform(X)
-        X_dict = {
-            p: self.make_model_array(X_scaled, param=p)
-            for p in range(self.distribution.n_params)
-        }
+        X_dict = {p: None for p in range(self.distribution.n_params)}
 
         if self.debug:
             self._debug_X_dict = X_dict
@@ -525,6 +606,7 @@ class OnlineGamlss(Estimator):
         self.y_gram = {}
         self.weights = {}
         self.residuals = {}
+        self.history = None
 
         for p in range(self.distribution.n_params):
             is_regularized = np.repeat(True, self.J[p])
@@ -538,7 +620,7 @@ class OnlineGamlss(Estimator):
         self.beta_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
 
         self.beta_path = {p: None for p in range(self.distribution.n_params)}
-        self.beta = {p: np.zeros(self.J[p]) for p in range(self.distribution.n_params)}
+        self.beta = {p: None for p in range(self.distribution.n_params)}
 
         self.beta_path_iterations_inner = {
             i: {} for i in range(self.distribution.n_params)
@@ -559,10 +641,18 @@ class OnlineGamlss(Estimator):
             self.global_dev,
             self.iteration_outer,
         ) = self._outer_fit(
-            X=X_dict,
+            X=X_scaled,
             y=y,
             w=w,
         )
+        if self.max_lag > 0:
+            # We need to store the history for the update and prediction steps
+            # keep in mind that at the moment we cannot really predict in-sample
+            self.history = {
+                "y": y[np.arange(-self.max_lag, 0)],
+                "theta": self.fv[np.arange(-self.max_lag, 0), :],
+            }
+
         message = "Finished fit call"
         self._print_message(message=message, level=1)
 
@@ -598,14 +688,11 @@ class OnlineGamlss(Estimator):
             for p in range(self.distribution.n_params)
         }
 
-        self.fv = self.predict(X, what="response")
+        self.fv = self.predict_one_step(X)
 
         self.scaler.partial_fit(X)
         X_scaled = self.scaler.transform(X)
-        X_dict = {
-            p: self.make_model_array(X_scaled, param=p)
-            for p in range(self.distribution.n_params)
-        }
+        X_dict = {p: None for p in range(self.distribution.n_params)}
 
         if self.debug:
             self._debug_X_dict = X_dict
@@ -632,7 +719,7 @@ class OnlineGamlss(Estimator):
             self.global_dev,
             self.iteration_outer,
         ) = self._outer_update(
-            X=X_dict,
+            X=X_scaled,
             y=y,
             w=w,
         )
@@ -696,7 +783,7 @@ class OnlineGamlss(Estimator):
 
     def _outer_fit(self, X, y, w):
 
-        global_di = -2 * np.log(self.distribution.pdf(y, self.fv))
+        global_di = -2 * np.log(self.distribution.pdf(y[self.max_lag :], self.fv))
         global_dev = np.sum(w * global_di)
         global_dev_old = global_dev + 1000
         iteration_outer = 0
@@ -761,7 +848,7 @@ class OnlineGamlss(Estimator):
         dv,
     ):
 
-        di = -2 * np.log(self.distribution.pdf(y, self.fv))
+        di = -2 * np.log(self.distribution.pdf(y[self.max_lag :], self.fv))
         dv = np.sum(di * w)
         olddv = dv + 1
 
@@ -786,31 +873,47 @@ class OnlineGamlss(Estimator):
                 break
 
             iteration_inner += 1
+            self.J = self.get_J_from_equation(
+                X=X, is_first_iteration=(iteration_inner + iteration_outer) <= 2
+            )
+
             eta = self.distribution.link_function(self.fv[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
-            dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
-            dl2dp2 = self.distribution.dl2_dp2(y, self.fv, param=param)
+            dl1dp1 = self.distribution.dl1_dp1(y[self.max_lag :], self.fv, param=param)
+            dl2dp2 = self.distribution.dl2_dp2(y[self.max_lag :], self.fv, param=param)
             wt = -(dl2dp2 / (dr * dr))
             wt = np.clip(wt, 1e-10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
 
             if self.debug:
-                key = (param, iteration_outer, iteration_outer)
+                key = (param, iteration_outer, iteration_inner)
                 self._debug_weights[key] = wt
                 self._debug_working_vectors[key] = wv
                 self._debug_dl1dlp1[key] = dl1dp1
                 self._debug_dl2dlp2[key] = dl2dp2
                 self._debug_eta[key] = eta
 
+            model_x = self.make_model_array(
+                X=X,
+                y=y,
+                param=param,
+                inner_iteration=max(iteration_outer - 1, iteration_inner - 1),
+            )
+            # moved to self.fit
+            # w = w[self.max_lag :]
+
+            if self.debug:
+                self._debug_X_dict[param] = model_x
+
             ## Update the X and Y Gramian and the weight
             self.x_gram[param] = self._method[param].init_x_gram(
-                X=X[param], weights=(w * wt), forget=self.forget[param]
+                X=model_x, weights=(w * wt), forget=self.forget[param]
             )
             self.y_gram[param] = self._method[param].init_y_gram(
-                X=X[param], y=wv, weights=(w * wt), forget=self.forget[param]
+                X=model_x, y=wv, weights=(w * wt), forget=self.forget[param]
             )
             beta_new, beta_path_new, rss_new = self.fit_beta_and_select_model(
-                X=X[param],
+                X=model_x,
                 y=wv,
                 w=wt,
                 param=param,
@@ -834,10 +937,10 @@ class OnlineGamlss(Estimator):
             self.beta_path[param] = beta_path_new
             self.rss[param] = rss_new
 
-            eta = X[param] @ self.beta[param].T
+            eta = model_x @ self.beta[param].T
             self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
 
-            di = -2 * np.log(self.distribution.pdf(y, self.fv))
+            di = -2 * np.log(self.distribution.pdf(y[self.max_lag :], self.fv))
             olddv = dv
             dv = np.sum(di * w)
 
@@ -894,28 +997,33 @@ class OnlineGamlss(Estimator):
             wv = eta + dl1dp1 / (dr * wt)
 
             if self.debug:
-                key = (param, iteration_outer, iteration_outer)
+                key = (param, iteration_outer, iteration_inner)
                 self._debug_weights[key] = wt
                 self._debug_working_vectors[key] = wv
                 self._debug_dl1dlp1[key] = dl1dp1
                 self._debug_dl2dlp2[key] = dl2dp2
                 self._debug_eta[key] = eta
 
+            model_x = self.make_model_array_update(
+                X=X,
+                param=param,
+            )
+
             self.x_gram_inner[param] = self._method[param].update_x_gram(
                 gram=self.x_gram[param],
-                X=X[param],
+                X=model_x,
                 weights=(w * wt),
                 forget=self.forget[param],
             )
             self.y_gram_inner[param] = self._method[param].update_y_gram(
                 gram=self.y_gram[param],
-                X=X[param],
+                X=model_x,
                 y=wv,
                 weights=(w * wt),
                 forget=self.forget[param],
             )
             beta_new, beta_path_new, rss_new = self.update_beta_and_select_model(
-                X[param],
+                X=model_x,
                 y=wv,
                 w=wt,
                 iteration_inner=iteration_inner,
@@ -937,7 +1045,7 @@ class OnlineGamlss(Estimator):
             self.beta_path[param] = beta_path_new
             self.rss[param] = rss_new
 
-            eta = X[param] @ self.beta[param].T
+            eta = model_x @ self.beta[param].T
             self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
 
             self.sum_of_weights_inner[param] = (
@@ -956,6 +1064,18 @@ class OnlineGamlss(Estimator):
             self._print_message(message=message, level=3)
 
         return dv
+
+    def predict_one_step(self, X: np.ndarray):
+        if X.shape[0] > 1:
+            raise ValueError("X should be of shape (1, n_features).")
+
+        X_scaled = self.scaler.transform(X=X)
+        prediction = np.zeros([1, self.distribution.n_params])
+        for p in range(self.distribution.n_params):
+            x = self.make_model_array_update(X_scaled, param=p)
+            prediction[:, p] = x @ self.beta[p].T
+            prediction[:, p] = self.distribution.link_inverse(prediction[:, p], param=p)
+        return prediction
 
     def predict(
         self,
@@ -978,7 +1098,7 @@ class OnlineGamlss(Estimator):
         """
         X_scaled = self.scaler.transform(X=X)
         X_dict = {
-            p: self.make_model_array(X_scaled, p)
+            p: self.make_model_array(X_scaled, inner_iteration=self.is_fitted, param=p)
             for p in range(self.distribution.n_params)
         }
         prediction = [x @ b.T for x, b in zip(X_dict.values(), self.beta.values())]
@@ -1004,25 +1124,3 @@ class OnlineGamlss(Estimator):
             return (prediction, contribution)
         else:
             return prediction
-
-    def predict_quantile(
-        self,
-        X: np.ndarray,
-        quantile: float | np.ndarray,
-    ) -> np.ndarray:
-        """Predict the quantile(s) of the distribution.
-
-        Args:
-            X (np.ndarray): Covariate matrix $X$. Shape should be (n_samples, n_features).
-            quantile (float | np.ndarray): Quantile(s) to predict.
-
-        Returns:
-            np.ndarray: Predicted quantile(s) of the distribution. Shape will be (n_samples, n_quantiles).
-        """
-        theta = self.predict(X, what="response")
-        if isinstance(quantile, np.ndarray):
-            quantile_pred = self.distribution.ppf(quantile[:, None], theta).T
-        else:
-            quantile_pred = self.distribution.ppf(quantile, theta).reshape(-1, 1)
-
-        return quantile_pred
