@@ -127,7 +127,6 @@ class LassoPathMethod(EstimationMethod):
         return update_y_gram(gram, X, y, forget=forget, w=weights)
 
     def fit_beta_path(self, x_gram, y_gram, is_regularized):
-        self._set_and_validate_bounds(x_gram=x_gram)
         lambda_max = self._get_lambda_max(
             x_gram=x_gram, y_gram=y_gram, is_regularized=is_regularized
         )
