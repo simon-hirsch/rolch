@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..base import TransformationCallback
-from ..design_matrix import parse_to_array_for_lags
+from ..utils import parse_to_array_for_lags
 
 
 class LaggedValue(TransformationCallback):

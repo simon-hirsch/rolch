@@ -1,5 +1,6 @@
 import numpy as np
 
+from ..utils import parse_to_array_for_lags
 from .autoregressive_effects import (
     LaggedAbsoluteValue,
     LaggedLeverageEffect,
@@ -15,21 +16,12 @@ __all__ = [
 ]
 
 
-def parse_to_array_for_lags(lags: int | np.ndarray):
-    if isinstance(lags, np.ndarray):
-        return lags.astype(int)
-    elif isinstance(lags, int):
-        return np.arange(1, lags + 1, dtype=int)
-    else:
-        raise ValueError("Lags should be either an integer or a numpy array.")
-
-
 def make_intercept(n_observations: int) -> np.ndarray:
     return np.ones((n_observations, 1))
 
 
 def add_intercept(X: np.ndarray) -> np.ndarray:
-    return np.hstack((make_intercept(X.shape), X))
+    return np.hstack((make_intercept(X.shape[0]), X))
 
 
 def make_lags(y: np.ndarray, lags: int | np.ndarray) -> np.ndarray:

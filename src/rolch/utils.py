@@ -5,6 +5,15 @@ from typing import Any, Dict, Union
 import numpy as np
 
 
+def parse_to_array_for_lags(lags: int | np.ndarray):
+    if isinstance(lags, np.ndarray):
+        return lags.astype(int)
+    elif isinstance(lags, int):
+        return np.arange(1, lags + 1, dtype=int)
+    else:
+        raise ValueError("Lags should be either an integer or a numpy array.")
+
+
 def handle_param_dict(
     self: Any,
     param: Union[Any, Dict],
