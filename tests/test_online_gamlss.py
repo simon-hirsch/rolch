@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
-from sklearn.datasets import make_regression
-
 from rolch.distributions import DistributionJSU
 from rolch.estimators import OnlineGamlss
+from sklearn.datasets import make_regression
 
 FIT_INTERCEPT = [True, False]
 N_FEATURES = np.round(np.geomspace(11, 100, 5)).astype(int)
@@ -36,7 +35,7 @@ def test_get_J_from_equation(n_features, fit_intercept):
         fit_intercept=fit_intercept,
     )
 
-    J = estimator.get_J_from_equation(X)
+    J = estimator.get_J_from_equation(X, True)
     assert J[0] == EXPECTED[0][fit_intercept], "Wrong J for param == 0"
     assert J[1] == EXPECTED[1][fit_intercept], "Wrong J for param == 1"
     assert J[2] == EXPECTED[2][fit_intercept], "Wrong J for param == 2"
@@ -64,7 +63,7 @@ def test_get_J_from_equation_warnings():
         fit_intercept=fit_intercept,
     )
     with pytest.raises(ValueError, match="Shape does not match for param 2."):
-        J = estimator.get_J_from_equation(X)
+        J = estimator.get_J_from_equation(X, True)
 
     # Test for parameter three
     equation_fail_3 = {
@@ -86,4 +85,4 @@ def test_get_J_from_equation_warnings():
         ValueError,
         match="Shape does not match for param 3.",
     ):
-        J = estimator.get_J_from_equation(X)
+        J = estimator.get_J_from_equation(X, True)
