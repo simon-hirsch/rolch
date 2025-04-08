@@ -99,7 +99,7 @@ class LassoPathMethod(EstimationMethod):
             beta_lower_bound = np.repeat(-np.inf, J)
         else:
             if len(self.beta_lower_bound) < J:
-                raise ValueError("Upper bound does not have correct length")
+                raise ValueError("Lower bound does not have correct length")
             beta_lower_bound = np.asarray(self.beta_lower_bound)
         if self.beta_upper_bound is None:
             beta_upper_bound = np.repeat(np.inf, J)
