@@ -35,13 +35,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           pip install numpy==${{ matrix.numpy-version }}
-          pip install flake8 pytest#
-#          pip install "pytest-xdist"
+          pip install flake8 pytest
           if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
       - name: Build package
         run: python -m build --wheel
       - name: Install Package
         run: pip install dist/*
       - name: Run tests with pytest
-        run: pytest tests #-n auto
+        run: pytest tests
 
