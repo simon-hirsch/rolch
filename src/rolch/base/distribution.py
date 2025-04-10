@@ -109,6 +109,18 @@ class Distribution(ABC):
         return self.links[param].inverse_derivative(y)
 
     @abstractmethod
+    def mean(self, theta: np.ndarray) -> np.ndarray:
+        """Calculate the mean of the distribution."""
+
+    @abstractmethod
+    def var(self, theta: np.ndarray) -> np.ndarray:
+        """Calculate the variance of the distribution."""
+
+    @abstractmethod
+    def std(self, theta: np.ndarray) -> np.ndarray:
+        """Calculate the standard deviation of the distribution."""
+
+    @abstractmethod
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
@@ -221,6 +233,18 @@ class ScipyMixin(ABC):
         for idx, name in self.parameter_names.items():
             params[self.scipy_names[name]] = theta[:, idx]
         return params
+
+    def mean(self, theta: np.ndarray) -> np.ndarray:
+        """Calculate the mean of the distribution."""
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).mean()
+
+    def std(self, theta: np.ndarray) -> np.ndarray:
+        """Calculate the standard deviation of the distribution."""
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).std()
+
+    def var(self, theta: np.ndarray) -> np.ndarray:
+        """Calculate the variance of the distribution."""
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).var()
 
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).cdf(y)
