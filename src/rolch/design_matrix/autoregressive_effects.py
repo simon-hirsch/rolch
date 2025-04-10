@@ -4,6 +4,23 @@ from ..base import TransformationCallback
 from ..utils import parse_to_array_for_lags
 
 
+def add_lagged_effects(X, value, lagged_effects):
+    """
+    Add lagged effects to a value.
+    """
+    out = []
+    for callback in lagged_effects:
+        out.append(callback(value))
+    return np.hstack([X] + out)
+
+
+def make_lagged_effects(value, lagged_effects):
+    out = []
+    for callback in lagged_effects:
+        out.append(callback(value))
+    return np.hstack(out)
+
+
 class LaggedValue(TransformationCallback):
     def __init__(self, lags: np.ndarray | int):
         self.lags = parse_to_array_for_lags(lags)

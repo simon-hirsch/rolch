@@ -6,7 +6,13 @@ import numpy as np
 
 from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, Estimator, TransformationCallback
-from ..design_matrix import add_intercept, add_lags, make_intercept, make_lags
+from ..design_matrix import (
+    LaggedValue,
+    add_intercept,
+    add_lagged_effects,
+    make_intercept,
+    make_lagged_effects,
+)
 from ..error import OutOfSupportError
 from ..gram import init_forget_vector
 from ..information_criteria import select_best_model_by_information_criterion
@@ -27,8 +33,8 @@ class OnlineGamlss(Estimator):
         self,
         distribution: Distribution,
         equation: Dict,
-        autoregression_y: Dict[int, int] | int | None = 0,
-        autoregression_theta: Dict[int, int] | int | None = 0,
+        autoregression_y: Dict[int, int] | int | None = None,
+        autoregression_theta: Dict[int, int] | int | None = None,
         residual_effects: Dict[int, List[TransformationCallback]] | List | None = None,
         forget: float | Dict[int, float] = 0.0,
         method: Union[
@@ -109,17 +115,27 @@ class OnlineGamlss(Estimator):
         self._process_attribute(regularize_intercept, False, "regularize_intercept")
         self._process_attribute(forget, default=0.0, name="forget")
         self._process_attribute(ic, "aic", name="ic")
-        self._process_attribute(autoregression_theta, 0, name="autoregression_theta")
-        self._process_attribute(autoregression_y, 0, name="autoregression_y")
+        self._process_attribute(autoregression_theta, [], name="autoregression_theta")
+        self._process_attribute(autoregression_y, [], name="autoregression_y")
         self._process_attribute(residual_effects, [], name="residual_effects")
-        self.max_ar_term_theta = max(self.autoregression_theta.values())
-        self.max_ar_term_y = max(self.autoregression_y.values())
-        self.max_re_term = max(
-            [c.max_lag for p in self.residual_effects.values() for c in p]
-            + [0]  # Add zero to ensure that we have at least zero lags
+
+        # TODO (SH) I dont really like this re-assignment. This may should be done in-place
+        # but then we have to partly duplicate the self._process_attribute.
+        # This is at least very explicit on the plus side
+        self.autoregression_theta = self._process_autoregression(
+            self.autoregression_theta, LaggedValue
         )
+        self.autoregression_y = self._process_autoregression(
+            self.autoregression_y, LaggedValue
+        )
+        self.residual_effects = self._process_autoregression(
+            self.residual_effects, LaggedValue
+        )
+        # Calculate a lot of maximum lag orders
+        self.max_ar_term_theta = self._get_max_lag(self.autoregression_theta)
+        self.max_ar_term_y = self._get_max_lag(self.autoregression_y)
+        self.max_re_term = self._get_max_lag(self.residual_effects)
         self.max_lag = max(self.max_ar_term_y, self.max_ar_term_theta, self.max_re_term)
-        self.min_lag = min(self.max_ar_term_y, self.max_ar_term_theta, self.max_re_term)
         self.is_time_series = self.max_lag > 0
 
         # Get the estimation method
@@ -224,6 +240,47 @@ class OnlineGamlss(Estimator):
 
         return equation
 
+    def _process_autoregression(
+        self,
+        effect: dict,
+        integer_effect: TransformationCallback = LaggedValue,
+    ) -> Dict[int, List[TransformationCallback]]:
+        """Generates a dict of lists of transformation callbacks from a potentially incomplete
+        dictionary of autoregressive effects. This also handles the case where the user
+        inputs integer values, which will be converted to LaggedValue callbacks.
+
+        Args:
+            effect (dict): Dictionary of autoregressive effects. The keys are the distribution parameters
+            integer_effect (TransformationCallback, optional): The default transformation for integers. Defaults to LaggedValue.
+
+        Raises:
+            ValueError: If something unexpected happens.
+
+        Returns:
+            Dict[int, List[TransformationCallback]]: Preprocessed and ready to use dictionary of autoregressive effects.
+        """
+        out = {}
+        for p, e in effect.items():
+            if isinstance(e, list):
+                out[p] = e
+            elif isinstance(e, int):
+                out[p] = [integer_effect(e)]
+            else:
+                raise ValueError(f"Unknown effect type {type(e)}")
+        return out
+
+    @staticmethod
+    def _get_max_lag(effect: Dict[int, List[TransformationCallback]]) -> int:
+        lags = [c.max_lag for p in effect.values() for c in p]
+        if len(lags) == 0:
+            return 0
+        else:
+            return max(lags)
+
+    @staticmethod
+    def _get_n_coef_of_effect(effect, param):
+        return sum([c.J for c in effect[param]])
+
     def _is_intercept_only(self, param: int):
         """Check in the equation whether we model only as intercept"""
         if isinstance(self.equation[param], str):
@@ -261,12 +318,12 @@ class OnlineGamlss(Estimator):
                 raise ValueError("Something unexpected happened")
 
             # Add the MA and AR terms here!
-            if self.autoregression_theta[p] > 0 and not is_first_iteration:
-                J[p] += self.autoregression_theta[p]
-            if self.autoregression_y[p] > 0 and not is_first_iteration:
-                J[p] += self.autoregression_y[p]
+            if self.autoregression_theta[p] and not is_first_iteration:
+                J[p] += self._get_n_coef_of_effect(self.autoregression_theta, p)
+            if self.autoregression_y[p] and not is_first_iteration:
+                J[p] += self._get_n_coef_of_effect(self.autoregression_y, p)
             if self.residual_effects[p]:
-                J[p] += sum([c.J for c in self.residual_effects[p]])
+                J[p] += self._get_n_coef_of_effect(self.residual_effects, p)
 
         return J
 
@@ -313,21 +370,29 @@ class OnlineGamlss(Estimator):
             fv_forward_filled = np.vstack(
                 (self.fv[np.zeros(self.max_lag, dtype=int), :], self.fv)
             )
-        if self.autoregression_y[param] > 0 and y is None:
+        if self.autoregression_y[param] and y is None:
             raise ValueError(
                 "You need to pass the y values to make the autoregressive terms."
             )
-        if (self.autoregression_y[param] > 0) and (inner_iteration > 0):
-            out = add_lags(X=out, y=y, lags=self.autoregression_y[param])
-        if (self.autoregression_theta[param] > 0) and (inner_iteration > 0):
-            out = add_lags(
-                X=out,
-                y=fv_forward_filled[:, param],
-                lags=self.autoregression_theta[param],
+        if self.autoregression_y[param] and (inner_iteration > 0):
+            out = add_lagged_effects(
+                out,
+                y,
+                self.autoregression_y[param],
+            )
+        if self.autoregression_theta[param] and (inner_iteration > 0):
+            out = add_lagged_effects(
+                out,
+                value=fv_forward_filled[:, param],
+                lagged_effects=self.autoregression_theta[param],
             )
         if self.residual_effects[param]:
-            for c in self.residual_effects[param]:
-                out = np.hstack((out, c(y - fv_forward_filled[:, 0])))
+            residuals = y - self.distribution.mean(fv_forward_filled)
+            out = add_lagged_effects(
+                out,
+                residuals,
+                self.residual_effects[param],
+            )
 
         out_x = out[self.max_lag :, :]
         return out_x
@@ -371,29 +436,44 @@ class OnlineGamlss(Estimator):
                 out = np.hstack((make_intercept(n), out))
 
         if self.max_lag > 0:
+            # If y is none we need to take care of "history".
+            # This only works, e.g. for 1 step ahead prediction
+            # or for 1 step updates.
+            # else we either have y (because we do multi-step updates)
+            # or we do have estimates of y
             if y is None:
                 y = np.repeat(0, X.shape[0])
                 fv = np.full((X.shape[0], self.distribution.n_params), 0)
             y_hist = np.concatenate((self.history["y"], y))
+            print(y_hist, y_hist.shape)
             fv_hist = np.vstack((self.history["theta"], fv))
-            r_hist = y_hist - fv_hist[:, 0]
+            print(fv_hist, fv_hist.shape)
+            r_hist = y_hist - self.distribution.mean(fv_hist)
 
-        if (self.autoregression_y[param] > 0) and (param == 0):
-            lagged = make_lags(y=y_hist, lags=self.autoregression_y[param])
-            out = np.hstack((out, np.expand_dims(lagged[-out.shape[0], :], 0)))
-        if (self.autoregression_theta[param] > 0) and (param >= 1):
-            lagged = make_lags(
-                y=fv_hist[:, param], lags=self.autoregression_theta[param]
+        if self.autoregression_y[param] and (param == 0):
+            le = make_lagged_effects(
+                y_hist,
+                self.autoregression_y[param],
             )
-            out = np.hstack((out, np.expand_dims(lagged[-out.shape[0], :], 0)))
+            print(le[-out.shape[0] :, :])
+            print(out)
+            out = np.hstack((out, le[-out.shape[0] :, :]))
+        if self.autoregression_theta[param] and (param >= 1):
+            le = make_lagged_effects(
+                fv_hist[:, param],
+                self.autoregression_theta[param],
+            )
+            print(le[-out.shape[0] :, :])
+            print(out)
+            out = np.hstack((out, le[-out.shape[0] :, :]))
         if self.residual_effects[param]:
-            for c in self.residual_effects[param]:
-                out = np.hstack((out, np.expand_dims(c(r_hist)[-out.shape[0], :], 0)))
-
-        # We have this above (contrary to the non-update)
-        # out_x = out[self.max_lag :, :]
-        # out_y = y[self.max_lag :]
-
+            le = make_lagged_effects(
+                r_hist,
+                self.residual_effects[param],
+            )
+            print(le[-out.shape[0] :, :])
+            print(out)
+            out = np.hstack((out, le[-out.shape[0] :, :]))
         return out
 
     def fit_beta_and_select_model(

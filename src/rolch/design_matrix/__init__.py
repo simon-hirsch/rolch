@@ -6,6 +6,8 @@ from .autoregressive_effects import (
     LaggedLeverageEffect,
     LaggedSquaredValue,
     LaggedValue,
+    add_lagged_effects,
+    make_lagged_effects,
 )
 
 __all__ = [
@@ -13,6 +15,8 @@ __all__ = [
     "LaggedAbsoluteValue",
     "LaggedSquaredValue",
     "LaggedLeverageEffect",
+    "add_lagged_effects",
+    "make_lagged_effects",
 ]
 
 
