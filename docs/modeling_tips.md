@@ -7,7 +7,7 @@ This page contains a collection of tips and tricks for using the online regressi
 If your distributional regression model does not converge, or fails to fit, you might want to check the following:
 
 - Turn on the `verbose=3` option in the `Estimator()` class. This will print out the optimization steps and might give you a hint on what is going wrong.
-- Turn on the `debug=True` option in the `Estimator()` class. This will save each iterations data to the estimator class. Remember to remove the option for production settings, otherwise the model size can increase significantly.
+- Turn on the `debug=True` option in the `Estimator()` class. This will save each iteration's data to the estimator class. Remember to remove the option for production settings, otherwise the model size can increase significantly.
 - Check the data for missing values.
 - Check the data for features with zero variance. These cannot be handled by the `OnlineScaler()` and will cause missing / infinte values (due to the division by zero).
 - Check the data for multicollinearity. The recursive least squares (RLS) algorithm uses the inverse of the Gramian $(X^T X)^{-1}$ which cannot be calculated if your $X$ matrix is not full rank. The algorithm will fail hard on this. The online coordinate descent (OCD) under the hood of the `LassoPathMethod` is more robust, since it does not rely on updating the *inverted* Gramian, but still will select arbitrary features in the case of multicollinearity. If LASSO works, but OLS not, there is a good chance that you have multicollinearity in your data.
