@@ -35,6 +35,7 @@ class LassoPathMethod(EstimationMethod):
         self,
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
+        early_stop: int = 0,
         start_value_initial: Literal[
             "previous_lambda", "previous_fit", "average"
         ] = "previous_lambda",
@@ -53,6 +54,7 @@ class LassoPathMethod(EstimationMethod):
         Parameters:
             lambda_n (int): Number of lambda values to use in the path. Default is 100.
             lambda_eps (float): Minimum lambda value as a fraction of the maximum lambda. Default is 1e-4.
+            early_stop (int): Early stopping criterion. Will stop if the number of non-zero parameters is reached. Default is 0 (no early stopping).
             start_value_initial (Literal["previous_lambda", "previous_fit", "average"]): Method to initialize the start value for the first lambda. Default is "previous_lambda".
             start_value_update (Literal["previous_lambda", "previous_fit", "average"]): Method to update the start value for subsequent lambdas. Default is "previous_fit".
             selection (Literal["cyclic", "random"]): Method to select features during the path. Default is "cyclic".
@@ -66,6 +68,7 @@ class LassoPathMethod(EstimationMethod):
             _accepts_bounds=True,
             _accepts_selection=True,
         )
+        self.early_stop = early_stop
         self.beta_lower_bound = beta_lower_bound
         self.beta_upper_bound = beta_upper_bound
         self.lambda_n = lambda_n
@@ -133,6 +136,7 @@ class LassoPathMethod(EstimationMethod):
         beta_path, _ = online_coordinate_descent_path(
             x_gram=x_gram,
             y_gram=y_gram.squeeze(-1),
+            early_stop=self.early_stop,
             beta_path=beta_path,
             lambda_path=lambda_path,
             is_regularized=is_regularized,
@@ -157,6 +161,7 @@ class LassoPathMethod(EstimationMethod):
             y_gram=y_gram.squeeze(-1),
             beta_path=beta_path,
             lambda_path=lambda_path,
+            early_stop=self.early_stop,
             is_regularized=is_regularized,
             beta_lower_bound=self.beta_lower_bound,
             beta_upper_bound=self.beta_upper_bound,
