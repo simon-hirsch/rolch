@@ -33,9 +33,10 @@ class OnlineGamlss(Estimator):
         self,
         distribution: Distribution,
         equation: Dict,
-        autoregression_y: Dict[int, int] | int | None = None,
-        autoregression_theta: Dict[int, int] | int | None = None,
-        residual_effects: Dict[int, List[TransformationCallback]] | List | None = None,
+        lagged_y: Dict[int, int] | None = None,
+        lagged_theta: Dict[int, int] | None = None,
+        lagged_residual: Dict[int, List[TransformationCallback]] | None = None,
+        lagged_std_residual: Dict[int, List[TransformationCallback]] | None = None,
         forget: float | Dict[int, float] = 0.0,
         method: Union[
             str, EstimationMethod, Dict[int, str], Dict[int, EstimationMethod]
@@ -115,27 +116,33 @@ class OnlineGamlss(Estimator):
         self._process_attribute(regularize_intercept, False, "regularize_intercept")
         self._process_attribute(forget, default=0.0, name="forget")
         self._process_attribute(ic, "aic", name="ic")
-        self._process_attribute(autoregression_theta, [], name="autoregression_theta")
-        self._process_attribute(autoregression_y, [], name="autoregression_y")
-        self._process_attribute(residual_effects, [], name="residual_effects")
+        self._process_attribute(lagged_theta, [], name="lagged_theta")
+        self._process_attribute(lagged_y, [], name="lagged_y")
+        self._process_attribute(lagged_residual, [], name="lagged_residual")
+        self._process_attribute(lagged_std_residual, [], name="lagged_std_residual")
 
         # TODO (SH) I dont really like this re-assignment. This may should be done in-place
         # but then we have to partly duplicate the self._process_attribute.
         # This is at least very explicit on the plus side
-        self.autoregression_theta = self._process_autoregression(
-            self.autoregression_theta, LaggedValue
+        self.lagged_theta = self._process_autoregression(self.lagged_theta, LaggedValue)
+        self.lagged_y = self._process_autoregression(self.lagged_y, LaggedValue)
+        self.lagged_residual = self._process_autoregression(
+            self.lagged_residual, LaggedValue
         )
-        self.autoregression_y = self._process_autoregression(
-            self.autoregression_y, LaggedValue
-        )
-        self.residual_effects = self._process_autoregression(
-            self.residual_effects, LaggedValue
+        self.lagged_std_residual = self._process_autoregression(
+            self.lagged_std_residual, LaggedValue
         )
         # Calculate a lot of maximum lag orders
-        self.max_ar_term_theta = self._get_max_lag(self.autoregression_theta)
-        self.max_ar_term_y = self._get_max_lag(self.autoregression_y)
-        self.max_re_term = self._get_max_lag(self.residual_effects)
-        self.max_lag = max(self.max_ar_term_y, self.max_ar_term_theta, self.max_re_term)
+        self.max_ar_term_theta = self._get_max_lag(self.lagged_theta)
+        self.max_ar_term_y = self._get_max_lag(self.lagged_y)
+        self.max_re_term = self._get_max_lag(self.lagged_residual)
+        self.max_std_re_term = self._get_max_lag(self.lagged_std_residual)
+        self.max_lag = max(
+            self.max_ar_term_y,
+            self.max_ar_term_theta,
+            self.max_re_term,
+            self.max_std_re_term,
+        )
         self.is_time_series = self.max_lag > 0
 
         # Get the estimation method
@@ -318,12 +325,14 @@ class OnlineGamlss(Estimator):
                 raise ValueError("Something unexpected happened")
 
             # Add the MA and AR terms here!
-            if self.autoregression_theta[p] and not is_first_iteration:
-                J[p] += self._get_n_coef_of_effect(self.autoregression_theta, p)
-            if self.autoregression_y[p] and not is_first_iteration:
-                J[p] += self._get_n_coef_of_effect(self.autoregression_y, p)
-            if self.residual_effects[p]:
-                J[p] += self._get_n_coef_of_effect(self.residual_effects, p)
+            if self.lagged_theta[p] and not is_first_iteration:
+                J[p] += self._get_n_coef_of_effect(self.lagged_theta, p)
+            if self.lagged_y[p] and not is_first_iteration:
+                J[p] += self._get_n_coef_of_effect(self.lagged_y, p)
+            if self.lagged_residual[p]:
+                J[p] += self._get_n_coef_of_effect(self.lagged_residual, p)
+            if self.lagged_std_residual[p]:
+                J[p] += self._get_n_coef_of_effect(self.lagged_std_residual, p)
 
         return J
 
@@ -370,28 +379,37 @@ class OnlineGamlss(Estimator):
             fv_forward_filled = np.vstack(
                 (self.fv[np.zeros(self.max_lag, dtype=int), :], self.fv)
             )
-        if self.autoregression_y[param] and y is None:
+        if self.lagged_y[param] and y is None:
             raise ValueError(
                 "You need to pass the y values to make the autoregressive terms."
             )
-        if self.autoregression_y[param] and (inner_iteration > 0):
+        if self.lagged_y[param] and (inner_iteration > 0):
             out = add_lagged_effects(
                 out,
                 y,
-                self.autoregression_y[param],
+                self.lagged_y[param],
             )
-        if self.autoregression_theta[param] and (inner_iteration > 0):
+        if self.lagged_theta[param] and (inner_iteration > 0):
             out = add_lagged_effects(
                 out,
                 value=fv_forward_filled[:, param],
-                lagged_effects=self.autoregression_theta[param],
+                lagged_effects=self.lagged_theta[param],
             )
-        if self.residual_effects[param]:
+        if self.lagged_residual[param]:
             residuals = y - self.distribution.mean(fv_forward_filled)
             out = add_lagged_effects(
                 out,
                 residuals,
-                self.residual_effects[param],
+                self.lagged_residual[param],
+            )
+        if self.lagged_std_residual[param]:
+            std_residuals = (
+                y - self.distribution.mean(fv_forward_filled)
+            ) / self.distribution.std(fv_forward_filled)
+            out = add_lagged_effects(
+                out,
+                std_residuals,
+                self.lagged_residual[param],
             )
 
         out_x = out[self.max_lag :, :]
@@ -450,30 +468,39 @@ class OnlineGamlss(Estimator):
             print(fv_hist, fv_hist.shape)
             r_hist = y_hist - self.distribution.mean(fv_hist)
 
-        if self.autoregression_y[param] and (param == 0):
+        if self.lagged_y[param] and (param == 0):
             le = make_lagged_effects(
                 y_hist,
-                self.autoregression_y[param],
+                self.lagged_y[param],
             )
             print(le[-out.shape[0] :, :])
             print(out)
             out = np.hstack((out, le[-out.shape[0] :, :]))
-        if self.autoregression_theta[param] and (param >= 1):
+        if self.lagged_theta[param] and (param >= 1):
             le = make_lagged_effects(
                 fv_hist[:, param],
-                self.autoregression_theta[param],
+                self.lagged_theta[param],
             )
             print(le[-out.shape[0] :, :])
             print(out)
             out = np.hstack((out, le[-out.shape[0] :, :]))
-        if self.residual_effects[param]:
+        if self.lagged_residual[param]:
             le = make_lagged_effects(
                 r_hist,
-                self.residual_effects[param],
+                self.lagged_residual[param],
             )
             print(le[-out.shape[0] :, :])
             print(out)
             out = np.hstack((out, le[-out.shape[0] :, :]))
+        if self.lagged_std_residual[param]:
+            le = make_lagged_effects(
+                r_hist / self.distribution.std(fv_hist),
+                self.lagged_std_residual[param],
+            )
+            print(le[-out.shape[0] :, :])
+            print(out)
+            out = np.hstack((out, le[-out.shape[0] :, :]))
+
         return out
 
     def fit_beta_and_select_model(
