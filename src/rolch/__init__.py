@@ -17,6 +17,12 @@ from .coordinate_descent import (
     online_coordinate_descent_path,
     soft_threshold,
 )
+from .design_matrix import (
+    LaggedAbsoluteValue,
+    LaggedLeverageEffect,
+    LaggedSquaredValue,
+    LaggedValue,
+)
 from .distributions import (
     DistributionGamma,
     DistributionJSU,
@@ -60,6 +66,10 @@ from .warnings import OutOfSupportWarning
 __version__ = version("rolch")
 
 __all__ = [
+    "LaggedAbsoluteValue",
+    "LaggedLeverageEffect",
+    "LaggedSquaredValue",
+    "LaggedValue",
     "OutOfSupportWarning",
     "OutOfSupportError",
     "OnlineScaler",
