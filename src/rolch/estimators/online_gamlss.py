@@ -409,7 +409,7 @@ class OnlineGamlss(Estimator):
             out = add_lagged_effects(
                 out,
                 std_residuals,
-                self.lagged_residual[param],
+                self.lagged_std_residual[param],
             )
 
         out_x = out[self.max_lag :, :]
@@ -466,13 +466,13 @@ class OnlineGamlss(Estimator):
             fv_hist = np.vstack((self.history["theta"], fv))
             r_hist = y_hist - self.distribution.mean(fv_hist)
 
-        if self.lagged_y[param] and (param == 0):
+        if self.lagged_y[param]:
             le = make_lagged_effects(
                 y_hist,
                 self.lagged_y[param],
             )
             out = np.hstack((out, le[-out.shape[0] :, :]))
-        if self.lagged_theta[param] and (param >= 1):
+        if self.lagged_theta[param]:
             le = make_lagged_effects(
                 fv_hist[:, param],
                 self.lagged_theta[param],
@@ -959,15 +959,16 @@ class OnlineGamlss(Estimator):
             # - the 1st Outer iteration (iteration_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
             # - the 2nd Outer iteration (iteration_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
 
-            if (abs(olddv - dv) <= self.abs_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
-                break
+            if iteration_inner > int(self.is_time_series):
+                if (abs(olddv - dv) <= self.abs_tol_inner) & (
+                    (iteration_inner + iteration_outer) >= 2
+                ):
+                    break
 
-            if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
-                break
+                if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
+                    (iteration_inner + iteration_outer) >= 2
+                ):
+                    break
 
             iteration_inner += 1
             self.J = self.get_J_from_equation(
@@ -994,7 +995,7 @@ class OnlineGamlss(Estimator):
                 X=X,
                 y=y,
                 param=param,
-                inner_iteration=max(iteration_outer - 1, iteration_inner - 1),
+                inner_iteration=max(iteration_outer - 1, iteration_inner - 1, 0),
             )
             # moved to self.fit
             # w = w[self.max_lag :]
