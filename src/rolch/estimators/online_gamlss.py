@@ -463,9 +463,7 @@ class OnlineGamlss(Estimator):
                 y = np.repeat(0, X.shape[0])
                 fv = np.full((X.shape[0], self.distribution.n_params), 0)
             y_hist = np.concatenate((self.history["y"], y))
-            print(y_hist, y_hist.shape)
             fv_hist = np.vstack((self.history["theta"], fv))
-            print(fv_hist, fv_hist.shape)
             r_hist = y_hist - self.distribution.mean(fv_hist)
 
         if self.lagged_y[param] and (param == 0):
@@ -473,32 +471,24 @@ class OnlineGamlss(Estimator):
                 y_hist,
                 self.lagged_y[param],
             )
-            print(le[-out.shape[0] :, :])
-            print(out)
             out = np.hstack((out, le[-out.shape[0] :, :]))
         if self.lagged_theta[param] and (param >= 1):
             le = make_lagged_effects(
                 fv_hist[:, param],
                 self.lagged_theta[param],
             )
-            print(le[-out.shape[0] :, :])
-            print(out)
             out = np.hstack((out, le[-out.shape[0] :, :]))
         if self.lagged_residual[param]:
             le = make_lagged_effects(
                 r_hist,
                 self.lagged_residual[param],
             )
-            print(le[-out.shape[0] :, :])
-            print(out)
             out = np.hstack((out, le[-out.shape[0] :, :]))
         if self.lagged_std_residual[param]:
             le = make_lagged_effects(
                 r_hist / self.distribution.std(fv_hist),
                 self.lagged_std_residual[param],
             )
-            print(le[-out.shape[0] :, :])
-            print(out)
             out = np.hstack((out, le[-out.shape[0] :, :]))
 
         return out
