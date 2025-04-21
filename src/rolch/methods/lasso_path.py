@@ -93,17 +93,22 @@ class LassoPathMethod(EstimationMethod):
             )
         return lambda_max
 
-    def _set_and_validate_bounds(self, x_gram: np.ndarray) -> None:
+    def _get_bounds(self, x_gram: np.ndarray) -> None:
         J = x_gram.shape[1]
         if self.beta_lower_bound is None:
-            self.beta_lower_bound = np.repeat(-np.inf, J)
+            beta_lower_bound = np.repeat(-np.inf, J)
+        else:
+            if len(self.beta_lower_bound) < J:
+                raise ValueError("Lower bound does not have correct length")
+            beta_lower_bound = np.asarray(self.beta_lower_bound)
         if self.beta_upper_bound is None:
-            self.beta_upper_bound = np.repeat(np.inf, J)
+            beta_upper_bound = np.repeat(np.inf, J)
+        else:
+            if len(self.beta_upper_bound) < J:
+                raise ValueError("Lower bound does not have correct length")
+            beta_upper_bound = np.asarray(self.beta_upper_bound)
 
-        if len(self.beta_lower_bound) != J:
-            raise ValueError("Lower bound does not have correct length")
-        if len(self.beta_upper_bound) != J:
-            raise ValueError("Upper bound does not have correct length")
+        return beta_lower_bound, beta_upper_bound
 
     @staticmethod
     def init_x_gram(X, weights, forget):
@@ -122,7 +127,6 @@ class LassoPathMethod(EstimationMethod):
         return update_y_gram(gram, X, y, forget=forget, w=weights)
 
     def fit_beta_path(self, x_gram, y_gram, is_regularized):
-        self._set_and_validate_bounds(x_gram=x_gram)
         lambda_max = self._get_lambda_max(
             x_gram=x_gram, y_gram=y_gram, is_regularized=is_regularized
         )
@@ -130,14 +134,15 @@ class LassoPathMethod(EstimationMethod):
             lambda_max, lambda_max * self.lambda_eps, self.lambda_n
         )
         beta_path = np.zeros((self.lambda_n, x_gram.shape[0]))
+        beta_lower_bound, beta_upper_bound = self._get_bounds(x_gram=x_gram)
         beta_path, _ = online_coordinate_descent_path(
             x_gram=x_gram,
             y_gram=y_gram.squeeze(-1),
             beta_path=beta_path,
             lambda_path=lambda_path,
             is_regularized=is_regularized,
-            beta_lower_bound=self.beta_lower_bound,
-            beta_upper_bound=self.beta_upper_bound,
+            beta_lower_bound=beta_lower_bound,
+            beta_upper_bound=beta_upper_bound,
             which_start_value=self.start_value_initial,
             selection=self.selection,
             tolerance=self.tolerance,
@@ -152,14 +157,15 @@ class LassoPathMethod(EstimationMethod):
         lambda_path = np.geomspace(
             lambda_max, lambda_max * self.lambda_eps, self.lambda_n
         )
+        beta_lower_bound, beta_upper_bound = self._get_bounds(x_gram=x_gram)
         beta_path, _ = online_coordinate_descent_path(
             x_gram=x_gram,
             y_gram=y_gram.squeeze(-1),
             beta_path=beta_path,
             lambda_path=lambda_path,
             is_regularized=is_regularized,
-            beta_lower_bound=self.beta_lower_bound,
-            beta_upper_bound=self.beta_upper_bound,
+            beta_lower_bound=beta_lower_bound,
+            beta_upper_bound=beta_upper_bound,
             which_start_value=self.start_value_update,
             selection=self.selection,
             tolerance=self.tolerance,
