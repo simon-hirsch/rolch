@@ -59,6 +59,32 @@ def information_criterion(
     return ic
 
 
+def information_criterion_log_likelihood(
+    n_observations: Union[int, np.ndarray],
+    n_parameters: Union[int, np.ndarray],
+    log_likelihood: Union[float, np.ndarray],
+    criterion: Literal["aic", "bic", "hqc", "aicc"] = "aic",
+) -> Union[float, np.ndarray]:
+    if criterion == "aic":
+        value = 2 * n_parameters - 2 * log_likelihood
+    elif criterion == "aicc":
+        value = (
+            2 * n_parameters
+            - 2 * log_likelihood
+            + (
+                (2 * n_parameters**2 + 2 * n_parameters)
+                / (n_observations - n_parameters - 1)
+            )
+        )
+    elif criterion == "bic":
+        value = n_parameters * np.log(n_observations) - 2 * log_likelihood
+    elif criterion == "hqc":
+        value = n_parameters * np.log(np.log(n_observations)) - 2 * log_likelihood
+    else:
+        raise ValueError("Did not recognize ic.")
+    return value
+
+
 def select_best_model_by_information_criterion(
     n_observations: float,
     n_parameters: np.ndarray,

@@ -8,7 +8,10 @@ from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, Estimator
 from ..error import OutOfSupportError
 from ..gram import init_forget_vector
-from ..information_criteria import select_best_model_by_information_criterion
+from ..information_criteria import (
+    information_criterion_log_likelihood,
+    select_best_model_by_information_criterion,
+)
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..utils import calculate_effective_training_length, online_mean_update
@@ -318,13 +321,12 @@ class OnlineGamlss(Estimator):
         X,
         y,
         w,
-        iteration_outer,
-        iteration_inner,
         param,
+        iteration_outer: int = 0,
+        iteration_inner: int = 0,
     ):
 
         f = init_forget_vector(self.forget[param], self.n_observations)
-
         if not self._method[param]._path_based_method:
             beta_path = None
             beta = self._method[param].fit_beta(
@@ -337,6 +339,7 @@ class OnlineGamlss(Estimator):
             rss = np.sum(residuals**2 * w * f) / np.mean(w * f)
 
         else:
+            beta = None
             beta_path = self._method[param].fit_beta_path(
                 x_gram=self.x_gram[param],
                 y_gram=self.y_gram[param],
@@ -345,19 +348,57 @@ class OnlineGamlss(Estimator):
             residuals = y[:, None] - X @ beta_path.T
             rss = np.sum(residuals**2 * w[:, None] * f[:, None], axis=0)
             rss = rss / np.mean(w * f)
-            model_params_n = np.sum(~np.isclose(beta_path, 0), axis=1)
+
+        self.residuals[param] = residuals
+        self.weights[param] = w
+        self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
+
+        return beta, beta_path, rss
+
+    def fit_select_model(
+        self,
+        X,
+        y,
+        w,
+        beta_path,
+        rss,
+        iteration_inner,
+        iteration_outer,
+        param,
+    ) -> np.ndarray:
+        # TODO Here:
+        # - We should save the information in a named tuple
+        # - We should keep only the information we need
+        # - Consider the interation with the local RSS criterion?!
+
+        model_params_n = np.count_nonzero(beta_path, axis=1)
+        if self.model_selection == "local_rss":
             best_ic = select_best_model_by_information_criterion(
                 self.n_training[param], model_params_n, rss, self.ic[param]
             )
             beta = beta_path[best_ic, :]
+        elif self.model_selection == "global_ll":
+            ll = np.zeros(self._method[param]._path_length)
+            prediction = X @ beta_path.T
+            theta = np.copy(self.fv)
+            for i in range(self._method[param]._path_length):
+                theta[:, param] = self.distribution.link_inverse(
+                    prediction[:, i], param=param
+                )
+                ll[i] = np.sum(np.log(self.distribution.pdf(y, theta)))
 
-            self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
-            self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
+            ic = information_criterion_log_likelihood(
+                n_observations=self.n_training[param],
+                n_parameters=model_params_n,
+                log_likelihood=ll,
+                criterion=self.ic[param],
+            )
+            best_ic = np.argmin(ic)
+            beta = beta_path[best_ic, :]
 
-        self.residuals[param] = residuals
-        self.weights[param] = w
+        self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
 
-        return beta, beta_path, rss
+        return beta
 
     def update_beta_and_select_model(
         self,
@@ -368,7 +409,6 @@ class OnlineGamlss(Estimator):
         iteration_inner,
         param,
     ):
-
         denom = online_mean_update(
             self.mean_of_weights[param], w, self.forget[param], self.n_observations
         )
@@ -804,10 +844,15 @@ class OnlineGamlss(Estimator):
 
             ## Update the X and Y Gramian and the weight
             self.x_gram[param] = self._method[param].init_x_gram(
-                X=X[param], weights=(w * wt), forget=self.forget[param]
+                X=X[param],
+                weights=(w * wt),
+                forget=self.forget[param],
             )
             self.y_gram[param] = self._method[param].init_y_gram(
-                X=X[param], y=wv, weights=(w * wt), forget=self.forget[param]
+                X=X[param],
+                y=wv,
+                weights=(w * wt),
+                forget=self.forget[param],
             )
             beta_new, beta_path_new, rss_new = self.fit_beta_and_select_model(
                 X=X[param],
@@ -817,7 +862,19 @@ class OnlineGamlss(Estimator):
                 iteration_inner=iteration_inner,
                 iteration_outer=iteration_outer,
             )
-
+            # Select the model if we have a path-based method
+            if self._method[param]._path_based_method:
+                beta_new = self.fit_select_model(
+                    X=X[param],
+                    y=wv,
+                    w=wt,
+                    beta_path=beta_path_new,
+                    rss=rss_new,
+                    param=param,
+                    iteration_inner=iteration_inner,
+                    iteration_outer=iteration_outer,
+                )
+            # Check if the local RSS are decreasing
             if iteration_inner > 1 or iteration_outer > 1:
 
                 if self.method[param] == "ols":
