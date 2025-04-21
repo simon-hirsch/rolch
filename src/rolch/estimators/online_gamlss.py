@@ -959,16 +959,20 @@ class OnlineGamlss(Estimator):
             # - the 1st Outer iteration (iteration_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
             # - the 2nd Outer iteration (iteration_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
 
-            if iteration_inner > int(self.is_time_series):
-                if (abs(olddv - dv) <= self.abs_tol_inner) & (
-                    (iteration_inner + iteration_outer) >= 2
-                ):
-                    break
+            if self.is_time_series and (iteration_outer == 1):
+                allowed_to_break = iteration_inner > 2
+            else:
+                allowed_to_break = True
 
-                if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
-                    (iteration_inner + iteration_outer) >= 2
-                ):
-                    break
+            if (abs(olddv - dv) <= self.abs_tol_inner) & (
+                ((iteration_inner + iteration_outer) >= 2) & allowed_to_break
+            ):
+                break
+
+            if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
+                ((iteration_inner + iteration_outer) >= 2) & allowed_to_break
+            ):
+                break
 
             iteration_inner += 1
             self.J = self.get_J_from_equation(
@@ -995,7 +999,7 @@ class OnlineGamlss(Estimator):
                 X=X,
                 y=y,
                 param=param,
-                inner_iteration=max(iteration_outer - 1, iteration_inner - 1, 0),
+                inner_iteration=max(iteration_outer - 1, iteration_inner - 1),
             )
             # moved to self.fit
             # w = w[self.max_lag :]
