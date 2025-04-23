@@ -236,6 +236,18 @@ class ScipyMixin(ABC):
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
+    def logpmf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the probability mass function (PMF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log PMF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log PMF values corresponding to the data points in `y`.
+        """
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).logpmf(y)
+
     def logpdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """Compute the log of the probability density function (PDF) for the given data points.
 
