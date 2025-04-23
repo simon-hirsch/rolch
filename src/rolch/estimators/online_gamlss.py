@@ -577,6 +577,8 @@ class OnlineGamlss(Estimator):
         self.rss_iterations = np.zeros(
             (self.distribution.n_params, self.max_it_outer, self.max_it_inner)
         )
+
+        # For regularized estimation, we have the necessary data to do model selection!
         self.model_selection_data = {}
         self.best_ic = np.zeros(self.distribution.n_params)
         self.best_ic_iterations = np.zeros(
@@ -591,6 +593,8 @@ class OnlineGamlss(Estimator):
                 is_regularized[0] = False
             self.is_regularized[p] = is_regularized
 
+        # Betas might be different across distribution parameters
+        # So this is a dict of dicts
         self.beta_iterations = {i: {} for i in range(self.distribution.n_params)}
         self.beta_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
 
