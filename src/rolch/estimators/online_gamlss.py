@@ -574,8 +574,9 @@ class OnlineGamlss(Estimator):
         # For regularized estimation, we have the necessary data to do model selection!
         self.model_selection_data = {}
         self.best_ic = np.zeros(self.distribution.n_params)
-        self.best_ic_iterations = np.zeros(
-            (self.distribution.n_params, self.max_it_outer, self.max_it_inner)
+        self.best_ic_iterations = np.full(
+            (self.distribution.n_params, self.max_it_outer, self.max_it_inner),
+            np.nan,
         )
 
         for p in range(self.distribution.n_params):
@@ -766,7 +767,7 @@ class OnlineGamlss(Estimator):
             if it_outer >= self.max_it_outer:
                 break
 
-            global_dev_old = global_dev
+            global_dev_old = float(global_dev)
             it_outer += 1
 
             for param in range(self.distribution.n_params):
@@ -789,7 +790,7 @@ class OnlineGamlss(Estimator):
                 message = f"Outer iteration {it_outer}: Fitted param {param}: current LL {global_dev}"
                 self._print_message(message=message, level=2)
 
-            message = f"Outer iteration {it_outer}: Finished. Current LL {global_dev}"
+            message = f"Outer iteration {it_outer}: Finished. Current LL {global_dev}, old LL {global_dev_old}"
             self._print_message(message=message, level=1)
 
         return (global_dev, it_outer)
@@ -818,11 +819,14 @@ class OnlineGamlss(Estimator):
             # - the 1st Outer iteration (it_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
             # - the 2nd Outer iteration (it_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
 
-            if (abs(olddv - dv) <= self.abs_tol_inner) & ((it_inner + it_outer) >= 2):
+            if (abs(olddv - dv) <= self.abs_tol_inner) & (
+                it_inner > 1
+            ):  # & ((it_inner + it_outer) >= 2):
                 break
 
             if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
-                (it_inner + it_outer) >= 2
+                # (it_inner + it_outer) >= 2
+                (it_inner > 1)
             ):
                 break
 
@@ -873,6 +877,7 @@ class OnlineGamlss(Estimator):
                 )
                 self.model_selection_data[param] = model_selection_data
                 self.best_ic[param] = best_ic
+                # print(param, it_outer - 1, it_inner - 1, best_ic)
                 self.best_ic_iterations[param, it_outer - 1, it_inner - 1] = best_ic
 
             f = init_forget_vector(self.forget[param], self.n_observations)
