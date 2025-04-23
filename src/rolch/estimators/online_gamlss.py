@@ -392,7 +392,7 @@ class OnlineGamlss(Estimator):
             beta = beta_path[best_ic, :]
             model_selection_data = ll
 
-        return beta, model_selection_data
+        return beta, model_selection_data, best_ic
 
     def update_select_model(
         self,
@@ -442,7 +442,7 @@ class OnlineGamlss(Estimator):
             model_selection_data_new = ll
 
         beta = beta_path[best_ic, :]
-        return beta, model_selection_data_new
+        return beta, model_selection_data_new, best_ic
 
     def update_beta(
         self,
@@ -569,8 +569,6 @@ class OnlineGamlss(Estimator):
             self._debug_dl2dlp2 = {}
             self._debug_eta = {}
 
-        self.rss = {i: 0 for i in range(self.distribution.n_params)}
-
         self.x_gram = {}
         self.y_gram = {}
         self.weights = {}
@@ -580,6 +578,10 @@ class OnlineGamlss(Estimator):
             (self.distribution.n_params, self.max_it_outer, self.max_it_inner)
         )
         self.model_selection_data = {}
+        self.best_ic = np.zeros(self.distribution.n_params)
+        self.best_ic_iterations = np.zeros(
+            (self.distribution.n_params, self.max_it_outer, self.max_it_inner)
+        )
 
         for p in range(self.distribution.n_params):
             is_regularized = np.repeat(True, self.J[p])
@@ -599,9 +601,6 @@ class OnlineGamlss(Estimator):
             i: {} for i in range(self.distribution.n_params)
         }
         self.beta_path_iterations = {i: {} for i in range(self.distribution.n_params)}
-
-        self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
-        self.ic_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
 
         # We need to track the sum of weights for each
         # distribution parameter for online model selection
@@ -671,10 +670,13 @@ class OnlineGamlss(Estimator):
             self._debug_dl2dlp2 = {}
             self._debug_eta = {}
 
-        ## Reset rss and iterations
-        self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
-        self.ic_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
+        ## Reset rss and ic to avoid confusion
+        ## These are only for viewing, not read!!
+        self.best_ic[:] = 0
+        self.best_ic_iterations[:] = 0
+        self.rss_iterations[:] = 0
 
+        ## Copy old values for updating
         self.x_gram_inner = copy.copy(self.x_gram)
         self.y_gram_inner = copy.copy(self.y_gram)
         self.rss_old = copy.copy(self.rss)
@@ -729,9 +731,6 @@ class OnlineGamlss(Estimator):
                 self.beta_iterations_inner[param][it_outer] = {}
                 self.beta_path_iterations_inner[param][it_outer] = {}
 
-                self.rss_iterations_inner[param][it_outer] = {}
-                self.ic_iterations_inner[param][it_outer] = {}
-
                 global_dev = self._inner_update(
                     X=X,
                     y=y,
@@ -777,9 +776,6 @@ class OnlineGamlss(Estimator):
 
                 self.beta_iterations_inner[param][it_outer] = {}
                 self.beta_path_iterations_inner[param][it_outer] = {}
-
-                self.rss_iterations_inner[param][it_outer] = {}
-                self.ic_iterations_inner[param][it_outer] = {}
 
                 global_dev = self._inner_fit(
                     X=X,
@@ -870,7 +866,7 @@ class OnlineGamlss(Estimator):
             )
             # Select the model if we have a path-based method
             if self._method[param]._path_based_method:
-                beta_new, model_selection_data = self.fit_select_model(
+                beta_new, model_selection_data, best_ic = self.fit_select_model(
                     X=X[param],
                     y=wv,
                     w=w,
@@ -880,6 +876,8 @@ class OnlineGamlss(Estimator):
                     param=param,
                 )
                 self.model_selection_data[param] = model_selection_data
+                self.best_ic[param] = best_ic
+                self.best_ic_iterations[param, it_outer - 1, it_inner - 1] = best_ic
 
             f = init_forget_vector(self.forget[param], self.n_observations)
             residuals = y - X[param] @ beta_new.T
@@ -978,7 +976,7 @@ class OnlineGamlss(Estimator):
             )
             # Select the model if we have a path-based method
             if self._method[param]._path_based_method:
-                beta_new, model_selection_data_new = self.update_select_model(
+                beta_new, model_selection_data_new, best_ic = self.update_select_model(
                     X=X[param],
                     y=y,
                     w=w,
@@ -988,6 +986,9 @@ class OnlineGamlss(Estimator):
                     model_selection_data=self.model_selection_data_old[param],
                     param=param,
                 )
+                self.best_ic[param] = best_ic
+                self.best_ic_iterations[param, it_outer - 1, it_inner - 1] = best_ic
+
             # Check if the local RSS are decreasing
             denom = online_mean_update(
                 self.mean_of_weights[param], wt, self.forget[param], self.n_observations
@@ -1008,6 +1009,7 @@ class OnlineGamlss(Estimator):
             self.beta_path[param] = beta_path_new
             self.rss[param] = rss_new
             self.rss_iterations[param, it_outer - 1, it_inner - 1] = rss_new
+
             self.model_selection_data[param] = model_selection_data_new
 
             eta = X[param] @ self.beta[param].T
