@@ -316,7 +316,7 @@ class OnlineGamlss(Estimator):
 
         return out
 
-    def fit_beta_and_select_model(
+    def fit_beta(
         self,
         X,
         y,
@@ -385,6 +385,7 @@ class OnlineGamlss(Estimator):
                 theta[:, param] = self.distribution.link_inverse(
                     prediction[:, i], param=param
                 )
+                # TODO: This needs to have the discounting here I believe!
                 ll[i] = np.sum(np.log(self.distribution.pdf(y, theta)))
 
             ic = information_criterion_log_likelihood(
@@ -396,11 +397,53 @@ class OnlineGamlss(Estimator):
             best_ic = np.argmin(ic)
             beta = beta_path[best_ic, :]
 
-        self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
+            self.ms_ll[param] = ll
 
+        self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
+        self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
         return beta
 
-    def update_beta_and_select_model(
+    def update_select_model(
+        self,
+        X,
+        y,
+        w,
+        beta_path,
+        rss,
+        iteration_inner,
+        iteration_outer,
+        param,
+    ):
+        model_params_n = np.count_nonzero(beta_path, axis=1)
+        if self.model_selection == "local_rss":
+            best_ic = select_best_model_by_information_criterion(
+                self.n_training[param], model_params_n, rss, self.ic[param]
+            )
+            ll = None
+        elif self.model_selection == "global_ll":
+            ll = np.zeros(self._method[param]._path_length)
+            prediction = X @ beta_path.T
+            theta = np.copy(self.fv)
+            for i in range(self._method[param]._path_length):
+                theta[:, param] = self.distribution.link_inverse(
+                    prediction[:, i], param=param
+                )
+                ll[i] = np.sum(np.log(self.distribution.pdf(y, theta)))
+            ll = ll + (1 - self.forget[param]) * self.ms_ll_old[param]
+            ic = information_criterion_log_likelihood(
+                n_observations=self.n_training[param],
+                n_parameters=model_params_n,
+                log_likelihood=ll,
+                criterion=self.ic[param],
+            )
+            best_ic = np.argmin(ic)
+
+        beta = beta_path[best_ic, :]
+        self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
+        self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
+        return beta, ll
+
+    def update_beta(
         self,
         X,
         y,
@@ -428,8 +471,9 @@ class OnlineGamlss(Estimator):
                 + (1 - self.forget[param])
                 * (self.rss_old[param] * self.mean_of_weights[param])
             ) / denom
-
+            self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
         else:
+            beta = None
             beta_path = self._method[param].update_beta_path(
                 x_gram=self.x_gram_inner[param],
                 y_gram=self.y_gram_inner[param],
@@ -437,22 +481,11 @@ class OnlineGamlss(Estimator):
                 is_regularized=self.is_regularized[param],
             )
             residuals = y - X @ beta_path.T
-
             rss = (
                 (residuals**2).flatten() * w
                 + (1 - self.forget[param])
                 * (self.rss_old[param] * self.mean_of_weights[param])
             ) / denom
-
-            model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
-            best_ic = select_best_model_by_information_criterion(
-                self.n_training[param], model_params_n, rss, self.ic[param]
-            )
-
-            self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
-            self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
-
-            beta = beta_path[best_ic, :]
 
         return beta, beta_path, rss
 
@@ -565,6 +598,11 @@ class OnlineGamlss(Estimator):
         self.y_gram = {}
         self.weights = {}
         self.residuals = {}
+        self.ms_ll = {
+            p: np.zeros(self._method[p]._path_length)
+            for p in range(self.distribution.n_params)
+            if self._method[p]._path_based_method
+        }
 
         for p in range(self.distribution.n_params):
             is_regularized = np.repeat(True, self.J[p])
@@ -665,6 +703,7 @@ class OnlineGamlss(Estimator):
         self.rss_old = copy.copy(self.rss)
         self.sum_of_weights_inner = copy.copy(self.sum_of_weights)
         self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
+        self.ms_ll_old = copy.copy(self.ms_ll)
 
         message = "Starting update call"
         self._print_message(message=message, level=1)
@@ -854,7 +893,7 @@ class OnlineGamlss(Estimator):
                 weights=(w * wt),
                 forget=self.forget[param],
             )
-            beta_new, beta_path_new, rss_new = self.fit_beta_and_select_model(
+            beta_new, beta_path_new, rss_new = self.fit_beta(
                 X=X[param],
                 y=wv,
                 w=wt,
@@ -971,7 +1010,7 @@ class OnlineGamlss(Estimator):
                 weights=(w * wt),
                 forget=self.forget[param],
             )
-            beta_new, beta_path_new, rss_new = self.update_beta_and_select_model(
+            beta_new, beta_path_new, rss_new = self.update_beta(
                 X[param],
                 y=wv,
                 w=wt,
@@ -979,6 +1018,18 @@ class OnlineGamlss(Estimator):
                 iteration_outer=iteration_outer,
                 param=param,
             )
+            # Select the model if we have a path-based method
+            if self._method[param]._path_based_method:
+                beta_new, ll_new = self.update_select_model(
+                    X=X[param],
+                    y=y,
+                    w=w,
+                    beta_path=beta_path_new,
+                    rss=rss_new,
+                    param=param,
+                    iteration_inner=iteration_inner,
+                    iteration_outer=iteration_outer,
+                )
             # Check if the local RSS are decreasing
             if self.method[param] == "ols":
                 if rss_new > (self.rss_tol_inner * self.rss[param]):
@@ -993,6 +1044,7 @@ class OnlineGamlss(Estimator):
             self.beta[param] = beta_new
             self.beta_path[param] = beta_path_new
             self.rss[param] = rss_new
+            self.ms_ll[param] = ll_new
 
             eta = X[param] @ self.beta[param].T
             self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
