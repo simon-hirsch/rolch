@@ -322,8 +322,8 @@ class OnlineGamlss(Estimator):
         y,
         w,
         param,
-        iteration_outer: int = 0,
-        iteration_inner: int = 0,
+        it_outer: int = 0,
+        it_inner: int = 0,
     ):
 
         f = init_forget_vector(self.forget[param], self.n_observations)
@@ -612,7 +612,7 @@ class OnlineGamlss(Estimator):
         self._print_message(message=message, level=1)
         (
             self.global_dev,
-            self.iteration_outer,
+            self.it_outer,
         ) = self._outer_fit(
             X=X_dict,
             y=y,
@@ -686,7 +686,7 @@ class OnlineGamlss(Estimator):
         self._print_message(message=message, level=1)
         (
             self.global_dev,
-            self.iteration_outer,
+            self.it_outer,
         ) = self._outer_update(
             X=X_dict,
             y=y,
@@ -705,7 +705,7 @@ class OnlineGamlss(Estimator):
         global_di = -2 * np.log(self.distribution.pdf(y, self.fv))
         global_dev = (1 - self.forget[0]) * self.global_dev + global_di
         global_dev_old = global_dev + 1000
-        iteration_outer = 0
+        it_outer = 0
 
         while True:
             # Check relative congergence
@@ -718,44 +718,42 @@ class OnlineGamlss(Estimator):
             if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
                 break
 
-            if iteration_outer >= self.max_it_outer:
+            if it_outer >= self.max_it_outer:
                 break
 
             global_dev_old = global_dev
-            iteration_outer += 1
+            it_outer += 1
 
             for param in range(self.distribution.n_params):
 
-                self.beta_iterations_inner[param][iteration_outer] = {}
-                self.beta_path_iterations_inner[param][iteration_outer] = {}
+                self.beta_iterations_inner[param][it_outer] = {}
+                self.beta_path_iterations_inner[param][it_outer] = {}
 
-                self.rss_iterations_inner[param][iteration_outer] = {}
-                self.ic_iterations_inner[param][iteration_outer] = {}
+                self.rss_iterations_inner[param][it_outer] = {}
+                self.ic_iterations_inner[param][it_outer] = {}
 
                 global_dev = self._inner_update(
                     X=X,
                     y=y,
                     w=w,
-                    iteration_outer=iteration_outer,
+                    it_outer=it_outer,
                     param=param,
                     dv=global_dev,
                 )
-                message = f"Outer iteration {iteration_outer}: Fitted param {param}: Current LL {global_dev}"
+                message = f"Outer iteration {it_outer}: Fitted param {param}: Current LL {global_dev}"
                 self._print_message(message=message, level=2)
 
-            message = (
-                f"Outer iteration {iteration_outer}: Finished: current LL {global_dev}"
-            )
+            message = f"Outer iteration {it_outer}: Finished: current LL {global_dev}"
             self._print_message(message=message, level=1)
 
-        return global_dev, iteration_outer
+        return global_dev, it_outer
 
     def _outer_fit(self, X, y, w):
 
         global_di = -2 * np.log(self.distribution.pdf(y, self.fv))
         global_dev = np.sum(w * global_di)
         global_dev_old = global_dev + 1000
-        iteration_outer = 0
+        it_outer = 0
 
         while True:
             # Check relative congergence
@@ -769,50 +767,46 @@ class OnlineGamlss(Estimator):
             if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
                 break
 
-            if iteration_outer >= self.max_it_outer:
+            if it_outer >= self.max_it_outer:
                 break
 
             global_dev_old = global_dev
-            iteration_outer += 1
+            it_outer += 1
 
             for param in range(self.distribution.n_params):
 
-                self.beta_iterations_inner[param][iteration_outer] = {}
-                self.beta_path_iterations_inner[param][iteration_outer] = {}
+                self.beta_iterations_inner[param][it_outer] = {}
+                self.beta_path_iterations_inner[param][it_outer] = {}
 
-                self.rss_iterations_inner[param][iteration_outer] = {}
-                self.ic_iterations_inner[param][iteration_outer] = {}
+                self.rss_iterations_inner[param][it_outer] = {}
+                self.ic_iterations_inner[param][it_outer] = {}
 
                 global_dev = self._inner_fit(
                     X=X,
                     y=y,
                     w=w,
                     param=param,
-                    iteration_outer=iteration_outer,
+                    it_outer=it_outer,
                     dv=global_dev,
                 )
 
-                self.beta_iterations[param][iteration_outer] = self.beta[param]
-                self.beta_path_iterations[param][iteration_outer] = self.beta_path[
-                    param
-                ]
+                self.beta_iterations[param][it_outer] = self.beta[param]
+                self.beta_path_iterations[param][it_outer] = self.beta_path[param]
 
-                message = f"Outer iteration {iteration_outer}: Fitted param {param}: current LL {global_dev}"
+                message = f"Outer iteration {it_outer}: Fitted param {param}: current LL {global_dev}"
                 self._print_message(message=message, level=2)
 
-            message = (
-                f"Outer iteration {iteration_outer}: Finished. Current LL {global_dev}"
-            )
+            message = f"Outer iteration {it_outer}: Finished. Current LL {global_dev}"
             self._print_message(message=message, level=1)
 
-        return (global_dev, iteration_outer)
+        return (global_dev, it_outer)
 
     def _inner_fit(
         self,
         X,
         y,
         w,
-        iteration_outer,
+        it_outer,
         param,
         dv,
     ):
@@ -822,26 +816,24 @@ class OnlineGamlss(Estimator):
         olddv = dv + 1
 
         # Use this for the while loop
-        iteration_inner = 0
+        it_inner = 0
         while True:
-            if iteration_inner >= self.max_it_inner:
+            if it_inner >= self.max_it_inner:
                 break
 
             # We allow for breaking in the inner iteration in
-            # - the 1st Outer iteration (iteration_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
-            # - the 2nd Outer iteration (iteration_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
+            # - the 1st Outer iteration (it_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
+            # - the 2nd Outer iteration (it_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
 
-            if (abs(olddv - dv) <= self.abs_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
+            if (abs(olddv - dv) <= self.abs_tol_inner) & ((it_inner + it_outer) >= 2):
                 break
 
             if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
+                (it_inner + it_outer) >= 2
             ):
                 break
 
-            iteration_inner += 1
+            it_inner += 1
             eta = self.distribution.link_function(self.fv[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
             dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
@@ -851,7 +843,7 @@ class OnlineGamlss(Estimator):
             wv = eta + dl1dp1 / (dr * wt)
 
             if self.debug:
-                key = (param, iteration_outer, iteration_outer)
+                key = (param, it_outer, it_outer)
                 self._debug_weights[key] = wt
                 self._debug_working_vectors[key] = wv
                 self._debug_dl1dlp1[key] = dl1dp1
@@ -894,15 +886,15 @@ class OnlineGamlss(Estimator):
             rss_new = np.sum(residuals**2 * w * f) / np.mean(w * f)
 
             # Check if the local RSS are decreasing
-            if (iteration_inner > 1) or (iteration_outer > 1):
+            if (it_inner > 1) or (it_outer > 1):
                 if rss_new > (self.rss_tol_inner * self.rss[param]):
-                    message = f"Inner iteration {iteration_inner}: Fitting Parameter {param}: Current RSS {rss_new} > {self.rss_tol_inner} * {self.rss[param]}"
+                    message = f"Inner iteration {it_inner}: Fitting Parameter {param}: Current RSS {rss_new} > {self.rss_tol_inner} * {self.rss[param]}"
                     self._print_message(message=message, level=3)
                     break
 
             # Save the
             self.rss[param] = rss_new
-            self.rss_iterations[param, iteration_outer, iteration_inner] = rss_new
+            self.rss_iterations[param, it_outer - 1, it_inner - 1] = rss_new
 
             self.beta[param] = beta_new
             self.beta_path[param] = beta_path_new
@@ -918,14 +910,10 @@ class OnlineGamlss(Estimator):
             self.sum_of_weights[param] = np.sum(w * wt)
             self.mean_of_weights[param] = np.mean(w * wt)
 
-            self.beta_iterations_inner[param][iteration_outer][
-                iteration_inner
-            ] = beta_new
-            self.beta_path_iterations_inner[param][iteration_outer][
-                iteration_inner
-            ] = beta_path_new
+            self.beta_iterations_inner[param][it_outer][it_inner] = beta_new
+            self.beta_path_iterations_inner[param][it_outer][it_inner] = beta_path_new
 
-            message = f"Outer iteration {iteration_outer}: Fitting Parameter {param}: Inner iteration {iteration_inner}: Current LL {dv}"
+            message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Inner iteration {it_inner}: Current LL {dv}"
             self._print_message(message=message, level=3)
 
         return dv
@@ -935,7 +923,7 @@ class OnlineGamlss(Estimator):
         X,
         y,
         w,
-        iteration_outer,
+        it_outer,
         dv,
         param,
     ):
@@ -944,20 +932,18 @@ class OnlineGamlss(Estimator):
         olddv = dv + 1
 
         # Use this for the while loop
-        iteration_inner = 0
+        it_inner = 0
         while True:
-            if iteration_inner >= self.max_it_inner:
+            if it_inner >= self.max_it_inner:
                 break
-            if (abs(olddv - dv) <= self.abs_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
+            if (abs(olddv - dv) <= self.abs_tol_inner) & ((it_inner + it_outer) >= 2):
                 break
             if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
+                (it_inner + it_outer) >= 2
             ):
                 break
 
-            iteration_inner += 1
+            it_inner += 1
             eta = self.distribution.link_function(self.fv[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
             dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
@@ -967,7 +953,7 @@ class OnlineGamlss(Estimator):
             wv = eta + dl1dp1 / (dr * wt)
 
             if self.debug:
-                key = (param, iteration_outer, iteration_outer)
+                key = (param, it_outer, it_outer)
                 self._debug_weights[key] = wt
                 self._debug_working_vectors[key] = wv
                 self._debug_dl1dlp1[key] = dl1dp1
@@ -1013,7 +999,7 @@ class OnlineGamlss(Estimator):
                 * (self.rss_old[param] * self.mean_of_weights[param])
             ) / denom
 
-            if (iteration_inner > 1) or (iteration_outer > 1):
+            if (it_inner > 1) or (it_outer > 1):
                 if rss_new > (self.rss_tol_inner * self.rss[param]):
                     print("Breaking RSS in Update step.")
                     break
@@ -1021,7 +1007,7 @@ class OnlineGamlss(Estimator):
             self.beta[param] = beta_new
             self.beta_path[param] = beta_path_new
             self.rss[param] = rss_new
-            self.rss_iterations[param, iteration_outer, iteration_inner] = rss_new
+            self.rss_iterations[param, it_outer - 1, it_inner - 1] = rss_new
             self.model_selection_data[param] = model_selection_data_new
 
             eta = X[param] @ self.beta[param].T
@@ -1039,7 +1025,7 @@ class OnlineGamlss(Estimator):
             di = -2 * np.log(self.distribution.pdf(y, self.fv))
             dv = np.sum(di * w) + (1 - self.forget[0]) * self.global_dev
 
-            message = f"Outer iteration {iteration_outer}: Fitting Parameter {param}: Inner iteration {iteration_inner}: Current LL {dv}"
+            message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Inner iteration {it_inner}: Current LL {dv}"
             self._print_message(message=message, level=3)
 
         return dv
