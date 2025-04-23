@@ -236,6 +236,30 @@ class ScipyMixin(ABC):
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
 
+    def logpdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the probability density function (PDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log PDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log PDF values corresponding to the data points in `y`.
+        """
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).logpdf(y)
+
+    def logcdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the cumulative distribution function (CDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log CDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log CDF values corresponding to the data points in `y`.
+        """
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).logcdf(y)
+
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
         return (
             self.scipy_dist(**self.theta_to_scipy_params(theta))
