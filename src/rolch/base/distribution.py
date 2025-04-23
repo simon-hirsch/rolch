@@ -114,7 +114,6 @@ class Distribution(ABC):
     ) -> np.ndarray:
         """Calculate the initial values for the GAMLSS fit."""
 
-    @abstractmethod
     def quantile(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """
         Compute the quantile function for the given data.
