@@ -320,15 +320,8 @@ class OnlineGamlss(Estimator):
 
     def fit_beta(
         self,
-        X,
-        y,
-        w,
         param,
-        it_outer: int = 0,
-        it_inner: int = 0,
     ):
-
-        f = init_forget_vector(self.forget[param], self.n_observations)
         if not self._method[param]._path_based_method:
             beta_path = None
             beta = self._method[param].fit_beta(
@@ -343,8 +336,6 @@ class OnlineGamlss(Estimator):
                 y_gram=self.y_gram[param],
                 is_regularized=self.is_regularized[param],
             )
-
-        self.weights[param] = w
         return beta, beta_path
 
     def fit_select_model(
@@ -844,6 +835,8 @@ class OnlineGamlss(Estimator):
             wt = np.clip(wt, 1e-10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
 
+            self.weights[param] = wt
+
             if self.debug:
                 key = (param, it_outer, it_outer)
                 self._debug_weights[key] = wt
@@ -865,9 +858,6 @@ class OnlineGamlss(Estimator):
                 forget=self.forget[param],
             )
             beta_new, beta_path_new = self.fit_beta(
-                X=X[param],
-                y=wv,
-                w=wt,
                 param=param,
             )
             # Select the model if we have a path-based method
