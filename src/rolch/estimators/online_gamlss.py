@@ -1,6 +1,6 @@
 import copy
 import warnings
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 
@@ -37,6 +37,7 @@ class OnlineGamlss(Estimator):
         fit_intercept: Union[bool, Dict[int, bool]] = True,
         regularize_intercept: Union[bool, Dict[int, bool]] = False,
         ic: Union[str, Dict] = "aic",
+        model_selection: Literal["local_rss", "global_ll"] = "local_rss",
         max_it_outer: int = 30,
         max_it_inner: int = 30,
         abs_tol_outer: float = 1e-3,
@@ -112,6 +113,7 @@ class OnlineGamlss(Estimator):
         # Get the estimation method
         self._process_attribute(method, default="ols", name="method")
         self._method = {p: get_estimation_method(m) for p, m in self.method.items()}
+        self.model_selection = model_selection
 
         self.scaler = OnlineScaler(to_scale=scale_inputs)
         self.do_scale = scale_inputs
