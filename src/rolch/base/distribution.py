@@ -115,6 +115,22 @@ class Distribution(ABC):
         """Calculate the initial values for the GAMLSS fit."""
 
     @abstractmethod
+    def quantile(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Compute the quantile function for the given data.
+
+        This is a alias for the `ppf` method.
+
+        Parameters:
+            q (np.ndarray): The quantiles to compute.
+            theta (np.ndarray): The parameters of the distribution.
+
+        Returns:
+            np.ndarray: The quantiles corresponding to the given probabilities.
+        """
+        return self.ppf(q, theta)
+
+    @abstractmethod
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """
         Compute the cumulative distribution function (CDF) for the given data.
@@ -177,6 +193,30 @@ class Distribution(ABC):
 
         Returns:
             np.ndarray: A 2D array of random variates with shape (theta.shape[0], size).
+        """
+
+    @abstractmethod
+    def logpmf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        raise NotImplementedError(
+            "Log PMF is not implemented for continuous distributions."
+        )
+
+    @abstractmethod
+    def logpdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        raise NotImplementedError(
+            "Log PDF is not implemented for discrete distributions."
+        )
+
+    @abstractmethod
+    def logcdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the cumulative distribution function (CDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log CDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log CDF values corresponding to the data points in `y`.
         """
 
 
