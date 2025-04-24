@@ -791,6 +791,17 @@ class OnlineGamlss(Estimator):
                 break
 
             it_inner += 1
+
+            # We can improve the fit by taking the conditional
+            # start values for the first outer iteration and the first inner iteration
+            # as soon the first parameter is fitted.
+            if (it_inner == 1) & (it_outer == 1) & (param >= 1):
+                self.fv = self.distribution.calculate_conditional_initial_values(
+                    y=y,
+                    theta=self.fv,
+                    param=param,
+                )
+
             eta = self.distribution.link_function(self.fv[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
             dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
