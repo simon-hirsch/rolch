@@ -3,7 +3,7 @@ import numpy as np
 
 
 class InformationCriterion:
-    """Calcuate the information criteria.
+    """Calculate the information criteria.
 
     +---------+------------------------------------+--------------------------+
     | `ic`    | Information Criterion              | Formula                  |
