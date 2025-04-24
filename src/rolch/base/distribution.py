@@ -353,7 +353,7 @@ class ScipyMixin(ABC):
         for i in unknown:
             del fixed[self.scipy_names[self.parameter_names[i]]]
 
-        bounds = [self.parameter_support[b] for b in unknown]
+        bounds = [self.links[b].link_support for b in unknown]
         result = opt.minimize(
             self._scipy_mle_objective,
             x0=start,
