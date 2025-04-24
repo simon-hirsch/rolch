@@ -646,7 +646,7 @@ class OnlineGamlss(Estimator):
 
     def _outer_update(self, X, y, w):
         ## for new observations:
-        global_di = -2 * np.log(self.distribution.pdf(y, self.fv))
+        global_di = -2 * self.distribution.logpdf(y, self.fv)
         global_dev = (1 - self.forget[0]) * self.global_dev + global_di
         global_dev_old = global_dev + 1000
         iteration_outer = 0
@@ -696,7 +696,7 @@ class OnlineGamlss(Estimator):
 
     def _outer_fit(self, X, y, w):
 
-        global_di = -2 * np.log(self.distribution.pdf(y, self.fv))
+        global_di = -2 * self.distribution.logpdf(y, self.fv)
         global_dev = np.sum(w * global_di)
         global_dev_old = global_dev + 1000
         iteration_outer = 0
@@ -761,7 +761,7 @@ class OnlineGamlss(Estimator):
         dv,
     ):
 
-        di = -2 * np.log(self.distribution.pdf(y, self.fv))
+        di = -2 * self.distribution.logpdf(y, self.fv)
         dv = np.sum(di * w)
         olddv = dv + 1
 
@@ -837,7 +837,7 @@ class OnlineGamlss(Estimator):
             eta = X[param] @ self.beta[param].T
             self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
 
-            di = -2 * np.log(self.distribution.pdf(y, self.fv))
+            di = -2 * self.distribution.logpdf(y, self.fv)
             olddv = dv
             dv = np.sum(di * w)
 
@@ -866,7 +866,7 @@ class OnlineGamlss(Estimator):
         dv,
         param,
     ):
-        di = -2 * np.log(self.distribution.pdf(y, self.fv))
+        di = -2 * self.distribution.logpdf(y, self.fv)
         dv = (1 - self.forget[0]) * self.global_dev + np.sum(di * w)
         olddv = dv + 1
 
@@ -949,7 +949,7 @@ class OnlineGamlss(Estimator):
 
             olddv = dv
 
-            di = -2 * np.log(self.distribution.pdf(y, self.fv))
+            di = -2 * self.distribution.logpdf(y, self.fv)
             dv = np.sum(di * w) + (1 - self.forget[0]) * self.global_dev
 
             message = f"Outer iteration {iteration_outer}: Fitting Parameter {param}: Inner iteration {iteration_inner}: Current LL {dv}"
