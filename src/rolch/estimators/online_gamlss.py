@@ -355,7 +355,7 @@ class OnlineGamlss(Estimator):
                 theta[:, param] = self.distribution.link_inverse(
                     prediction_path[:, i], param=param
                 )
-                ll[i] = np.sum(f * np.log(self.distribution.pdf(y, theta)))
+                ll[i] = np.sum(f * self.distribution.logpdf(y, theta))
 
             ic = information_criterion_log_likelihood(
                 n_observations=self.n_training[param],
@@ -405,7 +405,7 @@ class OnlineGamlss(Estimator):
                 theta[:, param] = self.distribution.link_inverse(
                     prediction_path[:, i], param=param
                 )
-                ll[i] = np.sum(w * np.log(self.distribution.pdf(y, theta)))
+                ll[i] = np.sum(w * self.distribution.logpdf(y, theta))
             ll = ll + (1 - self.forget[param]) * model_selection_data
             ic = information_criterion_log_likelihood(
                 n_observations=self.n_training[param],
