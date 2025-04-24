@@ -26,20 +26,20 @@ class InformationCriterion:
         self,
         n_observations: Union[int, np.ndarray],
         n_parameters: Union[int, np.ndarray],
-        criterion: Literal["aic", "bic", "hqc", "aicc"] = "aic",
+        criterion: Literal["aic", "bic", "hqc", "aicc", "max"] = "aic",
     ):
         """
         Args:
             n_observations (int or array-like): Number of observations used in the model.
             n_parameters (int or array-like): Number of estimated parameters in the model.
-            criterion ({"aic","bic","hqc","aicc"}, default="aic"): The information criterion to compute.
+            criterion ({"aic","bic","hqc","aicc", "max"}, default="aic"): The information criterion to compute.
 
 
         Raises:
             ValueError: If the criterion is not recognized.
         """
         # validate criterion early
-        if criterion not in ("aic", "aicc", "bic", "hqc"):
+        if criterion not in ("aic", "aicc", "bic", "hqc", "max"):
             raise ValueError(f"Criterion '{criterion}' not recognized.")
         self.n_observations = n_observations
         self.n_parameters = n_parameters
@@ -56,7 +56,7 @@ class InformationCriterion:
             rss (float or array-like): Residual sum of squares of the fitted model.
 
         Returns:
-            ic (float or array-like): The information criterion value (AIC, AICC, BIC, or HQC).
+            ic (float or array-like): The information criterion value (AIC, AICC, BIC, HQC, or Max).
         """
         # Gaussian log‐likelihood: ll = -n/2*log(rss/n) + constant
         # https://en.wikipedia.org/wiki/Akaike_information_criterion#Comparison_with_least_squares
@@ -76,7 +76,7 @@ class InformationCriterion:
             log_likelihood (float or array-like): The log-likelihood of the model.
 
         Returns:
-            ic (float or array-like): The information criterion value (AIC, AICC, BIC, or HQC).
+            ic (float or array-like): The information criterion value (AIC, AICC, BIC, HQC, or Max).
         """
         c = self.criterion
         n, p, ll = self.n_observations, self.n_parameters, log_likelihood
@@ -88,3 +88,5 @@ class InformationCriterion:
             return p * np.log(n) - 2 * ll
         elif c == "hqc":
             return 2 * p * np.log(np.log(n)) - 2 * ll
+        elif c == "max":
+            return -ll
