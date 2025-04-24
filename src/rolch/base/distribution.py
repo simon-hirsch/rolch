@@ -114,6 +114,21 @@ class Distribution(ABC):
     ) -> np.ndarray:
         """Calculate the initial values for the GAMLSS fit."""
 
+    def quantile(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Compute the quantile function for the given data.
+
+        This is a alias for the `ppf` method.
+
+        Parameters:
+            q (np.ndarray): The quantiles to compute.
+            theta (np.ndarray): The parameters of the distribution.
+
+        Returns:
+            np.ndarray: The quantiles corresponding to the given probabilities.
+        """
+        return self.ppf(q, theta)
+
     @abstractmethod
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """
@@ -179,6 +194,30 @@ class Distribution(ABC):
             np.ndarray: A 2D array of random variates with shape (theta.shape[0], size).
         """
 
+    @abstractmethod
+    def logpmf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        raise NotImplementedError(
+            "Log PMF is not implemented for continuous distributions."
+        )
+
+    @abstractmethod
+    def logpdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        raise NotImplementedError(
+            "Log PDF is not implemented for discrete distributions."
+        )
+
+    @abstractmethod
+    def logcdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the cumulative distribution function (CDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log CDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log CDF values corresponding to the data points in `y`.
+        """
+
 
 class ScipyMixin(ABC):
 
@@ -235,6 +274,42 @@ class ScipyMixin(ABC):
 
     def ppf(self, q: np.ndarray, theta: np.ndarray) -> np.ndarray:
         return self.scipy_dist(**self.theta_to_scipy_params(theta)).ppf(q)
+
+    def logpmf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the probability mass function (PMF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log PMF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log PMF values corresponding to the data points in `y`.
+        """
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).logpmf(y)
+
+    def logpdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the probability density function (PDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log PDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log PDF values corresponding to the data points in `y`.
+        """
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).logpdf(y)
+
+    def logcdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """Compute the log of the cumulative distribution function (CDF) for the given data points.
+
+        Parameters:
+            y (np.ndarray): An array of data points at which to evaluate the log CDF.
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of log CDF values corresponding to the data points in `y`.
+        """
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).logcdf(y)
 
     def rvs(self, size: int, theta: np.ndarray) -> np.ndarray:
         return (
