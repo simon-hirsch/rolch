@@ -109,6 +109,7 @@ def online_coordinate_descent_path(
     beta_path: np.ndarray,
     lambda_path: np.ndarray,
     is_regularized: np.ndarray,
+    early_stop: int,
     beta_lower_bound: np.ndarray,
     beta_upper_bound: np.ndarray,
     which_start_value: Literal[
@@ -126,6 +127,7 @@ def online_coordinate_descent_path(
         beta_path (np.ndarray): The current coefficent path
         lambda_path (np.ndarray): The lambda grid
         is_regularized (bool): Vector of bools indicating whether the coefficient is regularized
+        early_stop (int, optional): Early stopping criterion. 0 implies no early stopping. Defaults to 0.
         beta_lower_bound (np.ndarray): Lower bounds for beta
         beta_upper_bound (np.ndarray): Upper bounds for beta
         which_start_value (Literal['previous_lambda', 'previous_fit', 'average'], optional): Values to warm-start the coordinate descent. Defaults to "previous_lambda".
@@ -149,17 +151,21 @@ def online_coordinate_descent_path(
         else:
             beta = beta_path[max(i, 0), :]
 
-        beta_path_new[i, :], iterations[i] = online_coordinate_descent(
-            x_gram=x_gram,
-            y_gram=y_gram,
-            beta=beta,
-            regularization=regularization,
-            is_regularized=is_regularized,
-            beta_lower_bound=beta_lower_bound,
-            beta_upper_bound=beta_upper_bound,
-            selection=selection,
-            tolerance=tolerance,
-            max_iterations=max_iterations,
-        )
+        if (early_stop > 0) and np.count_nonzero(beta) >= early_stop:
+            beta_path_new[i, :] = beta
+            iterations[i] = 0
+        else:
+            beta_path_new[i, :], iterations[i] = online_coordinate_descent(
+                x_gram=x_gram,
+                y_gram=y_gram,
+                beta=beta,
+                regularization=regularization,
+                is_regularized=is_regularized,
+                beta_lower_bound=beta_lower_bound,
+                beta_upper_bound=beta_upper_bound,
+                selection=selection,
+                tolerance=tolerance,
+                max_iterations=max_iterations,
+            )
 
     return beta_path_new, iterations
