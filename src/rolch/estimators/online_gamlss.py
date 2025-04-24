@@ -973,6 +973,7 @@ class OnlineGamlss(Estimator):
                     beta=self.beta[param],
                     is_regularized=self.is_regularized[param],
                 )
+                model_selection_data_new = None
 
             # Check if the local RSS are decreasing
             denom = online_mean_update(
