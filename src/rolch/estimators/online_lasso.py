@@ -15,6 +15,7 @@ class OnlineLasso(OnlineLinearModel):
         fit_intercept: bool = True,
         regularize_intercept: bool = False,
         ic: Literal["aic", "bic", "hqc", "max"] = "bic",
+        early_stop: int = 0,
         beta_lower_bound: np.ndarray | None = None,
         beta_upper_bound: np.ndarray | None = None,
         lambda_n: int = 100,
@@ -35,6 +36,7 @@ class OnlineLasso(OnlineLinearModel):
             fit_intercept (bool, optional): Whether to add an intercept in the estimation. Defaults to True.
             regularize_intercept (bool, optional): Whether to regularize the intercept. Defaults to False.
             ic (Literal["aic", "bic", "hqc", "max"], optional): The information criteria for model selection. Defaults to "bic".
+            early_stop (int, optional): Early stopping criterion. If we reach `early_stop` non-zero coefficients, we stop. Defaults to 0 (no early stopping).
             beta_lower_bound (np.ndarray | None, optional): Lower bounds for beta. Keep in mind the size of X and whether you want to fit an intercept. None corresponds to unconstrained estimation.Defaults to None.
             beta_upper_bound (np.ndarray | None, optional): Lower bounds for beta. Keep in mind the size of X and whether you want to fit an intercept. None corresponds to unconstrained estimation. Defaults to None.
             lambda_n (int, optional): Length of the regularization path. Defaults to 100.
@@ -49,6 +51,7 @@ class OnlineLasso(OnlineLinearModel):
             lambda_eps=lambda_eps,
             lambda_n=lambda_n,
             start_value_initial="previous_lambda",
+            early_stop=early_stop,
             start_value_update=start_value,
             tolerance=tolerance,
             max_iterations=max_iterations,
