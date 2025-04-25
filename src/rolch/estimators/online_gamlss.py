@@ -8,10 +8,7 @@ from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, Estimator
 from ..error import OutOfSupportError
 from ..gram import init_forget_vector
-from ..information_criteria import (
-    information_criterion_log_likelihood,
-    select_best_model_by_information_criterion,
-)
+from ..information_criteria import InformationCriterion
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..utils import calculate_effective_training_length, online_mean_update
@@ -342,9 +339,12 @@ class OnlineGamlss(Estimator):
             residuals = wv[:, None] - prediction_path
             rss = np.sum(residuals**2 * w[:, None] * wt[:, None] * f[:, None], axis=0)
             rss = rss / np.mean(wt * w * f)
-            best_ic = select_best_model_by_information_criterion(
-                self.n_training[param], model_params_n, rss, self.ic[param]
-            )
+            ic = InformationCriterion(
+                n_observations=self.n_training[param],
+                n_parameters=model_params_n,
+                criterion=self.ic[param],
+            ).from_rss(rss=rss)
+            best_ic = np.argmin(ic)
             beta = beta_path[best_ic, :]
             model_selection_data = rss
 
@@ -357,12 +357,11 @@ class OnlineGamlss(Estimator):
                 )
                 ll[i] = np.sum(f * self.distribution.logpdf(y, theta))
 
-            ic = information_criterion_log_likelihood(
+            ic = InformationCriterion(
                 n_observations=self.n_training[param],
                 n_parameters=model_params_n,
-                log_likelihood=ll,
                 criterion=self.ic[param],
-            )
+            ).from_ll(log_likelihood=ll)
             best_ic = np.argmin(ic)
             beta = beta_path[best_ic, :]
             model_selection_data = ll
@@ -393,9 +392,13 @@ class OnlineGamlss(Estimator):
                 + (1 - self.forget[param])
                 * (model_selection_data * self.mean_of_weights[param])
             ) / denom
-            best_ic = select_best_model_by_information_criterion(
-                self.n_training[param], model_params_n, rss, self.ic[param]
-            )
+
+            ic = InformationCriterion(
+                n_observations=self.n_training[param],
+                n_parameters=model_params_n,
+                criterion=self.ic[param],
+            ).from_rss(rss=rss)
+            best_ic = np.argmin(ic)
             model_selection_data_new = rss
         elif self.model_selection == "global_ll":
             ll = np.zeros(self._method[param]._path_length)
@@ -407,12 +410,12 @@ class OnlineGamlss(Estimator):
                 )
                 ll[i] = np.sum(w * self.distribution.logpdf(y, theta))
             ll = ll + (1 - self.forget[param]) * model_selection_data
-            ic = information_criterion_log_likelihood(
+
+            ic = InformationCriterion(
                 n_observations=self.n_training[param],
                 n_parameters=model_params_n,
-                log_likelihood=ll,
                 criterion=self.ic[param],
-            )
+            ).from_ll(log_likelihood=ll)
             best_ic = np.argmin(ic)
             model_selection_data_new = ll
 

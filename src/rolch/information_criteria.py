@@ -1,97 +1,9 @@
 from typing import Literal, Union
-
 import numpy as np
 
 
-def information_criterion(
-    n_observations: Union[int, np.ndarray],
-    n_parameters: Union[int, np.ndarray],
-    rss: Union[float, np.ndarray],
-    criterion: Literal["aic", "bic", "hqc"] = "aic",
-) -> Union[float, np.ndarray]:
-    """Calcuate the information criteria.
-
-    The information criteria are calculated from the Resdiual Sum of Squares $RSS$. The function provides the
-    calculation of Akaike's IC, the Bayesian IC and the Hannan-Quinn IC.
-
-    +---------+------------------------------------+--------------------------+
-    | `ic`    | Information Criterion              | Formula                  |
-    +=========+====================================+==========================+
-    | `"aic"` | Akaike's Information Criterion     | $- 2l + 2\log(n)$        |
-    | `"bic"` | Bayesian Information Criterion     | $- 2l + 2p\log(n)$       |
-    | `"hqc"` | Hannan-Quinn Information Criterion | $- 2l + 2p\log(\log(n))$ |
-    +---------+------------------------------------+--------------------------+
-
-    Args:
-        n_observations (Union[int, np.ndarray]): Number of observations
-        n_parameters (Union[int, np.ndarray]): Number of parameters
-        rss (Union[float, np.ndarray]): Residual sum of squares
-        criterion (Literal["aic", "bic", "hqc"], optional): Information criteria to calculate. Defaults to "aic".
-
-    Raises:
-        ValueError: Raises if the criterion is not one of `aic`, `bic` or `hqc`.
-
-    Returns:
-        Union[float, np.ndarray]: The value of the IC for given inputs.
-    """
-
-    if criterion == "aic":
-        ic_params = [2, 0, 0]
-    elif criterion == "bic":
-        ic_params = [0, 1, 0]
-    elif criterion == "hqc":
-        ic_params = [0, 0, 2]
-    else:
-        raise ValueError("criterion not recognized.")
-
-    # https://en.wikipedia.org/wiki/Akaike_information_criterion#Comparison_with_least_squares
-
-    constant_term = -n_observations / 2 * (1 + np.log(2 * np.pi))
-
-    ic = -2 * (
-        -n_observations / 2 * np.log(rss / n_observations) + constant_term
-    ) + n_parameters * (
-        ic_params[0]
-        + ic_params[1] * np.log(n_observations)
-        + ic_params[2] * np.log(np.log(n_observations))
-    )
-
-    return ic
-
-
-def information_criterion_log_likelihood(
-    n_observations: Union[int, np.ndarray],
-    n_parameters: Union[int, np.ndarray],
-    log_likelihood: Union[float, np.ndarray],
-    criterion: Literal["aic", "bic", "hqc", "aicc"] = "aic",
-) -> Union[float, np.ndarray]:
-    if criterion == "aic":
-        value = 2 * n_parameters - 2 * log_likelihood
-    elif criterion == "aicc":
-        value = (
-            2 * n_parameters
-            - 2 * log_likelihood
-            + (
-                (2 * n_parameters**2 + 2 * n_parameters)
-                / (n_observations - n_parameters - 1)
-            )
-        )
-    elif criterion == "bic":
-        value = n_parameters * np.log(n_observations) - 2 * log_likelihood
-    elif criterion == "hqc":
-        value = n_parameters * np.log(np.log(n_observations)) - 2 * log_likelihood
-    else:
-        raise ValueError("Did not recognize ic.")
-    return value
-
-
-def select_best_model_by_information_criterion(
-    n_observations: float,
-    n_parameters: np.ndarray,
-    rss: np.ndarray,
-    criterion: Literal["aic", "bic", "hqc", "max"],
-) -> int:
-    """Calculates the information criterion and returns the model with the best (lowest) IC.
+class InformationCriterion:
+    """Calculate the information criteria.
 
     +---------+------------------------------------+--------------------------+
     | `ic`    | Information Criterion              | Formula                  |
@@ -102,29 +14,79 @@ def select_best_model_by_information_criterion(
     | `"max"` | Select the largest model           |                          |
     +---------+------------------------------------+--------------------------+
 
-    !!! note
-        The information criterion `max` will always return the largest model.
-
-    Args:
-        n_observations (float): Number of observations
-        n_parameters (np.ndarray): Number of parameters per model
-        rss (np.ndarray): Residual sum of squares per model
-        criterion (Literal["aic", "bic", "hqc", "max"]): Information criterion.
-
-    Raises:
-        ValueError: Raises if the criterion is not one of `aic`, `bic`, `hqc` or `max`.
-
-    Returns:
-        int: Index of the model with the best (lowest) IC.
+    Methods:
+    -------
+    from_rss(rss)
+        Compute the chosen criterion from residual sum of squares.
+    from_ll(log_likelihood)
+        Compute the chosen criterion directly from a log-likelihood value.
     """
-    if criterion == "max":
-        best = n_parameters.shape[0] - 1
-    else:
-        ic = information_criterion(
-            n_observations=n_observations,
-            n_parameters=n_parameters,
-            rss=rss,
-            criterion=criterion,
+
+    def __init__(
+        self,
+        n_observations: Union[int, np.ndarray],
+        n_parameters: Union[int, np.ndarray],
+        criterion: Literal["aic", "bic", "hqc", "aicc", "max"] = "aic",
+    ):
+        """
+        Args:
+            n_observations (int or array-like): Number of observations used in the model.
+            n_parameters (int or array-like): Number of estimated parameters in the model.
+            criterion ({"aic","bic","hqc","aicc", "max"}, default="aic"): The information criterion to compute.
+
+
+        Raises:
+            ValueError: If the criterion is not recognized.
+        """
+        # validate criterion early
+        if criterion not in ("aic", "aicc", "bic", "hqc", "max"):
+            raise ValueError(f"Criterion '{criterion}' not recognized.")
+        self.n_observations = n_observations
+        self.n_parameters = n_parameters
+        self.criterion = criterion
+
+    def from_rss(self, rss: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+        """
+        Compute the specified information criterion from the residual sum of squares (RSS).
+
+        The Gaussian log-likelihood is estimated as:
+            ll = -n/2 * log(rss / n) - n/2 * (1 + log(2π))
+
+        Args:
+            rss (float or array-like): Residual sum of squares of the fitted model.
+
+        Returns:
+            ic (float or array-like): The information criterion value (AIC, AICC, BIC, HQC, or Max).
+        """
+        # Gaussian log‐likelihood: ll = -n/2*log(rss/n) + constant
+        # https://en.wikipedia.org/wiki/Akaike_information_criterion#Comparison_with_least_squares
+        constant_term = -self.n_observations / 2 * (1 + np.log(2 * np.pi))
+        log_likelihood = (
+            -self.n_observations / 2 * np.log(rss / self.n_observations) + constant_term
         )
-        best = np.argmin(ic)
-    return best
+        return self.from_ll(log_likelihood)
+
+    def from_ll(
+        self, log_likelihood: Union[float, np.ndarray]
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the specified information criterion directly from log-likelihood.
+
+        Args:
+            log_likelihood (float or array-like): The log-likelihood of the model.
+
+        Returns:
+            ic (float or array-like): The information criterion value (AIC, AICC, BIC, HQC, or Max).
+        """
+        c = self.criterion
+        n, p, ll = self.n_observations, self.n_parameters, log_likelihood
+        if c == "aic":
+            return 2 * p - 2 * ll
+        elif c == "aicc":
+            return 2 * p - 2 * ll + (2 * p**2 + 2 * p) / (n - p - 1)
+        elif c == "bic":
+            return p * np.log(n) - 2 * ll
+        elif c == "hqc":
+            return 2 * p * np.log(np.log(n)) - 2 * ll
+        elif c == "max":
+            return -ll
