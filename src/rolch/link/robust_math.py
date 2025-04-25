@@ -2,7 +2,7 @@ import numba as nb
 import numpy as np
 
 SMALL_NUMBER = 1e-10
-LARGE_NUMBER = 1e10
+LARGE_NUMBER = 1e20
 LOG_LARGE_NUMBER = np.log(LARGE_NUMBER)
 
 
