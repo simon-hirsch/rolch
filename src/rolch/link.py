@@ -37,6 +37,36 @@ def robust_exp(x: np.ndarray) -> np.ndarray:
         return np.exp(x)
 
 
+@nb.vectorize(["float32(float32, float32)", "float64(float64, float64)"])
+def robust_sigmoid(value, k):
+    if value / k > 50:
+        return 1
+    elif value / k < -50:
+        return 0
+    else:
+        return 1 / (1 + robust_exp(-k * (value - 1)))
+
+
+@nb.vectorize(["float32(float32, float32)", "float64(float64, float64)"])
+def zero_safe_division(a, b):
+    """Return the max float value for the current precision at the a / b if
+    b becomes 0. Returns
+
+    Args:
+        a (float): Nominator.
+        b (float): Denominator.
+
+    Returns:
+        float: Result of the division a / b.
+    """
+    if np.isclose(b, 0):
+        return 0
+    elif np.isclose(a, 0):
+        return 0
+    else:
+        return a / b
+
+
 class LogLink(LinkFunction):
     """
     The log-link function.
