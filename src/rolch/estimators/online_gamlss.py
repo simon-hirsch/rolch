@@ -1030,16 +1030,6 @@ class OnlineGamlss(Estimator):
                 * (self.rss_old[param] * self.mean_of_weights[param])
             ) / denom
 
-            print(
-                denom,
-                rss_it,
-                "\n",
-                sum_of_rss_it,
-                "\n",
-                type(rss_it),
-                type(sum_of_rss_it),
-            )
-
             # TODO: Do we need the rss_tol_inner here?
             # if (it_inner > 1) or (it_outer > 1):
             #     if sum_of_rss_it > (self.rss_tol_inner * self.rss[param]):
