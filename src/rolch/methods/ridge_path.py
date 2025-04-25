@@ -7,11 +7,11 @@ from ..coordinate_descent import online_coordinate_descent_path
 from ..gram import init_gram, init_y_gram, update_gram, update_y_gram
 
 
-class LassoPathMethod(EstimationMethod):
+class RidgePathMethod(EstimationMethod):
     """
-    Path-based LASSO estimation.
+    Path-based Ridge estimation.
 
-    The LASSO Path method runs coordinate descent along a (geometric) decreasing grid of regularization strengths (lambdas).
+    The Ridge Path method runs coordinate descent along a (geometric) decreasing grid of regularization strengths (lambdas).
     We automatically calculate the maximum regularization strength for which all (not-regularized) coefficients are 0.
     The lower end of the lambda grid is defined as $$\\lambda_\min = \\lambda_\max * \\varepsilon_\\lambda.$$
 
@@ -49,7 +49,7 @@ class LassoPathMethod(EstimationMethod):
         max_iterations: int = 1000,
     ):
         """
-        Initializes the LassoPath method with the specified parameters.
+        Initializes the RidgePath method with the specified parameters.
 
         Parameters:
             lambda_n (int): Number of lambda values to use in the path. Default is 100.
@@ -139,7 +139,7 @@ class LassoPathMethod(EstimationMethod):
             early_stop=self.early_stop,
             beta_path=beta_path,
             lambda_path=lambda_path,
-            alpha=1.0,
+            alpha=0,
             is_regularized=is_regularized,
             beta_lower_bound=self.beta_lower_bound,
             beta_upper_bound=self.beta_upper_bound,
@@ -162,7 +162,7 @@ class LassoPathMethod(EstimationMethod):
             y_gram=y_gram.squeeze(-1),
             beta_path=beta_path,
             lambda_path=lambda_path,
-            alpha=1.0,
+            alpha=0,
             early_stop=self.early_stop,
             is_regularized=is_regularized,
             beta_lower_bound=self.beta_lower_bound,

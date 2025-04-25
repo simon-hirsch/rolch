@@ -7,13 +7,15 @@ from ..coordinate_descent import online_coordinate_descent_path
 from ..gram import init_gram, init_y_gram, update_gram, update_y_gram
 
 
-class LassoPathMethod(EstimationMethod):
+class ElasticNetPathMethod(EstimationMethod):
     """
-    Path-based LASSO estimation.
+    Path-based elastic net estimation.
 
-    The LASSO Path method runs coordinate descent along a (geometric) decreasing grid of regularization strengths (lambdas).
+    The elastic net method runs coordinate descent along a (geometric) decreasing grid of regularization strengths (lambdas).
     We automatically calculate the maximum regularization strength for which all (not-regularized) coefficients are 0.
     The lower end of the lambda grid is defined as $$\\lambda_\min = \\lambda_\max * \\varepsilon_\\lambda.$$
+
+    The elastic net method is a combination of LASSO and Ridge regression. Parameter $\alpha$ controls the balance between LASSO and Ridge. Thereby, $\alpha=0$ corresponds to Ridge regression and $\alpha=1$ corresponds to LASSO regression.
 
     We allow to pass user-defined lower and upper bounds for the coefficients.
     The coefficient bounds must be an `numpy` array of the length of `X` respectively of the number of variables in the
@@ -35,6 +37,7 @@ class LassoPathMethod(EstimationMethod):
         self,
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
+        alpha: float = 1,
         early_stop: int = 0,
         start_value_initial: Literal[
             "previous_lambda", "previous_fit", "average"
@@ -49,7 +52,7 @@ class LassoPathMethod(EstimationMethod):
         max_iterations: int = 1000,
     ):
         """
-        Initializes the LassoPath method with the specified parameters.
+        Initializes the RidgePath method with the specified parameters.
 
         Parameters:
             lambda_n (int): Number of lambda values to use in the path. Default is 100.
@@ -73,6 +76,7 @@ class LassoPathMethod(EstimationMethod):
         self.beta_upper_bound = beta_upper_bound
         self.lambda_n = lambda_n
         self.lambda_eps = lambda_eps
+        self.alpha = alpha
         self.start_value_initial = start_value_initial
         self.start_value_update = start_value_update
         self.selection = selection
@@ -139,7 +143,7 @@ class LassoPathMethod(EstimationMethod):
             early_stop=self.early_stop,
             beta_path=beta_path,
             lambda_path=lambda_path,
-            alpha=1.0,
+            alpha=self.alpha,
             is_regularized=is_regularized,
             beta_lower_bound=self.beta_lower_bound,
             beta_upper_bound=self.beta_upper_bound,
@@ -162,7 +166,7 @@ class LassoPathMethod(EstimationMethod):
             y_gram=y_gram.squeeze(-1),
             beta_path=beta_path,
             lambda_path=lambda_path,
-            alpha=1.0,
+            alpha=self.alpha,
             early_stop=self.early_stop,
             is_regularized=is_regularized,
             beta_lower_bound=self.beta_lower_bound,
