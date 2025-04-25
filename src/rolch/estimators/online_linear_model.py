@@ -5,14 +5,13 @@ import numpy as np
 
 from ..base import EstimationMethod, Estimator
 from ..design_matrix import add_intercept
-from ..information_criteria import select_best_model_by_information_criterion
+from ..information_criteria import InformationCriterion
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..utils import calculate_effective_training_length
 
 
 class OnlineLinearModel(Estimator):
-
     "Simple Online Linear Regression for the expected value."
 
     def __init__(
@@ -110,9 +109,12 @@ class OnlineLinearModel(Estimator):
             residuals = np.expand_dims(y, -1) - X_scaled @ self.beta_path.T
             self.rss = np.sum(residuals**2, axis=0)
             n_params = np.sum(~np.isclose(self.beta_path, 0), axis=1)
-            best_ic = select_best_model_by_information_criterion(
-                self.n_training, n_params, self.rss, self.ic
-            )
+            ic = InformationCriterion(
+                n_observations=self.n_training,
+                n_parameters=n_params,
+                criterion=self.ic,
+            ).from_rss(rss=self.rss)
+            best_ic = np.argmin(ic)
             self.beta = self.beta_path[best_ic, :]
         else:
             self.beta = self._method.fit_beta(
@@ -162,9 +164,12 @@ class OnlineLinearModel(Estimator):
             residuals = np.expand_dims(y, -1) - X_scaled @ self.beta_path.T
             self.rss = (1 - self.forget) * self.rss + np.sum(residuals**2, axis=0)
             n_params = np.sum(~np.isclose(self.beta_path, 0), axis=1)
-            best_ic = select_best_model_by_information_criterion(
-                self.n_training, n_params, self.rss, self.ic
-            )
+            ic = InformationCriterion(
+                n_observations=self.n_training,
+                n_parameters=n_params,
+                criterion=self.ic,
+            ).from_rss(rss=self.rss)
+            best_ic = np.argmin(ic)
             self.beta = self.beta_path[best_ic, :]
         else:
             self.beta = self._method.update_beta(

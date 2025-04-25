@@ -36,8 +36,7 @@ from .gram import (
     update_y_gram,
 )
 from .information_criteria import (
-    information_criterion,
-    select_best_model_by_information_criterion,
+    InformationCriterion,
 )
 from .link import (
     IdentityLink,
@@ -91,8 +90,7 @@ __all__ = [
     "online_coordinate_descent",
     "online_coordinate_descent_path",
     "soft_threshold",
-    "information_criterion",
-    "select_best_model_by_information_criterion",
+    "InformationCriterion",
     "calculate_asymptotic_training_length",
     "calculate_effective_training_length",
 ]
