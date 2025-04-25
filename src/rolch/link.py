@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import numba as nb
 import numpy as np
 
 from .base import LinkFunction
@@ -7,6 +8,41 @@ from .base import LinkFunction
 LOG_LOWER_BOUND = 1e-25
 EXP_UPPER_BOUND = 25
 SMALL_NUMBER = 1e-10
+
+
+SMALL_NUMBER = 1e-10
+LARGE_NUMBER = 1e10
+LOG_LARGE_NUMBER = np.log(LARGE_NUMBER)
+
+
+@nb.vectorize(["float64(float64)", "float32(float32)"])
+def robust_log(x: np.ndarray) -> np.ndarray:
+    """
+    A robust log function that handles negative and zero values.
+
+    This function returns the logarithm of the input array, replacing
+    negative and zero values with a small positive number to avoid
+    undefined logarithm values.
+    """
+    if x > SMALL_NUMBER:
+        return np.log(x)
+    else:
+        return np.log(x)
+
+
+@nb.vectorize(["float64(float64)", "float32(float32)"])
+def robust_exp(x: np.ndarray) -> np.ndarray:
+    """
+    A robust exponential function that handles large values.
+
+    This function returns the exponential of the input array, replacing
+    large values with a small positive number to avoid overflow.
+    """
+
+    if x > LOG_LARGE_NUMBER:
+        return LARGE_NUMBER
+    else:
+        return np.exp(x)
 
 
 class LogLink(LinkFunction):
@@ -22,16 +58,13 @@ class LogLink(LinkFunction):
         pass
 
     def link(self, x: np.ndarray) -> np.ndarray:
-        return np.log(np.fmax(x, LOG_LOWER_BOUND))
+        return robust_log(x)
 
     def inverse(self, x: np.ndarray) -> np.ndarray:
-        return np.fmax(
-            np.exp(np.fmin(x, EXP_UPPER_BOUND)),
-            LOG_LOWER_BOUND,
-        )
+        return robust_exp(x)
 
     def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
-        return np.exp(np.fmin(x, EXP_UPPER_BOUND))
+        return robust_exp(x)
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
         return 1 / x
@@ -86,21 +119,19 @@ class LogShiftValueLink(LinkFunction):
         return (self.value + np.nextafter(0, 1), np.inf)
 
     def link(self, x: np.ndarray) -> np.ndarray:
-        return np.log(x - self.value + LOG_LOWER_BOUND)
+        return robust_log(x - self.value + SMALL_NUMBER)
 
     def inverse(self, x: np.ndarray) -> np.ndarray:
-        return self.value + np.fmax(
-            np.exp(np.fmin(x, EXP_UPPER_BOUND)), LOG_LOWER_BOUND
-        )
+        return self.value + robust_exp(x)
 
     def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
-        return np.fmax(np.exp(np.fmin(x, EXP_UPPER_BOUND)), LOG_LOWER_BOUND)
+        return robust_exp(x)
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
-        return 1 / (x - self.value)
+        return 1 / (x - self.value + SMALL_NUMBER)
 
     def link_second_derivative(self, x: np.ndarray) -> np.ndarray:
-        return -1 / (x - self.value) ** 2
+        return -1 / (x - self.value + SMALL_NUMBER) ** 2
 
 
 class LogShiftTwoLink(LogShiftValueLink):
@@ -163,19 +194,19 @@ class SqrtShiftValueLink(LinkFunction):
         return (self.value + np.nextafter(0, 1), np.inf)
 
     def link(self, x: np.ndarray) -> np.ndarray:
-        return np.sqrt(x - self.value + LOG_LOWER_BOUND)
+        return np.sqrt(x - self.value + SMALL_NUMBER)
 
     def inverse(self, x: np.ndarray) -> np.ndarray:
-        return self.value + np.power(np.fmin(x, EXP_UPPER_BOUND), 2)
+        return self.value + np.power(x, 2)
 
     def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return 2 * x
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
-        return 1 / (2 * np.sqrt(x - self.value))
+        return 1 / (2 * np.sqrt(x - self.value + SMALL_NUMBER))
 
     def link_second_derivative(self, x) -> np.ndarray:
-        return -1 / (4 * (x - self.value) ** (3 / 2))
+        return -1 / (4 * (x - self.value + SMALL_NUMBER) ** (3 / 2))
 
 
 class SqrtShiftTwoLink(SqrtShiftValueLink):
@@ -207,13 +238,13 @@ class LogIdentLink(LinkFunction):
         pass
 
     def link(self, x: np.ndarray) -> np.ndarray:
-        return np.where(x <= 1, np.log(x), x - 1)
+        return np.where(x <= 1, robust_log(x), x - 1)
 
     def inverse(self, x: np.ndarray) -> np.ndarray:
-        return np.where(x <= 0, np.exp(x), x + 1)
+        return np.where(x <= 0, robust_exp(x), x + 1)
 
     def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
-        return np.where(x <= 0, np.exp(x), 1)
+        return np.where(x <= 0, robust_exp(x), 1)
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
         return super().link_derivative(x)
