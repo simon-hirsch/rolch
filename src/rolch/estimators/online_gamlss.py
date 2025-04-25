@@ -16,7 +16,7 @@ from ..utils import calculate_effective_training_length, online_mean_update
 if HAS_PANDAS:
     import pandas as pd
 if HAS_POLARS:
-    import polars as pl
+    import polars as pl  # noqa
 
 
 class OnlineGamlss(Estimator):
@@ -228,6 +228,13 @@ class OnlineGamlss(Estimator):
         else:
             return False
 
+    def _count_nonzero_coef(self, exclude: int | np.ndarray | None = None) -> int:
+        if exclude is None:
+            gen = range(self.distribution.n_params)
+        else:
+            gen = np.delete(np.arange(self.distribution.n_params), exclude)
+        return sum(np.count_nonzero(self.beta[p]) for p in gen)
+
     @staticmethod
     def _add_lags(
         y: np.ndarray, x: np.ndarray, lags: Union[int, np.ndarray]
@@ -332,7 +339,7 @@ class OnlineGamlss(Estimator):
         # - We should keep only the information we need
         # - Consider the interation with the local RSS criterion?!
         f = init_forget_vector(self.forget[param], self.n_observations)
-        model_params_n = np.count_nonzero(beta_path, axis=1)
+        n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
         prediction_path = X @ beta_path.T
 
         if self.model_selection == "local_rss":
@@ -341,7 +348,7 @@ class OnlineGamlss(Estimator):
             rss = rss / np.mean(wt * w * f)
             ic = InformationCriterion(
                 n_observations=self.n_training[param],
-                n_parameters=model_params_n,
+                n_parameters=n_nonzero_coef,
                 criterion=self.ic[param],
             ).from_rss(rss=rss)
             best_ic = np.argmin(ic)
@@ -356,10 +363,10 @@ class OnlineGamlss(Estimator):
                     prediction_path[:, i], param=param
                 )
                 ll[i] = np.sum(f * self.distribution.logpdf(y, theta))
-
+            n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
             ic = InformationCriterion(
                 n_observations=self.n_training[param],
-                n_parameters=model_params_n,
+                n_parameters=n_nonzero_coef + n_nonzero_coef_other,
                 criterion=self.ic[param],
             ).from_ll(log_likelihood=ll)
             best_ic = np.argmin(ic)
@@ -379,7 +386,7 @@ class OnlineGamlss(Estimator):
         model_selection_data: Any,
         param: int,
     ):
-        model_params_n = np.count_nonzero(beta_path, axis=1)
+        n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
         prediction_path = X @ beta_path.T
         if self.model_selection == "local_rss":
             # Denominator
@@ -392,10 +399,10 @@ class OnlineGamlss(Estimator):
                 + (1 - self.forget[param]) ** y.shape[0]
                 * (model_selection_data * self.mean_of_weights[param])
             ) / denom
-
+            n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
             ic = InformationCriterion(
                 n_observations=self.n_training[param],
-                n_parameters=model_params_n,
+                n_parameters=n_nonzero_coef + n_nonzero_coef_other,
                 criterion=self.ic[param],
             ).from_rss(rss=rss)
             best_ic = np.argmin(ic)
@@ -413,7 +420,7 @@ class OnlineGamlss(Estimator):
 
             ic = InformationCriterion(
                 n_observations=self.n_training[param],
-                n_parameters=model_params_n,
+                n_parameters=n_nonzero_coef,
                 criterion=self.ic[param],
             ).from_ll(log_likelihood=ll)
             best_ic = np.argmin(ic)
