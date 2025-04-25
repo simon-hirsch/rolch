@@ -56,8 +56,8 @@ def zero_safe_division(a, b):
         float: Result of the division a / b.
     """
     if np.isclose(b, 0):
-        return 0
+        return LARGE_NUMBER
     elif np.isclose(a, 0):
-        return 0
+        return LARGE_NUMBER
     else:
         return a / b
