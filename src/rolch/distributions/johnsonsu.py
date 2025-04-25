@@ -190,11 +190,12 @@ class DistributionJSU(ScipyMixin, Distribution):
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
+        params = st.johnsonsu.fit(y)
         if param == 0:
-            return np.repeat(np.mean(y, axis=axis), y.shape[0])
+            return np.repeat(params[2], y.shape[0])
         if param == 1:
-            return np.repeat(np.std(y, axis=axis), y.shape[0])
+            return np.repeat(params[3], y.shape[0])
         if param == 2:
-            return np.full_like(y, 0)
+            return np.full_like(y, params[0])
         if param == 3:
-            return np.full_like(y, 10)
+            return np.full_like(y, params[1])
