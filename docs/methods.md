@@ -42,3 +42,7 @@ More information on coordinate descent can also be found on this [page](coordina
 ::: rolch.OrdinaryLeastSquaresMethod
 
 ::: rolch.LassoPathMethod
+
+::: rolch.RidgePathMethod
+
+::: rolch.ElasticNetPathMethod

@@ -52,9 +52,10 @@ class ElasticNetPathMethod(EstimationMethod):
         max_iterations: int = 1000,
     ):
         """
-        Initializes the RidgePath method with the specified parameters.
+        Initializes the elastic net method with the specified parameters.
 
         Parameters:
+            alpha (float): Elastic net mixing parameter. 0 (ridge) <= alpha <= 1 (lasso).
             lambda_n (int): Number of lambda values to use in the path. Default is 100.
             lambda_eps (float): Minimum lambda value as a fraction of the maximum lambda. Default is 1e-4.
             early_stop (int): Early stopping criterion. Will stop if the number of non-zero parameters is reached. Default is 0 (no early stopping).
