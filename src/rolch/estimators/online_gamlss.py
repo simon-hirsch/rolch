@@ -1,6 +1,6 @@
 import copy
 import warnings
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 
@@ -8,7 +8,7 @@ from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, Estimator
 from ..error import OutOfSupportError
 from ..gram import init_forget_vector
-from ..information_criteria import select_best_model_by_information_criterion
+from ..information_criteria import InformationCriterion
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..utils import calculate_effective_training_length, online_mean_update
@@ -16,7 +16,7 @@ from ..utils import calculate_effective_training_length, online_mean_update
 if HAS_PANDAS:
     import pandas as pd
 if HAS_POLARS:
-    import polars as pl
+    import polars as pl  # noqa
 
 
 class OnlineGamlss(Estimator):
@@ -34,6 +34,7 @@ class OnlineGamlss(Estimator):
         fit_intercept: Union[bool, Dict[int, bool]] = True,
         regularize_intercept: Union[bool, Dict[int, bool]] = False,
         ic: Union[str, Dict] = "aic",
+        model_selection: Literal["local_rss", "global_ll"] = "local_rss",
         max_it_outer: int = 30,
         max_it_inner: int = 30,
         abs_tol_outer: float = 1e-3,
@@ -41,6 +42,7 @@ class OnlineGamlss(Estimator):
         rel_tol_outer: float = 1e-5,
         rel_tol_inner: float = 1e-5,
         rss_tol_inner: float = 1.5,
+        step_size: float | Dict[int, float] = 1.0,
         verbose: int = 0,
         debug: bool = False,
     ):
@@ -109,6 +111,7 @@ class OnlineGamlss(Estimator):
         # Get the estimation method
         self._process_attribute(method, default="ols", name="method")
         self._method = {p: get_estimation_method(m) for p, m in self.method.items()}
+        self.model_selection = model_selection
 
         self.scaler = OnlineScaler(to_scale=scale_inputs)
         self.do_scale = scale_inputs
@@ -121,6 +124,7 @@ class OnlineGamlss(Estimator):
         self.rel_tol_outer = rel_tol_outer
         self.rel_tol_inner = rel_tol_inner
         self.rss_tol_inner = rss_tol_inner
+        self._process_attribute(step_size, default=1.0, name="step_size")
 
         self.debug = debug
         self.verbose = verbose
@@ -224,6 +228,13 @@ class OnlineGamlss(Estimator):
         else:
             return False
 
+    def _count_nonzero_coef(self, exclude: int | np.ndarray | None = None) -> int:
+        if exclude is None:
+            gen = range(self.distribution.n_params)
+        else:
+            gen = np.delete(np.arange(self.distribution.n_params), exclude)
+        return sum(np.count_nonzero(self.beta[p]) for p in gen)
+
     @staticmethod
     def _add_lags(
         y: np.ndarray, x: np.ndarray, lags: Union[int, np.ndarray]
@@ -313,108 +324,110 @@ class OnlineGamlss(Estimator):
 
         return out
 
-    def fit_beta_and_select_model(
+    def fit_select_model(
         self,
         X,
         y,
+        wv,
+        wt,  # do we need this?!
         w,
-        iteration_outer,
-        iteration_inner,
+        beta_path,
         param,
-    ):
-
+    ) -> np.ndarray:
+        # TODO Here:
+        # - We should save the information in a named tuple
+        # - We should keep only the information we need
+        # - Consider the interation with the local RSS criterion?!
         f = init_forget_vector(self.forget[param], self.n_observations)
+        n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
+        prediction_path = X @ beta_path.T
 
-        if not self._method[param]._path_based_method:
-            beta_path = None
-            beta = self._method[param].fit_beta(
-                x_gram=self.x_gram[param],
-                y_gram=self.y_gram[param],
-                is_regularized=self.is_regularized[param],
-            )
-            # print(beta)
-            residuals = y - X @ beta.T
-            rss = np.sum(residuals**2 * w * f) / np.mean(w * f)
-
-        else:
-            beta_path = self._method[param].fit_beta_path(
-                x_gram=self.x_gram[param],
-                y_gram=self.y_gram[param],
-                is_regularized=self.is_regularized[param],
-            )
-            residuals = y[:, None] - X @ beta_path.T
-            rss = np.sum(residuals**2 * w[:, None] * f[:, None], axis=0)
-            rss = rss / np.mean(w * f)
-            model_params_n = np.sum(~np.isclose(beta_path, 0), axis=1)
-            best_ic = select_best_model_by_information_criterion(
-                self.n_training[param], model_params_n, rss, self.ic[param]
-            )
+        if self.model_selection == "local_rss":
+            residuals = wv[:, None] - prediction_path
+            rss = np.sum(residuals**2 * w[:, None] * wt[:, None] * f[:, None], axis=0)
+            rss = rss / np.mean(wt * w * f)
+            ic = InformationCriterion(
+                n_observations=self.n_training[param],
+                n_parameters=n_nonzero_coef,
+                criterion=self.ic[param],
+            ).from_rss(rss=rss)
+            best_ic = np.argmin(ic)
             beta = beta_path[best_ic, :]
+            model_selection_data = rss
 
-            self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
-            self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
+        elif self.model_selection == "global_ll":
+            ll = np.zeros(self._method[param]._path_length)
+            theta = np.copy(self.fv)
+            for i in range(self._method[param]._path_length):
+                theta[:, param] = self.distribution.link_inverse(
+                    prediction_path[:, i], param=param
+                )
+                ll[i] = np.sum(f * self.distribution.logpdf(y, theta))
+            n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
+            ic = InformationCriterion(
+                n_observations=self.n_training[param],
+                n_parameters=n_nonzero_coef + n_nonzero_coef_other,
+                criterion=self.ic[param],
+            ).from_ll(log_likelihood=ll)
+            best_ic = np.argmin(ic)
+            beta = beta_path[best_ic, :]
+            model_selection_data = ll
 
-        self.residuals[param] = residuals
-        self.weights[param] = w
+        return beta, model_selection_data, best_ic
 
-        return beta, beta_path, rss
-
-    def update_beta_and_select_model(
+    def update_select_model(
         self,
-        X,
-        y,
-        w,
-        iteration_outer,
-        iteration_inner,
-        param,
+        X: np.ndarray,
+        y: np.ndarray,  # observations / response
+        wv: np.ndarray,  # working vector
+        wt: np.ndarray,  # working weights
+        w: np.ndarray,  # sample weights
+        beta_path: np.ndarray,
+        model_selection_data: Any,
+        param: int,
     ):
-
-        denom = online_mean_update(
-            self.mean_of_weights[param], w, self.forget[param], self.n_observations
-        )
-
-        if not self._method[param]._path_based_method:
-            beta_path = None
-            beta = self._method[param].update_beta(
-                x_gram=self.x_gram_inner[param],
-                y_gram=self.y_gram_inner[param],
-                beta=self.beta[param],
-                is_regularized=self.is_regularized[param],
+        n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
+        prediction_path = X @ beta_path.T
+        if self.model_selection == "local_rss":
+            # Denominator
+            denom = online_mean_update(
+                self.mean_of_weights[param], wt, self.forget[param], self.n_observations
             )
-            residuals = y - X @ beta.T
-
+            residuals = wv - prediction_path
             rss = (
-                (residuals**2).flatten() * w
-                + (1 - self.forget[param])
-                * (self.rss_old[param] * self.mean_of_weights[param])
+                np.sum((residuals**2) * wt * w, axis=0)
+                + (1 - self.forget[param]) ** y.shape[0]
+                * (model_selection_data * self.mean_of_weights[param])
             ) / denom
+            n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
+            ic = InformationCriterion(
+                n_observations=self.n_training[param],
+                n_parameters=n_nonzero_coef + n_nonzero_coef_other,
+                criterion=self.ic[param],
+            ).from_rss(rss=rss)
+            best_ic = np.argmin(ic)
+            model_selection_data_new = rss
+        elif self.model_selection == "global_ll":
+            ll = np.zeros(self._method[param]._path_length)
 
-        else:
-            beta_path = self._method[param].update_beta_path(
-                x_gram=self.x_gram_inner[param],
-                y_gram=self.y_gram_inner[param],
-                beta_path=self.beta_path[param],
-                is_regularized=self.is_regularized[param],
-            )
-            residuals = y - X @ beta_path.T
+            theta = np.copy(self.fv)
+            for i in range(self._method[param]._path_length):
+                theta[:, param] = self.distribution.link_inverse(
+                    prediction_path[:, i], param=param
+                )
+                ll[i] = np.sum(w * self.distribution.logpdf(y, theta))
+            ll = ll + (1 - self.forget[param]) ** y.shape[0] * model_selection_data
 
-            rss = (
-                (residuals**2).flatten() * w
-                + (1 - self.forget[param])
-                * (self.rss_old[param] * self.mean_of_weights[param])
-            ) / denom
+            ic = InformationCriterion(
+                n_observations=self.n_training[param],
+                n_parameters=n_nonzero_coef,
+                criterion=self.ic[param],
+            ).from_ll(log_likelihood=ll)
+            best_ic = np.argmin(ic)
+            model_selection_data_new = ll
 
-            model_params_n = np.sum(np.isclose(beta_path, 0), axis=1)
-            best_ic = select_best_model_by_information_criterion(
-                self.n_training[param], model_params_n, rss, self.ic[param]
-            )
-
-            self.rss_iterations_inner[param][iteration_outer][iteration_inner] = rss
-            self.ic_iterations_inner[param][iteration_outer][iteration_inner] = best_ic
-
-            beta = beta_path[best_ic, :]
-
-        return beta, beta_path, rss
+        beta = beta_path[best_ic, :]
+        return beta, model_selection_data_new, best_ic
 
     def _validate_inputs(self, X: np.ndarray, y: np.ndarray):
         """Validate the input matrices X and y.
@@ -518,13 +531,24 @@ class OnlineGamlss(Estimator):
             self._debug_dl1dlp1 = {}
             self._debug_dl2dlp2 = {}
             self._debug_eta = {}
-
-        self.rss = {i: 0 for i in range(self.distribution.n_params)}
+            self._debug_fv = {}
+            self._debug_dv = {}
 
         self.x_gram = {}
         self.y_gram = {}
-        self.weights = {}
-        self.residuals = {}
+        self.residuals = np.zeros((self.n_observations, self.distribution.n_params))
+        self.rss = np.zeros((self.distribution.n_params))
+        self.rss_iterations = np.zeros(
+            (self.distribution.n_params, self.max_it_outer, self.max_it_inner)
+        )
+
+        # For regularized estimation, we have the necessary data to do model selection!
+        self.model_selection_data = {}
+        self.best_ic = np.zeros(self.distribution.n_params)
+        self.best_ic_iterations = np.full(
+            (self.distribution.n_params, self.max_it_outer, self.max_it_inner),
+            np.nan,
+        )
 
         for p in range(self.distribution.n_params):
             is_regularized = np.repeat(True, self.J[p])
@@ -534,6 +558,8 @@ class OnlineGamlss(Estimator):
                 is_regularized[0] = False
             self.is_regularized[p] = is_regularized
 
+        # Betas might be different across distribution parameters
+        # So this is a dict of dicts
         self.beta_iterations = {i: {} for i in range(self.distribution.n_params)}
         self.beta_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
 
@@ -545,9 +571,6 @@ class OnlineGamlss(Estimator):
         }
         self.beta_path_iterations = {i: {} for i in range(self.distribution.n_params)}
 
-        self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
-        self.ic_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
-
         # We need to track the sum of weights for each
         # distribution parameter for online model selection
         self.sum_of_weights = {}
@@ -557,7 +580,7 @@ class OnlineGamlss(Estimator):
         self._print_message(message=message, level=1)
         (
             self.global_dev,
-            self.iteration_outer,
+            self.it_outer,
         ) = self._outer_fit(
             X=X_dict,
             y=y,
@@ -616,21 +639,25 @@ class OnlineGamlss(Estimator):
             self._debug_dl2dlp2 = {}
             self._debug_eta = {}
 
-        ## Reset rss and iterations
-        self.rss_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
-        self.ic_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
+        ## Reset rss and ic to avoid confusion
+        ## These are only for viewing, not read!!
+        self.best_ic[:] = 0
+        self.best_ic_iterations[:] = 0
+        self.rss_iterations[:] = 0
 
+        ## Copy old values for updating
         self.x_gram_inner = copy.copy(self.x_gram)
         self.y_gram_inner = copy.copy(self.y_gram)
         self.rss_old = copy.copy(self.rss)
         self.sum_of_weights_inner = copy.copy(self.sum_of_weights)
         self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
+        self.model_selection_data_old = copy.copy(self.model_selection_data)
 
         message = "Starting update call"
         self._print_message(message=message, level=1)
         (
             self.global_dev,
-            self.iteration_outer,
+            self.it_outer,
         ) = self._outer_update(
             X=X_dict,
             y=y,
@@ -646,10 +673,10 @@ class OnlineGamlss(Estimator):
 
     def _outer_update(self, X, y, w):
         ## for new observations:
-        global_di = -2 * self.distribution.logpdf(y, self.fv)
-        global_dev = (1 - self.forget[0]) * self.global_dev + global_di
+        global_di = np.sum(-2 * self.distribution.logpdf(y, self.fv) * w)
+        global_dev = (1 - self.forget[0]) ** y.shape[0] * self.global_dev + global_di
         global_dev_old = global_dev + 1000
-        iteration_outer = 0
+        it_outer = 0
 
         while True:
             # Check relative congergence
@@ -662,44 +689,39 @@ class OnlineGamlss(Estimator):
             if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
                 break
 
-            if iteration_outer >= self.max_it_outer:
+            if it_outer >= self.max_it_outer:
                 break
 
             global_dev_old = global_dev
-            iteration_outer += 1
+            it_outer += 1
 
             for param in range(self.distribution.n_params):
 
-                self.beta_iterations_inner[param][iteration_outer] = {}
-                self.beta_path_iterations_inner[param][iteration_outer] = {}
-
-                self.rss_iterations_inner[param][iteration_outer] = {}
-                self.ic_iterations_inner[param][iteration_outer] = {}
+                self.beta_iterations_inner[param][it_outer] = {}
+                self.beta_path_iterations_inner[param][it_outer] = {}
 
                 global_dev = self._inner_update(
                     X=X,
                     y=y,
                     w=w,
-                    iteration_outer=iteration_outer,
+                    it_outer=it_outer,
                     param=param,
                     dv=global_dev,
                 )
-                message = f"Outer iteration {iteration_outer}: Fitted param {param}: Current LL {global_dev}"
+                message = f"Outer iteration {it_outer}: Fitted param {param}: Current LL {global_dev}"
                 self._print_message(message=message, level=2)
 
-            message = (
-                f"Outer iteration {iteration_outer}: Finished: current LL {global_dev}"
-            )
+            message = f"Outer iteration {it_outer}: Finished: current LL {global_dev}"
             self._print_message(message=message, level=1)
 
-        return global_dev, iteration_outer
+        return global_dev, it_outer
 
     def _outer_fit(self, X, y, w):
 
         global_di = -2 * self.distribution.logpdf(y, self.fv)
         global_dev = np.sum(w * global_di)
         global_dev_old = global_dev + 1000
-        iteration_outer = 0
+        it_outer = 0
 
         while True:
             # Check relative congergence
@@ -713,249 +735,384 @@ class OnlineGamlss(Estimator):
             if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
                 break
 
-            if iteration_outer >= self.max_it_outer:
+            if it_outer >= self.max_it_outer:
                 break
 
-            global_dev_old = global_dev
-            iteration_outer += 1
+            global_dev_old = float(global_dev)
+            it_outer += 1
 
             for param in range(self.distribution.n_params):
 
-                self.beta_iterations_inner[param][iteration_outer] = {}
-                self.beta_path_iterations_inner[param][iteration_outer] = {}
-
-                self.rss_iterations_inner[param][iteration_outer] = {}
-                self.ic_iterations_inner[param][iteration_outer] = {}
+                self.beta_iterations_inner[param][it_outer] = {}
+                self.beta_path_iterations_inner[param][it_outer] = {}
 
                 global_dev = self._inner_fit(
                     X=X,
                     y=y,
                     w=w,
                     param=param,
-                    iteration_outer=iteration_outer,
+                    it_outer=it_outer,
                     dv=global_dev,
                 )
 
-                self.beta_iterations[param][iteration_outer] = self.beta[param]
-                self.beta_path_iterations[param][iteration_outer] = self.beta_path[
-                    param
-                ]
+                self.beta_iterations[param][it_outer] = self.beta[param]
+                self.beta_path_iterations[param][it_outer] = self.beta_path[param]
 
-                message = f"Outer iteration {iteration_outer}: Fitted param {param}: current LL {global_dev}"
+                message = f"Outer iteration {it_outer}: Fitted param {param}: current LL {global_dev}"
                 self._print_message(message=message, level=2)
 
-            message = (
-                f"Outer iteration {iteration_outer}: Finished. Current LL {global_dev}"
-            )
+            message = f"Outer iteration {it_outer}: Finished. Current LL {global_dev}, old LL {global_dev_old}"
             self._print_message(message=message, level=1)
 
-        return (global_dev, iteration_outer)
+        return (global_dev, it_outer)
 
     def _inner_fit(
         self,
         X,
         y,
         w,
-        iteration_outer,
+        it_outer,
         param,
         dv,
     ):
 
-        di = -2 * self.distribution.logpdf(y, self.fv)
-        dv = np.sum(di * w)
-        olddv = dv + 1
+        dv_start = np.sum(-2 * self.distribution.logpdf(y, self.fv) * w)
+        dv_iterations = np.repeat(dv_start, self.max_it_inner + 1)
+        fv_it = copy.copy(self.fv)
+        fv_it_new = copy.copy(self.fv)
+        step_it = self.step_size[param]
+        # print(step_it)
+        step_decrease_counter = 0
+        terminate = False
 
-        # Use this for the while loop
-        iteration_inner = 0
-        while True:
-            if iteration_inner >= self.max_it_inner:
-                break
+        for it_inner in range(self.max_it_inner):
+            # We can improve the fit by taking the conditional
+            # start values for the first outer iteration and the first inner iteration
+            # as soon the first parameter is fitted.
 
-            # We allow for breaking in the inner iteration in
-            # - the 1st Outer iteration (iteration_outer = 1) after 1 inner iteration for each parameter --> SUM = 2
-            # - the 2nd Outer iteration (iteration_outer = 2) after 0 inner iteration for each parameter --> SUM = 2
+            if (it_inner == 0) & (it_outer == 1) & (param >= 1):
+                fv_it = self.distribution.calculate_conditional_initial_values(
+                    y=y,
+                    theta=fv_it,
+                    param=param,
+                )
 
-            if (abs(olddv - dv) <= self.abs_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
-                break
-
-            if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
-                break
-
-            iteration_inner += 1
-            eta = self.distribution.link_function(self.fv[:, param], param=param)
+            eta = self.distribution.link_function(fv_it[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
-            dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
-            dl2dp2 = self.distribution.dl2_dp2(y, self.fv, param=param)
+            dl1dp1 = self.distribution.dl1_dp1(y, fv_it, param=param)
+            dl2dp2 = self.distribution.dl2_dp2(y, fv_it, param=param)
             wt = -(dl2dp2 / (dr * dr))
             wt = np.clip(wt, 1e-10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
 
             if self.debug:
-                key = (param, iteration_outer, iteration_outer)
-                self._debug_weights[key] = wt
-                self._debug_working_vectors[key] = wv
-                self._debug_dl1dlp1[key] = dl1dp1
-                self._debug_dl2dlp2[key] = dl2dp2
-                self._debug_eta[key] = eta
+                key = (param, it_outer, it_inner)
+                self._debug_weights[key] = copy.copy(wt)
+                self._debug_working_vectors[key] = copy.copy(wv)
+                self._debug_dl1dlp1[key] = copy.copy(dl1dp1)
+                self._debug_dl2dlp2[key] = copy.copy(dl2dp2)
+                self._debug_eta[key] = copy.copy(eta)
+                self._debug_fv[key] = copy.copy(fv_it)
+                self._debug_dv[key] = float(dv_iterations[it_inner])
 
-            ## Update the X and Y Gramian and the weight
-            self.x_gram[param] = self._method[param].init_x_gram(
-                X=X[param], weights=(w * wt), forget=self.forget[param]
+            ## Create the X and Y Gramian and the weight
+            x_gram_it = self._method[param].init_x_gram(
+                X=X[param],
+                weights=(w * wt),
+                forget=self.forget[param],
             )
-            self.y_gram[param] = self._method[param].init_y_gram(
-                X=X[param], y=wv, weights=(w * wt), forget=self.forget[param]
-            )
-            beta_new, beta_path_new, rss_new = self.fit_beta_and_select_model(
+            y_gram_it = self._method[param].init_y_gram(
                 X=X[param],
                 y=wv,
-                w=wt,
-                param=param,
-                iteration_inner=iteration_inner,
-                iteration_outer=iteration_outer,
+                weights=(w * wt),
+                forget=self.forget[param],
             )
+            # Select the model if we have a path-based method
+            if self._method[param]._path_based_method:
+                beta_path_it = self._method[param].fit_beta_path(
+                    x_gram=x_gram_it,
+                    y_gram=y_gram_it,
+                    is_regularized=self.is_regularized[param],
+                )
+                beta_it, model_selection_data_it, best_ic_it = self.fit_select_model(
+                    X=X[param],
+                    y=wv,
+                    w=w,
+                    wv=wv,
+                    wt=wt,
+                    beta_path=beta_path_it,
+                    param=param,
+                )
+            else:
+                beta_path_it = None
+                beta_it = self._method[param].fit_beta(
+                    x_gram=x_gram_it,
+                    y_gram=y_gram_it,
+                    is_regularized=self.is_regularized[param],
+                )
 
-            if iteration_inner > 1 or iteration_outer > 1:
+            # Calculate the prediction, residuals and RSS
+            f = init_forget_vector(self.forget[param], self.n_observations)
+            prediction_it = X[param] @ beta_it.T
+            residuals_it = wv - prediction_it
+            rss_it = np.sum(residuals_it**2 * wt * w * f) / np.mean(wt * w * f)
 
-                if self.method[param] == "ols":
-                    if rss_new > (self.rss_tol_inner * self.rss[param]):
-                        break
-                else:
-                    ic_idx = self.ic_iterations_inner[param][iteration_outer][
-                        iteration_inner
-                    ]
-                    if rss_new[ic_idx] > (self.rss_tol_inner * self.rss[param][ic_idx]):
-                        break
+            # Calculate the fitted values and the deviance
+            fv_it_new[:, param] = self.distribution.link_inverse(
+                prediction_it, param=param
+            )
+            dv_it = np.sum(-2 * self.distribution.logpdf(y, fv_it_new) * w)
+            dv_old = dv_iterations[it_inner]
+            dv_increasing = dv_it > dv_old
 
-            self.beta[param] = beta_new
-            self.beta_path[param] = beta_path_new
-            self.rss[param] = rss_new
-
-            eta = X[param] @ self.beta[param].T
-            self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
-
-            di = -2 * self.distribution.logpdf(y, self.fv)
-            olddv = dv
-            dv = np.sum(di * w)
-
-            ## Sum of weights
-            self.sum_of_weights[param] = np.sum(w * wt)
-            self.mean_of_weights[param] = np.mean(w * wt)
-
-            self.beta_iterations_inner[param][iteration_outer][
-                iteration_inner
-            ] = beta_new
-            self.beta_path_iterations_inner[param][iteration_outer][
-                iteration_inner
-            ] = beta_path_new
-
-            message = f"Outer iteration {iteration_outer}: Fitting Parameter {param}: Inner iteration {iteration_inner}: Current LL {dv}"
+            # print(dv_it, dv_old, dv_increasing)
+            message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Inner iteration {it_inner}: Current Deviance {dv_it}"
             self._print_message(message=message, level=3)
 
-        return dv
+            if dv_increasing:
+                # print("Blabal")
+                step_decrease_counter += 1
+                step_it = step_it / 2
+                self._print_message(
+                    f"Deviance increasing, step size halved. {step_decrease_counter}",
+                    level=1,
+                )
+                if step_decrease_counter > 5:
+                    message = f"Step size too small. Parameter {param}, Outer iteration {it_outer}, Inner iteration {it_inner}."
+                    self._print_message(message=message, level=1)
+                    terminate = True
+
+            if (it_outer == 1) & (it_inner >= 1) | (it_outer >= 2):
+                # Allow to break in principle.
+                if abs(dv_old - dv_it) <= self.abs_tol_inner:
+                    terminate = True
+                if abs(dv_old - dv_it) / abs(dv_old) < self.rel_tol_inner:
+                    terminate = True
+                if it_inner == (self.max_it_inner - 1):
+                    message = f"Reached max inner iteration in inner fit. Parameter:{param}, Outer iteration: {it_outer}, Inner iteration: {it_inner}."
+                    self._print_message(message=message, level=3)
+                    terminate = True
+
+            if terminate:
+                break
+            if not dv_increasing:
+                # print("deviance decreasing, write to fv_it")
+                fv_it[:, param] = fv_it_new[:, param]
+
+            # Set the deviance for the next inner iteration
+            dv_iterations[it_inner + 1] = dv_it
+
+        # Write everything to the class
+        self.x_gram[param] = x_gram_it
+        self.y_gram[param] = y_gram_it
+        self.beta[param] = beta_it
+        self.beta_path[param] = beta_path_it
+        self.fv[:, param] = fv_it_new[:, param]
+
+        # Sum and mean of the weights
+        self.sum_of_weights[param] = np.sum(w * wt)
+        self.mean_of_weights[param] = np.mean(w * wt)
+
+        # RSS
+        self.rss[param] = rss_it
+        self.rss_iterations[param, it_outer - 1, it_inner - 1] = rss_it
+
+        # TODO: Think where this should go (at all?)
+        # # Check if the local RSS are decreasing
+        # if (it_inner > 1) or (it_outer > 1):
+        #     if rss_it > (self.rss_tol_inner * self.rss[param]):
+        #         message = f"Inner iteration {it_inner}: Fitting Parameter {param}: Current RSS {rss_it} > {self.rss_tol_inner} * {self.rss[param]}"
+        #         self._print_message(message=message, level=3)
+        #         break
+
+        if self._method[param]._path_based_method:
+            self.model_selection_data[param] = model_selection_data_it
+            self.best_ic[param] = best_ic_it
+            self.best_ic_iterations[param, it_outer - 1, it_inner] = best_ic_it
+
+        return dv_it
 
     def _inner_update(
         self,
         X,
         y,
         w,
-        iteration_outer,
+        it_outer,
         dv,
         param,
     ):
-        di = -2 * self.distribution.logpdf(y, self.fv)
-        dv = (1 - self.forget[0]) * self.global_dev + np.sum(di * w)
-        olddv = dv + 1
+        # di = -2 * self.distribution.logpdf(y, self.fv)
+        # dv = (1 - self.forget[0]) * self.global_dev + np.sum(di * w)
+        # olddv = dv + 1
 
-        # Use this for the while loop
-        iteration_inner = 0
-        while True:
-            if iteration_inner >= self.max_it_inner:
-                break
-            if (abs(olddv - dv) <= self.abs_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
-                break
-            if (abs(olddv - dv) / abs(olddv) < self.rel_tol_inner) & (
-                (iteration_inner + iteration_outer) >= 2
-            ):
-                break
+        dv_start = (
+            np.sum(-2 * self.distribution.logpdf(y, self.fv) * w)
+            + (1 - self.forget[0]) ** y.shape[0]
+            * self.global_dev  # global dev is previous observation / fit
+        )
+        dv_iterations = np.repeat(dv_start, self.max_it_inner + 1)
+        fv_it = copy.copy(self.fv)
+        fv_it_new = copy.copy(self.fv)
+        step_it = self.step_size[param]
+        step_decrease_counter = 0
+        terminate = False
 
-            iteration_inner += 1
-            eta = self.distribution.link_function(self.fv[:, param], param=param)
+        for it_inner in range(self.max_it_inner):
+
+            eta = self.distribution.link_function(fv_it[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
-            dl1dp1 = self.distribution.dl1_dp1(y, self.fv, param=param)
-            dl2dp2 = self.distribution.dl2_dp2(y, self.fv, param=param)
+            dl1dp1 = self.distribution.dl1_dp1(y, fv_it, param=param)
+            dl2dp2 = self.distribution.dl2_dp2(y, fv_it, param=param)
             wt = -(dl2dp2 / (dr * dr))
             wt = np.clip(wt, -1e10, 1e10)
             wv = eta + dl1dp1 / (dr * wt)
 
             if self.debug:
-                key = (param, iteration_outer, iteration_outer)
-                self._debug_weights[key] = wt
-                self._debug_working_vectors[key] = wv
-                self._debug_dl1dlp1[key] = dl1dp1
-                self._debug_dl2dlp2[key] = dl2dp2
-                self._debug_eta[key] = eta
+                key = (param, it_outer, it_inner)
+                self._debug_weights[key] = copy.copy(wt)
+                self._debug_working_vectors[key] = copy.copy(wv)
+                self._debug_dl1dlp1[key] = copy.copy(dl1dp1)
+                self._debug_dl2dlp2[key] = copy.copy(dl2dp2)
+                self._debug_eta[key] = copy.copy(eta)
 
-            self.x_gram_inner[param] = self._method[param].update_x_gram(
+            x_gram_it = self._method[param].update_x_gram(
                 gram=self.x_gram[param],
                 X=X[param],
                 weights=(w * wt),
                 forget=self.forget[param],
             )
-            self.y_gram_inner[param] = self._method[param].update_y_gram(
+            y_gram_it = self._method[param].update_y_gram(
                 gram=self.y_gram[param],
                 X=X[param],
                 y=wv,
                 weights=(w * wt),
                 forget=self.forget[param],
             )
-            beta_new, beta_path_new, rss_new = self.update_beta_and_select_model(
-                X[param],
-                y=wv,
-                w=wt,
-                iteration_inner=iteration_inner,
-                iteration_outer=iteration_outer,
-                param=param,
-            )
-            # Check if the local RSS are decreasing
-            if self.method[param] == "ols":
-                if rss_new > (self.rss_tol_inner * self.rss[param]):
-                    break
+            # Select the model if we have a path-based method
+            if self._method[param]._path_based_method:
+                beta_path_it = self._method[param].update_beta_path(
+                    x_gram=x_gram_it,
+                    y_gram=y_gram_it,
+                    beta_path=self.beta_path[param],
+                    is_regularized=self.is_regularized[param],
+                )
+
+                beta_it, model_selection_data_it, best_ic_it = self.update_select_model(
+                    X=X[param],
+                    y=y,
+                    w=w,
+                    wv=wv,
+                    wt=wt,
+                    beta_path=beta_path_it,
+                    model_selection_data=self.model_selection_data_old[param],
+                    param=param,
+                )
+                self.best_ic[param] = best_ic_it
+                self.best_ic_iterations[param, it_outer - 1, it_inner] = best_ic_it
             else:
-                ic_idx = self.ic_iterations_inner[param][iteration_outer][
-                    iteration_inner
-                ]
-                if rss_new[ic_idx] > (self.rss_tol_inner * self.rss[param][ic_idx]):
-                    break
+                beta_it = self._method[param].update_beta(
+                    x_gram=x_gram_it,
+                    y_gram=y_gram_it,
+                    beta=self.beta[param],
+                    is_regularized=self.is_regularized[param],
+                )
+                beta_path_it = None
+                model_selection_data_it = None
 
-            self.beta[param] = beta_new
-            self.beta_path[param] = beta_path_new
-            self.rss[param] = rss_new
+            # Calculate the prediction, residuals and RSS
+            f = init_forget_vector(self.forget[param], y.shape[0])
+            prediction_it = X[param] @ beta_it.T
+            residuals_it = wv - prediction_it
+            rss_it = np.sum(residuals_it**2 * wt * w * f) / np.mean(wt * w * f)
 
-            eta = X[param] @ self.beta[param].T
-            self.fv[:, param] = self.distribution.link_inverse(eta, param=param)
-
-            self.sum_of_weights_inner[param] = (
-                np.sum(w * wt) + (1 - self.forget[param]) * self.sum_of_weights[param]
+            denom = online_mean_update(
+                self.mean_of_weights[param],
+                np.mean(wt),
+                self.forget[param],
+                self.n_observations,
             )
-            self.mean_of_weights_inner[param] = (
-                self.sum_of_weights_inner[param] / self.n_training[param]
+            sum_of_rss_it = (
+                rss_it
+                + (1 - self.forget[param]) ** y.shape[0]
+                * (self.rss_old[param] * self.mean_of_weights[param])
+            ) / denom
+
+            # TODO: Do we need the rss_tol_inner here?
+            # if (it_inner > 1) or (it_outer > 1):
+            #     if sum_of_rss_it > (self.rss_tol_inner * self.rss[param]):
+            #         print("Breaking RSS in Update step.")
+            #         break
+
+            # Calculate the fitted values and the deviance
+            fv_it_new[:, param] = self.distribution.link_inverse(
+                prediction_it, param=param
             )
+            dv_it = (
+                np.sum(-2 * self.distribution.logpdf(y, fv_it_new) * w)
+                + (1 - self.forget[0]) ** y.shape[0] * self.global_dev
+            )
+            dv_old = dv_iterations[it_inner]
+            dv_increasing = dv_it > dv_old
 
-            olddv = dv
+            if dv_increasing:
+                # print("Blabal")
+                step_decrease_counter += 1
+                step_it = step_it / 2
+                self._print_message(
+                    f"Deviance increasing, step size halved. {step_decrease_counter}",
+                    level=1,
+                )
+                if step_decrease_counter > 5:
+                    message = f"Step size too small. Parameter {param}, Outer iteration {it_outer}, Inner iteration {it_inner}."
+                    self._print_message(message=message, level=1)
+                    terminate = True
 
-            di = -2 * self.distribution.logpdf(y, self.fv)
-            dv = np.sum(di * w) + (1 - self.forget[0]) * self.global_dev
+            if (not dv_increasing) | (it_inner < self.max_it_inner - 1):
+                # Allow to break in principle.
+                if abs(dv_old - dv_it) <= self.abs_tol_inner:
+                    terminate = True
+                if abs(dv_old - dv_it) / abs(dv_old) < self.rel_tol_inner:
+                    terminate = True
+                if it_inner == (self.max_it_inner - 1):
+                    message = f"Reached max inner iteration in inner fit. Parameter:{param}, Outer iteration: {it_outer}, Inner iteration: {it_inner}."
+                    self._print_message(message=message, level=3)
+                    terminate = True
 
-            message = f"Outer iteration {iteration_outer}: Fitting Parameter {param}: Inner iteration {iteration_inner}: Current LL {dv}"
+            message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Inner iteration {it_inner}: Current DV {dv_it}, previous DV {dv_old}, step size {step_it}"
             self._print_message(message=message, level=3)
 
-        return dv
+            if terminate:
+                break
+            if not dv_increasing:
+                # print("deviance decreasing, write to fv_it")
+                fv_it[:, param] = fv_it_new[:, param]
+
+            # Set the deviance for the next inner iteration
+            dv_iterations[it_inner + 1] = dv_it
+
+            # olddv = dv
+            # di = -2 * self.distribution.logpdf(y, self.fv)
+            # dv = np.sum(di * w)
+
+        # Assign to class variables
+        self.x_gram_inner[param] = x_gram_it
+        self.y_gram_inner[param] = y_gram_it
+        self.fv[:, param] = fv_it_new[:, param]
+
+        self.beta[param] = beta_it
+        self.beta_path[param] = beta_path_it
+        self.rss[param] = sum_of_rss_it
+        self.rss_iterations[param, it_outer - 1, it_inner] = sum_of_rss_it
+        self.model_selection_data[param] = model_selection_data_it
+
+        # Update the weights
+        self.sum_of_weights_inner[param] = (
+            np.sum(w * wt) + (1 - self.forget[param]) * self.sum_of_weights[param]
+        )
+        self.mean_of_weights_inner[param] = (
+            self.sum_of_weights_inner[param] / self.n_training[param]
+        )
+        return dv_it
 
     def predict(
         self,

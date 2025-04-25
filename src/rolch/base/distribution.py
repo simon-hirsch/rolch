@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional, Tuple
 
 import numpy as np
+import scipy.optimize as opt
 import scipy.stats as st
 
 from ..warnings import OutOfSupportWarning
@@ -128,6 +129,15 @@ class Distribution(ABC):
             np.ndarray: The quantiles corresponding to the given probabilities.
         """
         return self.ppf(q, theta)
+
+    @abstractmethod
+    def calculate_conditional_initial_values(
+        self,
+        y: np.ndarray,
+        theta: np.ndarray,
+        param: int,
+    ) -> np.ndarray:
+        """Calculate the conditional initial values for the GAMLSS fit."""
 
     @abstractmethod
     def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
@@ -317,3 +327,45 @@ class ScipyMixin(ABC):
             .rvs((size, theta.shape[0]))
             .T
         )
+
+    def _scipy_mle_objective(
+        self,
+        start: np.ndarray,
+        y: np.ndarray,
+        fixed: dict,
+        param: int,
+    ):
+        unknown = np.arange(param, self.n_params)
+        decision = {}
+        for i, value in zip(unknown, start):
+            decision[self.scipy_names[self.parameter_names[i]]] = value
+        return -np.sum(self.scipy_dist(**decision, **fixed).logpdf(y))
+
+    def calculate_conditional_initial_values(
+        self,
+        y: np.ndarray,
+        theta: np.ndarray,
+        param: int,
+    ):
+        start = theta[0, param:]
+        fixed = self.theta_to_scipy_params(theta)
+        unknown = np.arange(param, self.n_params)
+        for i in unknown:
+            del fixed[self.scipy_names[self.parameter_names[i]]]
+
+        bounds = [self.links[b].link_support for b in unknown]
+        result = opt.minimize(
+            self._scipy_mle_objective,
+            x0=start,
+            args=(y, fixed, param),
+            method="L-BFGS-B",
+            bounds=bounds,
+            # options={"disp": True}
+        )
+        new = theta.copy()
+        if not result.success:
+            print("Optimization failed: " + result.message)
+            print("Will use unconditional start values")
+        else:
+            new[:, unknown] = np.expand_dims(result.x, 0)
+        return new

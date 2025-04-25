@@ -5,6 +5,4 @@
 
 ## API Reference
 
-::: rolch.information_criterion
-
-::: rolch.select_best_model_by_information_criterion
+::: rolch.InformationCriterion
