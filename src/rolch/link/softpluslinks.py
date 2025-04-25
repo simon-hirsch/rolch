@@ -3,7 +3,14 @@ from typing import Tuple
 import numpy as np
 
 from ..base import LinkFunction
-from .robust_math import SMALL_NUMBER, robust_exp, robust_log, zero_safe_division
+from .robust_math import (
+    SMALL_NUMBER,
+    robust_exp,
+    robust_log,
+    robust_softplus,
+    robust_softplus_inverse,
+    zero_safe_division,
+)
 
 
 class InverseSoftPlusLink(LinkFunction):
@@ -26,10 +33,10 @@ class InverseSoftPlusLink(LinkFunction):
         pass
 
     def link(self, x: np.ndarray):
-        return robust_log(np.exp(x) - 1)
+        return robust_softplus_inverse(x)
 
     def inverse(self, x: np.ndarray):
-        return robust_log(1 + np.exp(x))
+        return robust_softplus(x)
 
     def link_derivative(self, x: np.ndarray):
         return zero_safe_division(1, (robust_exp(x) - 1) + 1)
@@ -59,10 +66,10 @@ class InverseSoftPlusShiftValueLink(LinkFunction):
         z = x - self.value
         # return np.log1p(np.exp(-np.abs(z))) + np.maximum(z, 0)
         # return robust_log(robust_exp(z) - 1)
-        return robust_log(np.exp(z) - 1)
+        return robust_softplus_inverse(z)
 
     def inverse(self, x: np.ndarray):
-        return robust_log(1 + np.exp(x)) + self.value
+        return robust_softplus(x) + self.value
 
     def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
         return zero_safe_division(1, (robust_exp(-x) + 1))

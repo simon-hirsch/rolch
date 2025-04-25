@@ -44,6 +44,24 @@ def robust_sigmoid(value, k):
         return 1 / (1 + robust_exp(-k * (value - 1)))
 
 
+@nb.vectorize(["float32(float32)", "float64(float64)"])
+def robust_softplus(value):
+    if value > 40:
+        return value
+    else:
+        return np.log(1 + np.exp(value))
+
+
+@nb.vectorize(["float32(float32)", "float64(float64)"])
+def robust_softplus_inverse(value):
+    if value > 40:
+        return value
+    elif value < SMALL_NUMBER:
+        return -30
+    else:
+        return np.log(np.exp(value) - 1)
+
+
 @nb.vectorize(["float32(float32, float32)", "float64(float64, float64)"])
 def zero_safe_division(a, b):
     """Return the max float value for the current precision at the a / b if
