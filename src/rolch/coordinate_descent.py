@@ -45,6 +45,7 @@ def online_coordinate_descent(
     beta: np.ndarray,
     regularization: float,
     is_regularized: bool,
+    alpha: float,
     beta_lower_bound: np.ndarray,
     beta_upper_bound: np.ndarray,
     selection: Literal["cyclic", "random"] = "cyclic",
@@ -87,9 +88,12 @@ def online_coordinate_descent(
                     y_gram[j] - (x_gram[j, :] @ beta_now) + x_gram[j, j] * beta_now[j]
                 )
                 if is_regularized[j]:
-                    update = soft_threshold(update, regularization)
+                    update = soft_threshold(update, alpha * regularization)
+                    denom = x_gram[j, j] + regularization * (1 - alpha)
+                else:
+                    denom = x_gram[j, j]
                 beta_now[j] = min(
-                    max(update / x_gram[j, j], beta_lower_bound[j]), beta_upper_bound[j]
+                    max(update / denom, beta_lower_bound[j]), beta_upper_bound[j]
                 )
         if np.max(np.abs(beta_now - beta_star)) <= tolerance * np.max(np.abs(beta_now)):
             break
@@ -109,6 +113,7 @@ def online_coordinate_descent_path(
     beta_path: np.ndarray,
     lambda_path: np.ndarray,
     is_regularized: np.ndarray,
+    alpha: float,
     early_stop: int,
     beta_lower_bound: np.ndarray,
     beta_upper_bound: np.ndarray,
@@ -161,6 +166,7 @@ def online_coordinate_descent_path(
                 beta=beta,
                 regularization=regularization,
                 is_regularized=is_regularized,
+                alpha=alpha,
                 beta_lower_bound=beta_lower_bound,
                 beta_upper_bound=beta_upper_bound,
                 selection=selection,
