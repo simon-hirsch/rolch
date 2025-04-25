@@ -23,7 +23,7 @@ from rolch import (
 REAL_LINE_LINKS = [IdentityLink]
 POSITIVE_LINE_LINKS = [LogLink, SqrtLink, LogIdentLink, InverseSoftPlusLink]
 SHIFTED_LINKS = [LogShiftValueLink, SqrtShiftValueLink, InverseSoftPlusShiftValueLink]
-VALUES = np.array([2, 5, 10, 25])
+VALUES = np.array([2, 5, 10, 25, 100])
 M = 10000
 
 
