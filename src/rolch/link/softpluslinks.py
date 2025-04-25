@@ -4,9 +4,7 @@ import numpy as np
 
 from ..base import LinkFunction
 from .robust_math import (
-    SMALL_NUMBER,
     robust_exp,
-    robust_log,
     robust_softplus,
     robust_softplus_inverse,
     zero_safe_division,
