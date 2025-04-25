@@ -16,7 +16,6 @@ __all__ = [
     "SqrtLink",
     "SqrtShiftValueLink",
     "SqrtShiftTwoLink",
-    "SqrtShiftTwoLink",
     "InverseSoftPlusLink",
     "InverseSoftPlusShiftValueLink",
     "InverseSoftPlusShiftTwoLink",
