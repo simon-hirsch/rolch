@@ -2,7 +2,8 @@ import numba as nb
 import numpy as np
 
 SMALL_NUMBER = 1e-10
-LARGE_NUMBER = 1e20
+LARGE_NUMBER = 1e15
+LOG_SMALL_NUMBER = np.log(SMALL_NUMBER)
 LOG_LARGE_NUMBER = np.log(LARGE_NUMBER)
 
 
@@ -18,7 +19,7 @@ def robust_log(x: np.ndarray) -> np.ndarray:
     if x > SMALL_NUMBER:
         return np.log(x)
     else:
-        return np.log(x)
+        return LOG_SMALL_NUMBER
 
 
 @nb.vectorize(["float64(float64)", "float32(float32)"])
