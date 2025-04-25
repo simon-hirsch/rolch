@@ -3,7 +3,7 @@ from .johnsonsu import DistributionJSU
 from .normal import DistributionNormal, DistributionNormalMeanVariance
 from .studentt import DistributionT
 from .lognormal import DistributionLogNormal
-from .lognormal2 import DistributionLogNormal2
+from .lognormalmedian import DistributionLogNormalMedian
 
 __all__ = [
     "DistributionNormal",
@@ -12,5 +12,5 @@ __all__ = [
     "DistributionJSU",
     "DistributionGamma",
     "DistributionLogNormal",
-    "DistributionLogNormal2",
+    "DistributionLogNormalMedian",
 ]
