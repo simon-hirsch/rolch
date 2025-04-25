@@ -5,11 +5,6 @@ import numpy as np
 
 from .base import LinkFunction
 
-LOG_LOWER_BOUND = 1e-25
-EXP_UPPER_BOUND = 25
-SMALL_NUMBER = 1e-10
-
-
 SMALL_NUMBER = 1e-10
 LARGE_NUMBER = 1e10
 LOG_LARGE_NUMBER = np.log(LARGE_NUMBER)
@@ -34,9 +29,6 @@ def robust_log(x: np.ndarray) -> np.ndarray:
 def robust_exp(x: np.ndarray) -> np.ndarray:
     """
     A robust exponential function that handles large values.
-
-    This function returns the exponential of the input array, replacing
-    large values with a small positive number to avoid overflow.
     """
 
     if x > LOG_LARGE_NUMBER:
