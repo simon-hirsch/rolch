@@ -336,10 +336,10 @@ class ScipyMixin(ABC):
         param: int,
     ):
         unknown = np.arange(param, self.n_params)
-        opt = {}
+        decision = {}
         for i, value in zip(unknown, start):
-            opt[self.scipy_names[self.parameter_names[i]]] = value
-        return -np.sum(self.scipy_dist(**opt, **fixed).logpdf(y))
+            decision[self.scipy_names[self.parameter_names[i]]] = value
+        return -np.sum(self.scipy_dist(**decision, **fixed).logpdf(y))
 
     def calculate_conditional_initial_values(
         self,
