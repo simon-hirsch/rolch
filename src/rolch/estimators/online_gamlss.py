@@ -47,6 +47,7 @@ class OnlineGamlss(Estimator):
         step_size: float | Dict[int, float] = 1.0,
         verbose: int = 0,
         debug: bool = False,
+        param_order: np.ndarray | None = None,
     ):
         """The `OnlineGamlss()` provides the fit, update and predict methods for linear parametric GAMLSS models.
 
@@ -109,6 +110,15 @@ class OnlineGamlss(Estimator):
         self._process_attribute(regularize_intercept, False, "regularize_intercept")
         self._process_attribute(forget, default=0.0, name="forget")
         self._process_attribute(ic, "aic", name="ic")
+        self.param_order = param_order
+
+        if self.param_order is None:
+            self._param_order = np.arange(self.distribution.n_params)
+        else:
+            if all(i in self.param_order for i in range(self.distribution.n_params)):
+                self._param_order = self.param_order
+            else:
+                raise ValueError("All parameters should be in the param_order.")
 
         # Get the estimation method
         self._process_attribute(method, default="ols", name="method")
@@ -121,12 +131,14 @@ class OnlineGamlss(Estimator):
         # These are global for all distribution parameters
         self.max_it_outer = max_it_outer
         self.max_it_inner = max_it_inner
+        self.min_it_outer = 1
         self.abs_tol_outer = abs_tol_outer
         self.abs_tol_inner = abs_tol_inner
         self.rel_tol_outer = rel_tol_outer
         self.rel_tol_inner = rel_tol_inner
         self.rss_tol_inner = rss_tol_inner
         self._process_attribute(step_size, default=1.0, name="step_size")
+        self.cautious_updates = True
 
         self.debug = debug
         self.verbose = verbose
@@ -678,6 +690,35 @@ class OnlineGamlss(Estimator):
             self._print_message(message=message, level=1)
             self.schedule_iteration[0] = self.prefit_update
 
+        # Check if we think the new observations are outliers given current estiamtes
+        # lower = self.distribution.quantile(0.25, self.fv)
+        # upper = self.distribution.quantile(0.75, self.fv)
+
+        # if np.any(y < lower) or np.any(y > upper):
+        #     message = (
+        #         f"New observations are outliers given current estimates. "
+        #         f"Lower bound: {lower}, upper bound: {upper}"
+        #     )
+        #     self._print_message(message=message, level=0)
+        #     self.schedule_iteration[:2] = 1
+        #     self.schedule_step_size[:2, :, :] = 0.5
+        #     self.min_it_outer = 2
+
+        if self.cautious_updates:
+
+            lower = self.distribution.quantile(0.005, self.fv)
+            upper = self.distribution.quantile(0.995, self.fv)
+
+            if np.any(y < lower) or np.any(y > upper):
+                message = (
+                    f"New observations are outliers given current estimates. "
+                    f"Lower bound: {lower}, upper bound: {upper}"
+                )
+                self._print_message(message=message, level=0)
+                self.schedule_iteration[:2] = 1
+                self.schedule_step_size[:2, :, :] = 0.5
+                self.min_it_outer = 2
+
         message = "Starting update call"
         self._print_message(message=message, level=1)
         (
@@ -705,22 +746,23 @@ class OnlineGamlss(Estimator):
 
         while True:
             # Check relative congergence
-            if (
-                np.abs(global_dev_old - global_dev) / np.abs(global_dev_old)
-                < self.rel_tol_outer
-            ):
-                break
+            if it_outer > self.min_it_outer:
+                if (
+                    np.abs(global_dev_old - global_dev) / np.abs(global_dev_old)
+                    < self.rel_tol_outer
+                ):
+                    break
 
-            if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
-                break
+                if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
+                    break
 
-            if it_outer >= self.max_it_outer:
-                break
+                if it_outer >= self.max_it_outer:
+                    break
 
             global_dev_old = global_dev
             it_outer += 1
 
-            for param in range(self.distribution.n_params):
+            for param in self._param_order:
 
                 self.beta_iterations_inner[param][it_outer] = {}
                 self.beta_path_iterations_inner[param][it_outer] = {}
@@ -750,23 +792,23 @@ class OnlineGamlss(Estimator):
 
         while True:
             # Check relative congergence
+            if it_outer > self.min_it_outer:
+                if (
+                    np.abs(global_dev_old - global_dev) / np.abs(global_dev_old)
+                    < self.rel_tol_outer
+                ):
+                    break
 
-            if (
-                np.abs(global_dev_old - global_dev) / np.abs(global_dev_old)
-                < self.rel_tol_outer
-            ):
-                break
+                if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
+                    break
 
-            if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
-                break
-
-            if it_outer >= self.max_it_outer:
-                break
+                if it_outer >= self.max_it_outer:
+                    break
 
             global_dev_old = float(global_dev)
             it_outer += 1
 
-            for param in range(self.distribution.n_params):
+            for param in self._param_order:
 
                 self.beta_iterations_inner[param][it_outer] = {}
                 self.beta_path_iterations_inner[param][it_outer] = {}
@@ -909,7 +951,7 @@ class OnlineGamlss(Estimator):
                     self._print_message(message=message, level=1)
                     if it_outer == 1:
                         message = (
-                            "The model ended in a bad state in the first outer iteration. This is not a good sign.  \n"
+                            f"The model ended in a bad state in the first outer iteration of param {param}. This is not a good sign.  \n"
                             "Please check your data and model. \n"
                             "Please turn on logging (verbose=3, debug=True) and check the debug information. \n"
                             "Consider using a pre-fit via the iteration_schedule and set the inner iterations to 1-2 for the first outer iteration."
