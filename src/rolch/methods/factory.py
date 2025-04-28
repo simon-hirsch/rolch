@@ -1,6 +1,7 @@
 import copy
 
 from ..base import EstimationMethod
+from .elasticnet import ElasticNetPathMethod
 from .lasso_path import LassoPathMethod
 from .recursive_least_squares import OrdinaryLeastSquaresMethod
 
@@ -16,6 +17,9 @@ class EstimationMethodFactory:
             return LassoPathMethod()
         elif method == "ols":
             return OrdinaryLeastSquaresMethod()
+        elif method == "elasticnet":
+            print("Setting default alpha to 0.5.")
+            raise ElasticNetPathMethod(alpha=0.5)
         else:
             return ValueError("Did not recognize method. Please provide [ols, lasso].")
 
