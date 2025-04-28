@@ -14,7 +14,7 @@ class RidgePathMethod(ElasticNetPathMethod):
     equation _plus the intercept, if you fit one_. This allows to box-constrain the coefficients to a certain range.
 
     Furthermore, we allow to choose the start value, i.e. whether you want an update to be warm-started on the previous fit's path
-    or on the previous reguarlization strength or an average of both. If your data generating process is rather stable,
+    or on the previous regularization strength or an average of both. If your data generating process is rather stable,
     the `"previous_fit"` should give considerable speed gains, since warm starting on the previous strength is effectively batch-fitting.
 
     Lastly, we have some rather technical parameters like the number of coordinate descent iterations,
