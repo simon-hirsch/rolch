@@ -114,12 +114,6 @@ class RidgeMethod(EstimationMethod):
         return beta
 
     def update_beta(self, x_gram, y_gram, beta, is_regularized):
-        lambda_max = self._get_lambda_max(
-            x_gram=x_gram, y_gram=y_gram, is_regularized=is_regularized
-        )
-        lambda_path = np.geomspace(
-            lambda_max, lambda_max * self.lambda_eps, self.lambda_n
-        )
         beta, _ = online_coordinate_descent(
             x_gram=x_gram,
             y_gram=y_gram.squeeze(-1),
