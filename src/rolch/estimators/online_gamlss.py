@@ -796,6 +796,8 @@ class OnlineGamlss(Estimator):
                     theta=fv_it,
                     param=param,
                 )
+                message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Using conditional start value {fv_it[0, param]}."
+                self._print_message(message=message, level=3)
 
             eta = self.distribution.link_function(fv_it[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
