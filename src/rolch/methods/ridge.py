@@ -25,6 +25,7 @@ class RidgeMethod(EstimationMethod):
     def __init__(
         self,
         lambda_reg: float,
+        start_beta: np.ndarray | None = None,
         selection: Literal["cyclic", "random"] = "cyclic",
         beta_lower_bound: np.ndarray | None = None,
         beta_upper_bound: np.ndarray | None = None,
@@ -53,6 +54,7 @@ class RidgeMethod(EstimationMethod):
         self.selection = selection
         self.tolerance = tolerance
         self.max_iterations = max_iterations
+        self.start_beta = start_beta
 
     def _set_and_validate_bounds(self, x_gram: np.ndarray) -> None:
         J = x_gram.shape[1]
@@ -84,8 +86,18 @@ class RidgeMethod(EstimationMethod):
 
     def fit_beta(self, x_gram, y_gram, is_regularized):
         self._set_and_validate_bounds(x_gram=x_gram)
-        # Use OLS solution for initialization
-        beta = (x_gram @ y_gram).squeeze(-1)
+
+        if self.start_beta is not None:
+            # Use user-defined start value
+            beta = self.start_beta
+        else:
+            # Use OLS solution for initialization if x_gram is invertible
+            if np.linalg.matrix_rank(x_gram) == x_gram.shape[0]:
+                beta = np.linalg.inv(x_gram) @ y_gram
+            else:
+                # If x_gram is not invertible, initialize with zeros
+                beta = np.zeros(x_gram.shape[1])
+
         beta, _ = online_coordinate_descent(
             x_gram=x_gram,
             y_gram=y_gram.squeeze(-1),
