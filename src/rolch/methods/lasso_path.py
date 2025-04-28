@@ -26,7 +26,7 @@ class LassoPathMethod(ElasticNetPathMethod):
 
     def __init__(self, *args, **kwargs):
         """
-        Initializes lasso the method with the specified parameters.
+        Initializes the lasso method with the specified parameters.
 
         Parameters:
             lambda_n (int): Number of lambda values to use in the path. Default is 100.
