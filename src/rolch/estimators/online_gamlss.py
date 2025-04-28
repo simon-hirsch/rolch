@@ -35,6 +35,8 @@ class OnlineGamlss(Estimator):
         regularize_intercept: Union[bool, Dict[int, bool]] = False,
         ic: Union[str, Dict] = "aic",
         model_selection: Literal["local_rss", "global_ll"] = "local_rss",
+        prefit_initial: bool | int = False,
+        prefit_update: bool | int = False,
         max_it_outer: int = 30,
         max_it_inner: int = 30,
         abs_tol_outer: float = 1e-3,
@@ -130,6 +132,9 @@ class OnlineGamlss(Estimator):
         self.verbose = verbose
 
         self.is_regularized = {}
+
+        self.prefit_initial = int(prefit_initial)
+        self.prefit_update = int(prefit_update)
 
     @property
     def betas(self):
@@ -576,6 +581,21 @@ class OnlineGamlss(Estimator):
         self.sum_of_weights = {}
         self.mean_of_weights = {}
 
+        self.schedule_iteration = np.repeat(
+            self.max_it_inner, repeats=self.max_it_outer
+        )
+        if self.prefit_initial > 0:
+            message = (
+                "Setting max_it_inner to {self.prefit_initial} for first iteration"
+            )
+            self._print_message(message=message, level=1)
+            self.schedule_iteration[0] = self.prefit_initial
+
+        self.schedule_step_size = np.tile(
+            A=list(self.step_size.values()),
+            reps=(self.max_it_outer, self.max_it_inner, 1),
+        )
+
         message = "Starting fit call"
         self._print_message(message=message, level=1)
         (
@@ -652,6 +672,11 @@ class OnlineGamlss(Estimator):
         self.sum_of_weights_inner = copy.copy(self.sum_of_weights)
         self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
         self.model_selection_data_old = copy.copy(self.model_selection_data)
+
+        if self.prefit_update > 0:
+            message = "Setting max_it_inner to {self.prefit_update} for first iteration"
+            self._print_message(message=message, level=1)
+            self.schedule_iteration[0] = self.prefit_update
 
         message = "Starting update call"
         self._print_message(message=message, level=1)
@@ -780,15 +805,15 @@ class OnlineGamlss(Estimator):
         dv_iterations = np.repeat(dv_start, self.max_it_inner + 1)
         fv_it = copy.copy(self.fv)
         fv_it_new = copy.copy(self.fv)
-        step_it = self.step_size[param]
-        # print(step_it)
         step_decrease_counter = 0
         terminate = False
+        bad_state = False
 
-        for it_inner in range(self.max_it_inner):
+        for it_inner in range(self.schedule_iteration[it_outer - 1]):
             # We can improve the fit by taking the conditional
             # start values for the first outer iteration and the first inner iteration
             # as soon the first parameter is fitted.
+            step_it = self.schedule_step_size[it_outer - 1, it_inner, param]
 
             if (it_inner == 0) & (it_outer == 1) & (param >= 1):
                 fv_it = self.distribution.calculate_conditional_initial_values(
@@ -874,7 +899,7 @@ class OnlineGamlss(Estimator):
             if dv_increasing:
                 # print("Blabal")
                 step_decrease_counter += 1
-                step_it = step_it / 2
+                self.schedule_step_size[it_outer - 1, it_inner, param] = step_it / 2
                 self._print_message(
                     f"Deviance increasing, step size halved. {step_decrease_counter}",
                     level=1,
@@ -882,7 +907,16 @@ class OnlineGamlss(Estimator):
                 if step_decrease_counter > 5:
                     message = f"Step size too small. Parameter {param}, Outer iteration {it_outer}, Inner iteration {it_inner}."
                     self._print_message(message=message, level=1)
+                    if it_outer == 1:
+                        message = (
+                            "The model ended in a bad state in the first outer iteration. This is not a good sign.  \n"
+                            "Please check your data and model. \n"
+                            "Please turn on logging (verbose=3, debug=True) and check the debug information. \n"
+                            "Consider using a pre-fit via the iteration_schedule and set the inner iterations to 1-2 for the first outer iteration."
+                        )
+                        self._print_message(message=message, level=0)
                     terminate = True
+                    bad_state = True
 
             if (it_outer == 1) & (it_inner >= 1) | (it_outer >= 2):
                 # Allow to break in principle.
@@ -900,37 +934,37 @@ class OnlineGamlss(Estimator):
             if not dv_increasing:
                 # print("deviance decreasing, write to fv_it")
                 fv_it[:, param] = fv_it_new[:, param]
+                # Set the deviance for the next inner iteration
+                dv_iterations[(it_inner + 1) :] = dv_it
 
-            # Set the deviance for the next inner iteration
-            dv_iterations[it_inner + 1] = dv_it
+        if (not bad_state) | (it_outer == 1):
+            # Write everything to the class
+            self.x_gram[param] = x_gram_it
+            self.y_gram[param] = y_gram_it
+            self.beta[param] = beta_it
+            self.beta_path[param] = beta_path_it
+            self.fv[:, param] = fv_it_new[:, param]
 
-        # Write everything to the class
-        self.x_gram[param] = x_gram_it
-        self.y_gram[param] = y_gram_it
-        self.beta[param] = beta_it
-        self.beta_path[param] = beta_path_it
-        self.fv[:, param] = fv_it_new[:, param]
+            # Sum and mean of the weights
+            self.sum_of_weights[param] = np.sum(w * wt)
+            self.mean_of_weights[param] = np.mean(w * wt)
 
-        # Sum and mean of the weights
-        self.sum_of_weights[param] = np.sum(w * wt)
-        self.mean_of_weights[param] = np.mean(w * wt)
+            # RSS
+            self.rss[param] = rss_it
+            self.rss_iterations[param, it_outer - 1, it_inner - 1] = rss_it
 
-        # RSS
-        self.rss[param] = rss_it
-        self.rss_iterations[param, it_outer - 1, it_inner - 1] = rss_it
+            # TODO: Think where this should go (at all?)
+            # # Check if the local RSS are decreasing
+            # if (it_inner > 1) or (it_outer > 1):
+            #     if rss_it > (self.rss_tol_inner * self.rss[param]):
+            #         message = f"Inner iteration {it_inner}: Fitting Parameter {param}: Current RSS {rss_it} > {self.rss_tol_inner} * {self.rss[param]}"
+            #         self._print_message(message=message, level=3)
+            #         break
 
-        # TODO: Think where this should go (at all?)
-        # # Check if the local RSS are decreasing
-        # if (it_inner > 1) or (it_outer > 1):
-        #     if rss_it > (self.rss_tol_inner * self.rss[param]):
-        #         message = f"Inner iteration {it_inner}: Fitting Parameter {param}: Current RSS {rss_it} > {self.rss_tol_inner} * {self.rss[param]}"
-        #         self._print_message(message=message, level=3)
-        #         break
-
-        if self._method[param]._path_based_method:
-            self.model_selection_data[param] = model_selection_data_it
-            self.best_ic[param] = best_ic_it
-            self.best_ic_iterations[param, it_outer - 1, it_inner] = best_ic_it
+            if self._method[param]._path_based_method:
+                self.model_selection_data[param] = model_selection_data_it
+                self.best_ic[param] = best_ic_it
+                self.best_ic_iterations[param, it_outer - 1, it_inner] = best_ic_it
 
         return dv_it
 
@@ -955,11 +989,11 @@ class OnlineGamlss(Estimator):
         dv_iterations = np.repeat(dv_start, self.max_it_inner + 1)
         fv_it = copy.copy(self.fv)
         fv_it_new = copy.copy(self.fv)
-        step_it = self.step_size[param]
         step_decrease_counter = 0
         terminate = False
 
-        for it_inner in range(self.max_it_inner):
+        for it_inner in range(self.schedule_iteration[it_outer - 1]):
+            step_it = self.schedule_step_size[it_outer - 1, it_inner, param]
 
             eta = self.distribution.link_function(fv_it[:, param], param=param)
             dr = 1 / self.distribution.link_inverse_derivative(eta, param=param)
@@ -1057,9 +1091,8 @@ class OnlineGamlss(Estimator):
             dv_increasing = dv_it > dv_old
 
             if dv_increasing:
-                # print("Blabal")
                 step_decrease_counter += 1
-                step_it = step_it / 2
+                self.schedule_step_size[it_outer - 1, it_inner, param] = step_it / 2
                 self._print_message(
                     f"Deviance increasing, step size halved. {step_decrease_counter}",
                     level=1,
@@ -1068,6 +1101,7 @@ class OnlineGamlss(Estimator):
                     message = f"Step size too small. Parameter {param}, Outer iteration {it_outer}, Inner iteration {it_inner}."
                     self._print_message(message=message, level=1)
                     terminate = True
+                    # bad_state = True
 
             if (not dv_increasing) | (it_inner < self.max_it_inner - 1):
                 # Allow to break in principle.
@@ -1088,9 +1122,8 @@ class OnlineGamlss(Estimator):
             if not dv_increasing:
                 # print("deviance decreasing, write to fv_it")
                 fv_it[:, param] = fv_it_new[:, param]
-
-            # Set the deviance for the next inner iteration
-            dv_iterations[it_inner + 1] = dv_it
+                # Set the deviance for the next inner iteration
+                dv_iterations[(it_inner + 1) :] = dv_it
 
             # olddv = dv
             # di = -2 * self.distribution.logpdf(y, self.fv)
