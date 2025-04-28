@@ -92,8 +92,8 @@ def online_coordinate_descent(
                     denom = x_gram[j, j] + regularization * (1 - alpha)
                 else:
                     denom = x_gram[j, j]
-                beta_now[j] = np.minimum(
-                    np.maximum(update / denom, beta_lower_bound[j]), beta_upper_bound[j]
+                beta_now[j] = min(
+                    max(update / denom, beta_lower_bound[j]), beta_upper_bound[j]
                 )
         if np.max(np.abs(beta_now - beta_star)) <= tolerance * np.max(np.abs(beta_now)):
             break
