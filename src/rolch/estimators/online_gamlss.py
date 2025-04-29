@@ -598,7 +598,7 @@ class OnlineGamlss(Estimator):
         )
         if self.prefit_initial > 0:
             message = (
-                "Setting max_it_inner to {self.prefit_initial} for first iteration"
+                f"Setting max_it_inner to {self.prefit_initial} for first iteration"
             )
             self._print_message(message=message, level=1)
             self.schedule_iteration[0] = self.prefit_initial
@@ -756,6 +756,14 @@ class OnlineGamlss(Estimator):
                 if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
                     break
 
+                if global_dev > global_dev_old:
+                    message = (
+                        f"Outer iteration {it_outer}: Global deviance increased. Breaking."
+                        f"Current LL {global_dev}, old LL {global_dev_old}"
+                    )
+                    self._print_message(message=message, level=0)
+                    break
+
                 if it_outer >= self.max_it_outer:
                     break
 
@@ -803,6 +811,14 @@ class OnlineGamlss(Estimator):
                     break
 
                 if it_outer >= self.max_it_outer:
+                    break
+
+                if global_dev > global_dev_old:
+                    message = (
+                        f"Outer iteration {it_outer}: Global deviance increased. Breaking."
+                        f"Current LL {global_dev}, old LL {global_dev_old}"
+                    )
+                    self._print_message(message=message, level=0)
                     break
 
             global_dev_old = float(global_dev)
@@ -922,7 +938,7 @@ class OnlineGamlss(Estimator):
 
             # Calculate the prediction, residuals and RSS
             f = init_forget_vector(self.forget[param], self.n_observations)
-            prediction_it = X[param] @ beta_it.T
+            prediction_it = step_it * (X[param] @ beta_it.T) + (1 - step_it) * eta
             residuals_it = wv - prediction_it
             rss_it = np.sum(residuals_it**2 * wt * w * f) / np.mean(wt * w * f)
 
@@ -938,10 +954,10 @@ class OnlineGamlss(Estimator):
             message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Inner iteration {it_inner}: Current Deviance {dv_it}"
             self._print_message(message=message, level=3)
 
-            if dv_increasing:
+            if dv_increasing and it_inner < (self.schedule_iteration[it_outer - 1] - 1):
                 # print("Blabal")
                 step_decrease_counter += 1
-                self.schedule_step_size[it_outer - 1, it_inner, param] = step_it / 2
+                self.schedule_step_size[it_outer - 1, it_inner + 1, param] = step_it / 2
                 self._print_message(
                     f"Deviance increasing, step size halved. {step_decrease_counter}",
                     level=1,
