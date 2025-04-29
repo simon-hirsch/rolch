@@ -19,7 +19,7 @@ class EstimationMethodFactory:
             return OrdinaryLeastSquaresMethod()
         elif method == "elasticnet":
             print("Setting default alpha to 0.5.")
-            raise ElasticNetPathMethod(alpha=0.5)
+            return ElasticNetPathMethod(alpha=0.5)
         else:
             return ValueError("Did not recognize method. Please provide [ols, lasso].")
 
