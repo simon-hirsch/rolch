@@ -686,8 +686,7 @@ class OnlineGamlss(Estimator):
         self.model_selection_data_old = copy.copy(self.model_selection_data)
 
         if self.prefit_update > 0:
-            message = "Setting max_it_inner to {self.prefit_update} for first iteration"
-            self._print_message(message=message, level=1)
+            message = f"Setting max_it_inner to {self.prefit_update} for first iteration"
             self.schedule_iteration[0] = self.prefit_update
 
         # Check if we think the new observations are outliers given current estiamtes
