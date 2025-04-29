@@ -37,6 +37,7 @@ class OnlineGamlss(Estimator):
         model_selection: Literal["local_rss", "global_ll"] = "local_rss",
         prefit_initial: bool | int = False,
         prefit_update: bool | int = False,
+        cautious_updates: bool = False,
         max_it_outer: int = 30,
         max_it_inner: int = 30,
         abs_tol_outer: float = 1e-3,
@@ -138,7 +139,7 @@ class OnlineGamlss(Estimator):
         self.rel_tol_inner = rel_tol_inner
         self.rss_tol_inner = rss_tol_inner
         self._process_attribute(step_size, default=1.0, name="step_size")
-        self.cautious_updates = True
+        self.cautious_updates = cautious_updates
 
         self.debug = debug
         self.verbose = verbose
@@ -496,6 +497,15 @@ class OnlineGamlss(Estimator):
         )
         return out
 
+    def _make_iter_schedule(self):
+        return np.repeat(self.max_it_inner, repeats=self.max_it_outer)
+
+    def _make_step_size_schedule(self):
+        return np.tile(
+            A=list(self.step_size.values()),
+            reps=(self.max_it_outer, self.max_it_inner, 1),
+        )
+
     def fit(
         self,
         X: np.ndarray,
@@ -593,9 +603,9 @@ class OnlineGamlss(Estimator):
         self.sum_of_weights = {}
         self.mean_of_weights = {}
 
-        self.schedule_iteration = np.repeat(
-            self.max_it_inner, repeats=self.max_it_outer
-        )
+        self.schedule_iteration = self._make_iter_schedule()
+        self.schedule_step_size = self._make_step_size_schedule()
+
         if self.prefit_initial > 0:
             message = (
                 f"Setting max_it_inner to {self.prefit_initial} for first iteration"
@@ -605,11 +615,6 @@ class OnlineGamlss(Estimator):
             self.current_min_it_outer = int(self.prefit_initial)
         else:
             self.current_min_it_outer = int(self.min_it_outer)
-
-        self.schedule_step_size = np.tile(
-            A=list(self.step_size.values()),
-            reps=(self.max_it_outer, self.max_it_inner, 1),
-        )
 
         message = "Starting fit call"
         self._print_message(message=message, level=1)
@@ -688,6 +693,10 @@ class OnlineGamlss(Estimator):
         self.mean_of_weights_inner = copy.copy(self.mean_of_weights)
         self.model_selection_data_old = copy.copy(self.model_selection_data)
 
+        # Clean schedules for iterations and step size
+        self.schedule_iteration = self._make_iter_schedule()
+        self.schedule_step_size = self._make_step_size_schedule()
+
         if self.prefit_update > 0:
             message = (
                 f"Setting max_it_inner to {self.prefit_update} for first iteration"
@@ -695,20 +704,6 @@ class OnlineGamlss(Estimator):
             self._print_message(message=message, level=1)
             self.schedule_iteration[: self.prefit_update] = 1
             self.current_min_it_outer = int(self.prefit_update)
-
-        # Check if we think the new observations are outliers given current estiamtes
-        # lower = self.distribution.quantile(0.25, self.fv)
-        # upper = self.distribution.quantile(0.75, self.fv)
-
-        # if np.any(y < lower) or np.any(y > upper):
-        #     message = (
-        #         f"New observations are outliers given current estimates. "
-        #         f"Lower bound: {lower}, upper bound: {upper}"
-        #     )
-        #     self._print_message(message=message, level=0)
-        #     self.schedule_iteration[:2] = 1
-        #     self.schedule_step_size[:2, :, :] = 0.5
-        #     self.min_it_outer = 2
 
         if self.cautious_updates:
             lower = self.distribution.quantile(0.005, self.fv)
@@ -807,7 +802,7 @@ class OnlineGamlss(Estimator):
 
         while True:
             # Check relative congergence
-            if it_outer >= self.self.current_min_it_outer:
+            if it_outer >= self.current_min_it_outer:
                 if (
                     np.abs(global_dev_old - global_dev) / np.abs(global_dev_old)
                     < self.rel_tol_outer
