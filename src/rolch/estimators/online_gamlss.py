@@ -602,6 +602,9 @@ class OnlineGamlss(Estimator):
             )
             self._print_message(message=message, level=1)
             self.schedule_iteration[: self.prefit_initial] = 1
+            self.current_min_it_outer = int(self.prefit_initial)
+        else:
+            self.current_min_it_outer = int(self.min_it_outer)
 
         self.schedule_step_size = np.tile(
             A=list(self.step_size.values()),
@@ -689,7 +692,9 @@ class OnlineGamlss(Estimator):
             message = (
                 f"Setting max_it_inner to {self.prefit_update} for first iteration"
             )
-            self.schedule_iteration[0] = self.prefit_update
+            self._print_message(message=message, level=1)
+            self.schedule_iteration[: self.prefit_update] = 1
+            self.current_min_it_outer = int(self.prefit_update)
 
         # Check if we think the new observations are outliers given current estiamtes
         # lower = self.distribution.quantile(0.25, self.fv)
@@ -706,7 +711,6 @@ class OnlineGamlss(Estimator):
         #     self.min_it_outer = 2
 
         if self.cautious_updates:
-
             lower = self.distribution.quantile(0.005, self.fv)
             upper = self.distribution.quantile(0.995, self.fv)
 
@@ -718,7 +722,9 @@ class OnlineGamlss(Estimator):
                 self._print_message(message=message, level=0)
                 self.schedule_iteration[:2] = 1
                 self.schedule_step_size[:2, :, :] = 0.5
-                self.min_it_outer = 2
+                self.current_min_it_outer = 2
+            else:
+                self.current_min_it_outer = int(self.min_it_outer)
 
         message = "Starting update call"
         self._print_message(message=message, level=1)
@@ -747,7 +753,7 @@ class OnlineGamlss(Estimator):
 
         while True:
             # Check relative congergence
-            if it_outer > self.min_it_outer:
+            if it_outer >= self.current_min_it_outer:
                 if (
                     np.abs(global_dev_old - global_dev) / np.abs(global_dev_old)
                     < self.rel_tol_outer
@@ -801,7 +807,7 @@ class OnlineGamlss(Estimator):
 
         while True:
             # Check relative congergence
-            if it_outer > self.min_it_outer:
+            if it_outer >= self.self.current_min_it_outer:
                 if (
                     np.abs(global_dev_old - global_dev) / np.abs(global_dev_old)
                     < self.rel_tol_outer
