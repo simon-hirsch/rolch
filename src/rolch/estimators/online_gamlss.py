@@ -601,7 +601,7 @@ class OnlineGamlss(Estimator):
                 f"Setting max_it_inner to {self.prefit_initial} for first iteration"
             )
             self._print_message(message=message, level=1)
-            self.schedule_iteration[0] = self.prefit_initial
+            self.schedule_iteration[: self.prefit_initial] = 1
 
         self.schedule_step_size = np.tile(
             A=list(self.step_size.values()),
@@ -686,7 +686,9 @@ class OnlineGamlss(Estimator):
         self.model_selection_data_old = copy.copy(self.model_selection_data)
 
         if self.prefit_update > 0:
-            message = f"Setting max_it_inner to {self.prefit_update} for first iteration"
+            message = (
+                f"Setting max_it_inner to {self.prefit_update} for first iteration"
+            )
             self.schedule_iteration[0] = self.prefit_update
 
         # Check if we think the new observations are outliers given current estiamtes
