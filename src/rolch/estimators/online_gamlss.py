@@ -140,7 +140,7 @@ class OnlineGamlss(Estimator):
         self.rss_tol_inner = rss_tol_inner
         self._process_attribute(step_size, default=1.0, name="step_size")
         self.cautious_updates = cautious_updates
-
+        self.cond_start_val = False
         self.debug = debug
         self.verbose = verbose
 
@@ -504,7 +504,7 @@ class OnlineGamlss(Estimator):
         return np.tile(
             A=list(self.step_size.values()),
             reps=(self.max_it_outer, self.max_it_inner, 1),
-        )
+        ).astype(float)
 
     def fit(
         self,
@@ -869,13 +869,16 @@ class OnlineGamlss(Estimator):
         terminate = False
         bad_state = False
 
+        message = f"Starting inner iteration param {param}, outer iteration {it_outer}, start DV {dv_start}"
+        self._print_message(message=message, level=2)
+
         for it_inner in range(self.schedule_iteration[it_outer - 1]):
             # We can improve the fit by taking the conditional
             # start values for the first outer iteration and the first inner iteration
             # as soon the first parameter is fitted.
             step_it = self.schedule_step_size[it_outer - 1, it_inner, param]
 
-            if (it_inner == 0) & (it_outer == 1) & (param >= 1):
+            if (it_inner == 0) & (it_outer == 1) & (param >= 1) & self.cond_start_val:
                 fv_it = self.distribution.calculate_conditional_initial_values(
                     y=y,
                     theta=fv_it,
@@ -952,6 +955,10 @@ class OnlineGamlss(Estimator):
             dv_old = dv_iterations[it_inner]
             dv_increasing = dv_it > dv_old
 
+            # This should really not happen unless your start values are
+            # way to good and the model cannot reach these
+            bad_state = dv_iterations[0] > dv_it
+
             # print(dv_it, dv_old, dv_increasing)
             message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Inner iteration {it_inner}: Current Deviance {dv_it}"
             self._print_message(message=message, level=3)
@@ -967,16 +974,17 @@ class OnlineGamlss(Estimator):
                 if step_decrease_counter > 5:
                     message = f"Step size too small. Parameter {param}, Outer iteration {it_outer}, Inner iteration {it_inner}."
                     self._print_message(message=message, level=1)
-                    if it_outer == 1:
-                        message = (
-                            f"The model ended in a bad state in the first outer iteration of param {param}. This is not a good sign.  \n"
-                            "Please check your data and model. \n"
-                            "Please turn on logging (verbose=3, debug=True) and check the debug information. \n"
-                            "Consider using a pre-fit via the iteration_schedule and set the inner iterations to 1-2 for the first outer iteration."
-                        )
-                        self._print_message(message=message, level=0)
                     terminate = True
-                    bad_state = True
+
+            if (it_outer == 1) and bad_state:
+                message = (
+                    f"The model ended in a bad state in the first outer iteration of param {param}. This is not a good sign.  \n"
+                    f"The deviance increased from the start values to the current fit in inner iteration {it_inner}. \n"
+                    "Please check your data and model. \n"
+                    "Please turn on logging (verbose=3, debug=True) and check the debug information. \n"
+                    "Consider using a pre-fit via the iteration_schedule and set the inner iterations to 1-2 for the first outer iteration."
+                )
+                self._print_message(message=message, level=0)
 
             if (it_outer == 1) & (it_inner >= 1) | (it_outer >= 2):
                 # Allow to break in principle.
@@ -1161,7 +1169,6 @@ class OnlineGamlss(Estimator):
                     message = f"Step size too small. Parameter {param}, Outer iteration {it_outer}, Inner iteration {it_inner}."
                     self._print_message(message=message, level=1)
                     terminate = True
-                    # bad_state = True
 
             if (not dv_increasing) | (it_inner < self.max_it_inner - 1):
                 # Allow to break in principle.
