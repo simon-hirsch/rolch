@@ -550,6 +550,15 @@ class OnlineGamlss(Estimator):
             for p in range(self.distribution.n_params)
         }
 
+        for p, x in X_dict.items():
+            cond_num = np.linalg.cond(x)
+            if cond_num > 100:
+                message = (
+                    f"Condition number of X for after scaling (and adding an intercept) for param {p} is {cond_num}. "
+                    "This might lead to numerical issues. Consider using a regularized estimation method."
+                )
+                self._print_message(message=message, level=1)
+
         if self.debug:
             self._debug_X_dict = X_dict
             self._debug_X_scaled = X_scaled
@@ -706,18 +715,18 @@ class OnlineGamlss(Estimator):
             self.current_min_it_outer = int(self.prefit_update)
 
         if self.cautious_updates:
-            lower = self.distribution.quantile(0.005, self.fv)
-            upper = self.distribution.quantile(0.995, self.fv)
+            lower = self.distribution.quantile(0.005, self.fv).item()
+            upper = self.distribution.quantile(0.995, self.fv).item()
 
             if np.any(y < lower) or np.any(y > upper):
                 message = (
                     f"New observations are outliers given current estimates. "
-                    f"Lower bound: {lower}, upper bound: {upper}"
+                    f"y: {y}, Lower bound: {lower}, upper bound: {upper}"
                 )
-                self._print_message(message=message, level=0)
-                self.schedule_iteration[:2] = 1
-                self.schedule_step_size[:2, :, :] = 0.5
-                self.current_min_it_outer = 2
+                self._print_message(message=message, level=1)
+                self.schedule_iteration[:4] = 1
+                self.schedule_step_size[:4, :, :] = 0.25
+                self.current_min_it_outer = 4
             else:
                 self.current_min_it_outer = int(self.min_it_outer)
 
@@ -758,13 +767,13 @@ class OnlineGamlss(Estimator):
                 if np.abs(global_dev_old - global_dev) < self.abs_tol_outer:
                     break
 
-                if global_dev > global_dev_old:
-                    message = (
-                        f"Outer iteration {it_outer}: Global deviance increased. Breaking."
-                        f"Current LL {global_dev}, old LL {global_dev_old}"
-                    )
-                    self._print_message(message=message, level=0)
-                    break
+                # if global_dev > global_dev_old:
+                #     message = (
+                #         f"Outer iteration {it_outer}: Global deviance increased. Breaking."
+                #         f"Current LL {global_dev}, old LL {global_dev_old}"
+                #     )
+                #     self._print_message(message=message, level=1)
+                #     break
 
                 if it_outer >= self.max_it_outer:
                     break
@@ -919,11 +928,29 @@ class OnlineGamlss(Estimator):
             )
             # Select the model if we have a path-based method
             if self._method[param]._path_based_method:
-                beta_path_it = self._method[param].fit_beta_path(
-                    x_gram=x_gram_it,
-                    y_gram=y_gram_it,
-                    is_regularized=self.is_regularized[param],
-                )
+                if (it_inner == 0) & (it_outer == 1):
+                    beta_path_it = self._method[param].fit_beta_path(
+                        x_gram=x_gram_it,
+                        y_gram=y_gram_it,
+                        is_regularized=self.is_regularized[param],
+                    )
+                elif it_inner > 0:
+                    beta_path_it = self._method[param].update_beta_path(
+                        x_gram=x_gram_it,
+                        y_gram=y_gram_it,
+                        is_regularized=self.is_regularized[param],
+                        beta_path=beta_path_it,
+                    )
+                elif (it_outer > 1) & (it_inner == 0):
+                    beta_path_it = self._method[param].update_beta_path(
+                        x_gram=x_gram_it,
+                        y_gram=y_gram_it,
+                        is_regularized=self.is_regularized[param],
+                        beta_path=self.beta_path[param],
+                    )
+                else:
+                    print("This should not happen")
+
                 beta_it, model_selection_data_it, best_ic_it = self.fit_select_model(
                     X=X[param],
                     y=wv,
@@ -957,7 +984,7 @@ class OnlineGamlss(Estimator):
 
             # This should really not happen unless your start values are
             # way to good and the model cannot reach these
-            bad_state = dv_iterations[0] > dv_it
+            bad_state = dv_it > dv_iterations[0]
 
             # print(dv_it, dv_old, dv_increasing)
             message = f"Outer iteration {it_outer}: Fitting Parameter {param}: Inner iteration {it_inner}: Current Deviance {dv_it}"
@@ -976,16 +1003,6 @@ class OnlineGamlss(Estimator):
                     self._print_message(message=message, level=1)
                     terminate = True
 
-            if (it_outer == 1) and bad_state:
-                message = (
-                    f"The model ended in a bad state in the first outer iteration of param {param}. This is not a good sign.  \n"
-                    f"The deviance increased from the start values to the current fit in inner iteration {it_inner}. \n"
-                    "Please check your data and model. \n"
-                    "Please turn on logging (verbose=3, debug=True) and check the debug information. \n"
-                    "Consider using a pre-fit via the iteration_schedule and set the inner iterations to 1-2 for the first outer iteration."
-                )
-                self._print_message(message=message, level=0)
-
             if (it_outer == 1) & (it_inner >= 1) | (it_outer >= 2):
                 # Allow to break in principle.
                 if abs(dv_old - dv_it) <= self.abs_tol_inner:
@@ -996,6 +1013,17 @@ class OnlineGamlss(Estimator):
                     message = f"Reached max inner iteration in inner fit. Parameter:{param}, Outer iteration: {it_outer}, Inner iteration: {it_inner}."
                     self._print_message(message=message, level=3)
                     terminate = True
+
+            if terminate and (it_outer == 1) and bad_state:
+                message = (
+                    f"The model ended in a bad state in the first outer iteration of param {param}. This is not a good sign.  \n"
+                    f"The deviance increased from the start values to the current fit in inner iteration {it_inner}. \n"
+                    f"The deviance is {dv_it} and the starting deviance for this inner iterations is {dv_iterations[0]}. \n"
+                    "Please check your data and model. \n"
+                    "Please turn on logging (verbose=3, debug=True) and check the debug information. \n"
+                    "Consider using a pre-fit via the iteration_schedule and set the inner iterations to 1-2 for the first outer iteration."
+                )
+                self._print_message(message=message, level=0)
 
             if terminate:
                 break
@@ -1078,6 +1106,7 @@ class OnlineGamlss(Estimator):
                 self._debug_dl1dlp1[key] = copy.copy(dl1dp1)
                 self._debug_dl2dlp2[key] = copy.copy(dl2dp2)
                 self._debug_eta[key] = copy.copy(eta)
+                # self._debug_x[key] = copy.copy(X[param])
 
             x_gram_it = self._method[param].update_x_gram(
                 gram=self.x_gram[param],
