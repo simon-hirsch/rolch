@@ -47,11 +47,7 @@ class DistributionLogNormal(ScipyMixin, Distribution):
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
         mu = theta[:, 0]
         sigma = theta[:, 1]
-        return {
-            "s": sigma,
-            "scale": np.exp(mu),
-            "loc": 0
-        }
+        return {"s": sigma, "scale": np.exp(mu), "loc": 0}
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -70,8 +66,7 @@ class DistributionLogNormal(ScipyMixin, Distribution):
             return -1 / (sigma**2)
 
         if param == 1:
-            return -2 / (sigma **2)
-
+            return -2 / (sigma**2)
 
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
@@ -88,4 +83,3 @@ class DistributionLogNormal(ScipyMixin, Distribution):
             return np.full_like(y, np.mean(log_y, axis=axis))
         if param == 1:
             return np.full_like(y, np.std(log_y, axis=axis))
-
