@@ -358,6 +358,8 @@ class OnlineGamlss(Estimator):
         # - Consider the interation with the local RSS criterion?!
         f = init_forget_vector(self.forget[param], self.n_observations)
         n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
+        n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
+
         prediction_path = X @ beta_path.T
 
         if self.model_selection == "local_rss":
@@ -366,7 +368,7 @@ class OnlineGamlss(Estimator):
             rss = rss / np.mean(wt * w * f)
             ic = InformationCriterion(
                 n_observations=self.n_training[param],
-                n_parameters=n_nonzero_coef,
+                n_parameters=n_nonzero_coef + n_nonzero_coef_other,
                 criterion=self.ic[param],
             ).from_rss(rss=rss)
             best_ic = np.argmin(ic)
@@ -381,7 +383,6 @@ class OnlineGamlss(Estimator):
                     prediction_path[:, i], param=param
                 )
                 ll[i] = np.sum(f * self.distribution.logpdf(y, theta))
-            n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
             ic = InformationCriterion(
                 n_observations=self.n_training[param],
                 n_parameters=n_nonzero_coef + n_nonzero_coef_other,
