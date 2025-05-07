@@ -37,6 +37,7 @@ from .gram import (
 )
 from .information_criteria import InformationCriterion
 from .link import (
+    GenericInverseLink,
     IdentityLink,
     InverseSoftPlusLink,
     InverseSoftPlusShiftTwoLink,
@@ -45,15 +46,17 @@ from .link import (
     LogLink,
     LogShiftTwoLink,
     LogShiftValueLink,
+    ScaledInverseSigmoidLink,
+    ScaledSigmoidLink,
     SqrtLink,
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
 )
 from .methods import (
+    ElasticNetPathMethod,
     LassoPathMethod,
     OrdinaryLeastSquaresMethod,
     RidgeMethod,
-    ElasticNetPathMethod,
 )
 from .scaler import OnlineScaler
 from .utils import (
@@ -86,6 +89,9 @@ __all__ = [
     "InverseSoftPlusLink",
     "InverseSoftPlusShiftValueLink",
     "InverseSoftPlusShiftTwoLink",
+    "ScaledInverseSigmoidLink",
+    "ScaledSigmoidLink",
+    "GenericInverseLink",
     "DistributionNormal",
     "DistributionNormalMeanVariance",
     "DistributionT",
