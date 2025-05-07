@@ -35,11 +35,12 @@ from .gram import (
     update_inverted_gram,
     update_y_gram,
 )
-from .information_criteria import (
-    InformationCriterion,
-)
+from .information_criteria import InformationCriterion
 from .link import (
     IdentityLink,
+    InverseSoftPlusLink,
+    InverseSoftPlusShiftTwoLink,
+    InverseSoftPlusShiftValueLink,
     LogIdentLink,
     LogLink,
     LogShiftTwoLink,
@@ -75,6 +76,9 @@ __all__ = [
     "SqrtLink",
     "SqrtShiftValueLink",
     "SqrtShiftTwoLink",
+    "InverseSoftPlusLink",
+    "InverseSoftPlusShiftValueLink",
+    "InverseSoftPlusShiftTwoLink",
     "DistributionNormal",
     "DistributionNormalMeanVariance",
     "DistributionT",
