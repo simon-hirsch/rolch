@@ -49,7 +49,12 @@ from .link import (
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
 )
-from .methods import LassoPathMethod, OrdinaryLeastSquaresMethod
+from .methods import (
+    LassoPathMethod,
+    OrdinaryLeastSquaresMethod,
+    RidgeMethod,
+    ElasticNetPathMethod,
+)
 from .scaler import OnlineScaler
 from .utils import (
     calculate_asymptotic_training_length,
@@ -67,6 +72,8 @@ __all__ = [
     "OnlineLinearModel",
     "OnlineLasso",
     "LassoPathMethod",
+    "RidgeMethod",
+    "ElasticNetPathMethod",
     "OrdinaryLeastSquaresMethod",
     "IdentityLink",
     "LogLink",
