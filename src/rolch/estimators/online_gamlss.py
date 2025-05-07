@@ -359,7 +359,6 @@ class OnlineGamlss(Estimator):
         f = init_forget_vector(self.forget[param], self.n_observations)
         n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
         n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
-        # print(f, f.shape)
 
         prediction_path = X @ beta_path.T
 
@@ -383,11 +382,8 @@ class OnlineGamlss(Estimator):
                 theta[:, param] = self.distribution.link_inverse(
                     prediction_path[:, i], param=param
                 )
-                # print(self.distribution.logpdf(y, theta)[:3])
                 ll[i] = np.sum(f * self.distribution.logpdf(y, theta))
-                # print(theta[:3, :])
 
-            # print(ll)
             ic = InformationCriterion(
                 n_observations=self.n_training[param],
                 n_parameters=n_nonzero_coef + n_nonzero_coef_other,
