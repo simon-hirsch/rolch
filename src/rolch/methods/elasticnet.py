@@ -52,7 +52,7 @@ class ElasticNetPathMethod(EstimationMethod):
         max_iterations: int = 1000,
     ):
         """
-        Initializes the RidgePath method with the specified parameters.
+        Initializes the ElasticNet method with the specified parameters.
 
         Parameters:
             lambda_n (int): Number of lambda values to use in the path. Default is 100.

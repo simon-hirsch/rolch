@@ -43,6 +43,6 @@ More information on coordinate descent can also be found on this [page](coordina
 
 ::: rolch.LassoPathMethod
 
-::: rolch.RidgePathMethod
+::: rolch.RidgeMethod
 
 ::: rolch.ElasticNetPathMethod
