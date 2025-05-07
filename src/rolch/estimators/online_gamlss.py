@@ -960,6 +960,8 @@ class OnlineGamlss(Estimator):
                     beta_path=beta_path_it,
                     param=param,
                 )
+                self.best_ic_iterations[param, it_outer - 1, it_inner] = best_ic_it
+
             else:
                 beta_path_it = None
                 beta_it = self._method[param].fit_beta(
@@ -1060,7 +1062,6 @@ class OnlineGamlss(Estimator):
             if self._method[param]._path_based_method:
                 self.model_selection_data[param] = model_selection_data_it
                 self.best_ic[param] = best_ic_it
-                self.best_ic_iterations[param, it_outer - 1, it_inner] = best_ic_it
 
         return dv_it
 
