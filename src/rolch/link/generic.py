@@ -25,11 +25,11 @@ class GenericInverseLink(LinkFunction):
             link_support (Tuple): The support of the link function
         """
         self.link_function = link_function
-        self.link_support = link_support
+        self._link_support = link_support
 
     @property
     def link_support(self) -> Tuple[float, float]:
-        return (self.link_support[0], self.link_support[1])
+        return (self._link_support[0], self._link_support[1])
 
     def link(self, x: np.ndarray) -> np.ndarray:
         return self.link_function.inverse(x)
