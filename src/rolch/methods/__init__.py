@@ -7,7 +7,6 @@ from .recursive_least_squares import OrdinaryLeastSquaresMethod
 __all__ = [
     "get_estimation_method",
     "LassoPathMethod",
-    "RidgePathMethod",
     "RidgeMethod",
     "ElasticnetPathMethod",
     "OrdinaryLeastSquaresMethod",
