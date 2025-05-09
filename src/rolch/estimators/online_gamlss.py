@@ -1037,7 +1037,7 @@ class OnlineGamlss(Estimator):
                 # Set the deviance for the next inner iteration
                 dv_iterations[(it_inner + 1) :] = dv_it
 
-        if (not bad_state) | (it_outer == 1):
+        if (not bad_state) or (it_outer == 1):
             # Write everything to the class
             self.x_gram[param] = x_gram_it
             self.y_gram[param] = y_gram_it
