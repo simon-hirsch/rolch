@@ -889,7 +889,7 @@ class OnlineGamlss(Estimator):
             # as soon the first parameter is fitted.
             step_it = self.schedule_step_size[it_outer - 1, it_inner, param]
 
-            if (it_inner == 0) & (it_outer == 1) & (param >= 1) & self.cond_start_val:
+            if (it_inner == 0) and (it_outer == 1) and (param >= 1) and self.cond_start_val:
                 fv_it = self.distribution.calculate_conditional_initial_values(
                     y=y,
                     theta=fv_it,
