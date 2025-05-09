@@ -200,7 +200,7 @@ class DistributionJSU(ScipyMixin, Distribution):
             if param == 2:
                 return np.zeros_like(y)
             if param == 3:
-                return np.repeat(0.5, y.shape)
+                return np.full_like(y, 0.5)
         else:
             params = st.johnsonsu.fit(y)
             if param == 0:
