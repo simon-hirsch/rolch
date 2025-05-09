@@ -39,6 +39,7 @@ class DistributionJSU(ScipyMixin, Distribution):
         scale_link: LinkFunction = LogLink(),
         skew_link: LinkFunction = IdentityLink(),
         tail_link: LinkFunction = LogLink(),
+        use_gamlss_init_values: bool = False,
     ) -> None:
         super().__init__(
             links={
@@ -48,6 +49,7 @@ class DistributionJSU(ScipyMixin, Distribution):
                 3: tail_link,
             }
         )
+        self.gamlss_init_values = use_gamlss_init_values
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -190,12 +192,22 @@ class DistributionJSU(ScipyMixin, Distribution):
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
-        params = st.johnsonsu.fit(y)
-        if param == 0:
-            return np.repeat(params[2], y.shape[0])
-        if param == 1:
-            return np.repeat(params[3], y.shape[0])
-        if param == 2:
-            return np.full_like(y, params[0])
-        if param == 3:
-            return np.full_like(y, params[1])
+        if self.gamlss_init_values:
+            if param == 0:
+                return (np.repeat(np.mean(y), y.shape[0]) + y) / 2
+            if param == 1:
+                return np.full_like(y, 0.1)
+            if param == 2:
+                return np.zeros_like(y)
+            if param == 3:
+                return np.full_like(y, 0.5)
+        else:
+            params = st.johnsonsu.fit(y)
+            if param == 0:
+                return np.full_like(y, params[2])
+            if param == 1:
+                return np.full_like(y, params[3])
+            if param == 2:
+                return np.full_like(y, params[0])
+            if param == 3:
+                return np.full_like(y, params[1])

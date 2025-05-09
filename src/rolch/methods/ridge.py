@@ -1,8 +1,9 @@
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 import numpy as np
-from ..coordinate_descent import online_coordinate_descent
+
 from ..base import EstimationMethod
+from ..coordinate_descent import online_coordinate_descent
 from ..gram import init_gram, init_y_gram, update_gram, update_y_gram
 
 
@@ -24,7 +25,7 @@ class RidgeMethod(EstimationMethod):
 
     def __init__(
         self,
-        lambda_reg: float,
+        lambda_reg: float | None = None,
         start_beta: np.ndarray | None = None,
         selection: Literal["cyclic", "random"] = "cyclic",
         beta_lower_bound: np.ndarray | None = None,
@@ -36,7 +37,7 @@ class RidgeMethod(EstimationMethod):
         Initializes the Ridge method with the specified parameters.
 
         Parameters:
-            lambda_reg (float): Regularization parameter. Must be greater than 0. Higher values lead to more regularization.
+            lambda_reg (float): Regularization parameter. Must be greater than 0. Higher values lead to more regularization. If not set, the average variance of the features is used as the default.
             selection (Literal["cyclic", "random"]): Method to select features during the path. Default is "cyclic".
             beta_lower_bound (np.ndarray | None): Lower bound for the coefficients. Default is None.
             beta_upper_bound (np.ndarray | None): Upper bound for the coefficients. Default is None.
@@ -99,6 +100,9 @@ class RidgeMethod(EstimationMethod):
             else:
                 # If x_gram is not invertible, initialize with zeros
                 beta = np.zeros(x_gram.shape[1])
+
+        if self.lambda_reg is None:
+            self.lambda_reg = np.linalg.trace(x_gram) / x_gram.shape[0]
 
         # Ensure that beta is a column vector
         if beta.ndim > 1:
