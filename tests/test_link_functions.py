@@ -6,6 +6,8 @@ import pytest
 
 from rolch import (
     IdentityLink,
+    InverseSoftPlusLink,
+    InverseSoftPlusShiftValueLink,
     LogIdentLink,
     LogLink,
     LogShiftValueLink,
@@ -19,8 +21,8 @@ from rolch import (
 # at the moment since they derive from the ShiftValueLink
 
 REAL_LINE_LINKS = [IdentityLink]
-POSITIVE_LINE_LINKS = [LogLink, SqrtLink, LogIdentLink]
-SHIFTED_LINKS = [LogShiftValueLink, SqrtShiftValueLink]
+POSITIVE_LINE_LINKS = [LogLink, SqrtLink, LogIdentLink, InverseSoftPlusLink]
+SHIFTED_LINKS = [LogShiftValueLink, SqrtShiftValueLink, InverseSoftPlusShiftValueLink]
 VALUES = np.array([2, 5, 10, 25, 100])
 M = 10000
 
