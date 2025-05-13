@@ -23,6 +23,7 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
+    DistributionLogNormalMedian,
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -88,6 +89,7 @@ __all__ = [
     "InverseSoftPlusShiftTwoLink",
     "DistributionNormal",
     "DistributionNormalMeanVariance",
+    "DistributionLogNormalMedian",
     "DistributionT",
     "DistributionJSU",
     "DistributionGamma",
