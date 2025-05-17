@@ -406,16 +406,21 @@ class OnlineGamlss(Estimator):
         model_selection_data: Any,
         param: int,
     ):
+        f = init_forget_vector(self.forget[param], y.shape[0])
         n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
         prediction_path = X @ beta_path.T
         if self.model_selection == "local_rss":
             # Denominator
+            # TODO: This should go in the online mean update function.
             denom = online_mean_update(
-                self.mean_of_weights[param], wt, self.forget[param], self.n_observations
+                self.mean_of_weights[param],
+                wt,
+                self.forget[param],
+                self.n_observations,
             )
-            residuals = wv - prediction_path
+            residuals = wv[:, None] - prediction_path
             rss = (
-                np.sum((residuals**2) * wt * w, axis=0)
+                np.sum((residuals**2) * w[:, None] * wt[:, None] * f[:, None], axis=0)
                 + (1 - self.forget[param]) ** y.shape[0]
                 * (model_selection_data * self.mean_of_weights[param])
             ) / denom
@@ -435,7 +440,7 @@ class OnlineGamlss(Estimator):
                 theta[:, param] = self.distribution.link_inverse(
                     prediction_path[:, i], param=param
                 )
-                ll[i] = np.sum(w * self.distribution.logpdf(y, theta))
+                ll[i] = np.sum(w * f * self.distribution.logpdf(y, theta))
             ll = ll + (1 - self.forget[param]) ** y.shape[0] * model_selection_data
 
             ic = InformationCriterion(
@@ -889,7 +894,12 @@ class OnlineGamlss(Estimator):
             # as soon the first parameter is fitted.
             step_it = self.schedule_step_size[it_outer - 1, it_inner, param]
 
-            if (it_inner == 0) and (it_outer == 1) and (param >= 1) and self.cond_start_val:
+            if (
+                (it_inner == 0)
+                and (it_outer == 1)
+                and (param >= 1)
+                and self.cond_start_val
+            ):
                 fv_it = self.distribution.calculate_conditional_initial_values(
                     y=y,
                     theta=fv_it,
@@ -1163,7 +1173,7 @@ class OnlineGamlss(Estimator):
 
             denom = online_mean_update(
                 self.mean_of_weights[param],
-                np.mean(wt),
+                wt,
                 self.forget[param],
                 self.n_observations,
             )
