@@ -10,7 +10,8 @@ from ..link import LogitLink
 
 SMALL_NUMBER = 1e-10
 LARGE_NUMBER = 1e+10
-
+LOG_LOWER_BOUND = 1e-25
+EXP_UPPER_BOUND = 25
 
 class DistributionBeta(ScipyMixin, Distribution):
     """The Beta Distribution for GAMLSS.
@@ -52,8 +53,8 @@ class DistributionBeta(ScipyMixin, Distribution):
 
 
     Args:
-        loc_link (LinkFunction, optional): The link function for $\mu$. Defaults to  LogitLink()
-        scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LogitLink()
+        loc_link (LinkFunction, optional): The link function for $\mu$. Defaults to  LOGIT
+        scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LOGIT
     """
 
     corresponding_gamlss: str = "BE"
@@ -154,14 +155,14 @@ class DistributionBeta(ScipyMixin, Distribution):
                 spc.polygamma(1, alpha + beta)
                 )'''         ####breaks here for log link instead of logit 
         
-            '''return - (4 / sigma**3) * ( mu**2 * spc.polygamma(1, np.fmax(alpha, SMALL_NUMBER)) + (1-mu)**2 * 
+            return - (4 / sigma**3) * ( mu**2 * spc.polygamma(1, np.fmax(alpha, SMALL_NUMBER)) + (1-mu)**2 * 
                 spc.polygamma(1, np.fmax(beta, SMALL_NUMBER)) -
                 spc.polygamma(1, np.fmax(alpha + beta, SMALL_NUMBER))
-                )'''
-            return - (4 / safe_sigma**3) * ( mu**2 * spc.polygamma(1, safe_alpha) + (1-mu)**2 * 
+                )
+            '''return - (4 / safe_sigma**3) * ( mu**2 * spc.polygamma(1, safe_alpha) + (1-mu)**2 * 
                 spc.polygamma(1, safe_beta) -
                 spc.polygamma(1, safe_alpha + safe_beta)
-                )
+                )'''
             
 
     def dl2_dpp(
@@ -178,15 +179,15 @@ class DistributionBeta(ScipyMixin, Distribution):
             safe_alpha = np.fmax(alpha, SMALL_NUMBER)
             safe_beta = np.fmax(beta, SMALL_NUMBER)
 
-            '''return ( 2*(1 - sigma**2) / sigma**5 ) * ( 
+            return ( 2*(1 - sigma**2) / sigma**5 ) * ( 
                 mu*spc.polygamma(1, np.fmax(alpha, SMALL_NUMBER)) - (1 - mu) * 
                 spc.polygamma(1, np.fmax(beta, SMALL_NUMBER))
-                )'''
+                )
         
-            return ( 2*(1 - safe_sigma**2) / safe_sigma**5 ) * ( 
+            '''return ( 2*(1 - safe_sigma**2) / safe_sigma**5 ) * ( 
                 mu*spc.polygamma(1, safe_alpha) - (1 - mu) * 
                 spc.polygamma(1, safe_beta)
-                ) 
+                )''' 
 
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
