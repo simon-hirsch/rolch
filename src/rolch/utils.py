@@ -91,11 +91,12 @@ def online_mean_update(
     forget: float,
     n_seen: int,
 ) -> float:
-    """Update the average with a new value using an online mean update.
+    """Update the average with a new value or an array of values using an online mean update.
 
     Args:
         avg (float): The current average.
-        value (float): The new value to update the average with.
+        value (float | np.ndarray): The new value or array of values to update the average with.
+            If `value` is an array, the average is updated iteratively for each element.
         forget (float): The forgetting factor.
         n_seen (int): The number of observations seen so far.
 
