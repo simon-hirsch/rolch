@@ -51,5 +51,5 @@ def test_normal_distribution():
         dl2_dp2_1, dl2_dp2_1_r
     ), "Second derivative wrt sigma doesn't match"
     assert np.allclose(
-        dl2_dpp, dl2_dpp_r + 1
+        dl2_dpp, dl2_dpp_r
     ), "Second derivative wrt mu and sigma doesn't match"
