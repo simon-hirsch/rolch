@@ -4,7 +4,6 @@ from .normal import DistributionNormal, DistributionNormalMeanVariance
 from .studentt import DistributionT
 from .lognormal import DistributionLogNormal
 from .lognormalmedian import DistributionLogNormalMedian
-from .exponential import DistributionExponential
 
 __all__ = [
     "DistributionNormal",
@@ -14,5 +13,4 @@ __all__ = [
     "DistributionGamma",
     "DistributionLogNormal",
     "DistributionLogNormalMedian",
-    "DistributionExponential",
 ]
