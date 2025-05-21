@@ -1,3 +1,4 @@
+# %%
 import numpy as np
 from rolch import DistributionNormal
 
@@ -16,7 +17,6 @@ def test_normal_distribution():
     # dist$d2ldd2(sigma)
     # dist$d2ldmdd(y)
 
-    print("Testing normal distribution derivatives")
     y = np.array([0.3, 0.3, 0.3])
     theta = np.array(
         [

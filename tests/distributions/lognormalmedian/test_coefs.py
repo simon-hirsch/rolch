@@ -8,7 +8,7 @@ y = mtcars[:, 0]
 X = mtcars[:, 1:]
 
 
-def test_LogNormalMedian_distribution():
+def test_lognormalmedian_distribution():
     # Run R code to get coefficients
     # library("gamlss")
     # data(mtcars)
