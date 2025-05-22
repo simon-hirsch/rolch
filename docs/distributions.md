@@ -7,15 +7,28 @@ This serves as reference for all distribution objects that we implement in the `
 
 All distributions are based on `scipy.stats` distributions. We implement the probability density function (PDF), the cumulative density function (CDF), the percentage point or quantile function (PPF) and the random variates (RVS) accordingly as pass-through. The link functions are implemented in the same way as in GAMLSS ([Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)). The link functions and their derivatives derive from the `LinkFunction` base class.
 
+
+## Base Classes
+
+| Base Distribution | Description |
+|------------------|-------------|
+| [`Distribution`](#rolch.Distribution) | Base class for all distributions. |
+| [`ScipyMixin`](#rolch.base.ScipyMixin) | Base class for all distributions that are based on `scipy`. |
+
+
 ## List of Distributions
 
 | Distribution         | Description                                      | `scipy` Equivalent          |
 |----------------------|--------------------------------------------------|---------------------------|
 | [`DistributionNormal`](#rolch.DistributionNormal) | Gaussian (mean and standard deviation) | `scipy.stats.norm` |
 | [`DistributionNormalMeanVariance`](#rolch.DistributionNormalMeanVariance) | Gaussian (mean and variance) | `scipy.stats.norm` |
-| [`DistributionT`](#rolch.DistributionT)           | Student's T distribution       | `scipy.stats.t`     |
+| [`DistributionT`](#rolch.DistributionT)           | Student's $t$ distribution       | `scipy.stats.t`     |
 | [`DistributionJSU`](#rolch.DistributionJSU)       | Johnson's SU distribution      | `scipy.stats.johnsonsu` |
 | [`DistributionGamma`](#rolch.DistributionGamma)   | Gamma distribution             | `scipy.stats.gamma` |
+| [`DistributionLogNormal`](#rolch.DistributionLogNormal) | Log-normal distribution        | `scipy.stats.lognorm` |
+| [`DistributionLogNormalMedian`](#rolch.DistributionLogNormalMedian) | Log-normal distribution (median) | - |
+
+
 
 ## API Reference
 
@@ -28,6 +41,10 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ::: rolch.DistributionJSU
 
 ::: rolch.DistributionGamma
+
+::: rolch.DistributionLogNormal
+
+::: rolch.DistributionLogNormalMedian
 
 
 ## Base Class

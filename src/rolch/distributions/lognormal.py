@@ -13,15 +13,13 @@ class DistributionLogNormal(ScipyMixin, Distribution):
 
     The probability density function of the distribution is defined as:
     $$
-        f(y | \mu, \sigma) = \frac{1}{y\sigma\sqrt{2\pi}}
-        \exp\left(-\frac{(\log y - \mu)^2}{2\sigma^2}\right).
+    f(y | \\mu, \\sigma) = \\frac{1}{y\\sigma\\sqrt{2\\pi}}\\exp\\left(-\\frac{(\log y - \\mu)^2}{2\\sigma^2}\\right).
     $$
-    respectively
+     respectively
     $$
-        f(y | \theta_0, \theta_1) = \frac{1}{y\theta_1\sqrt{2\pi}}
-        \exp\left(-\frac{(\log y - \theta_0)^2}{2\theta_1^2}\right).
+    f(y | \\theta_0, \\theta_1) = \\frac{1}{y\\theta_1\\sqrt{2\pi}}\exp\\left(-\\frac{(\\log y - \\theta_0)^2}{2\\theta_1^2}\\right).
     $$
-    where $y$ is the observed data, $\mu = \theta_0$ is the location parameter and $\sigma = \theta_1$ is the scale parameter.
+    where $y$ is the observed data, $\\mu = \\theta_0$ is the location parameter and $\\sigma = \\theta_1$ is the scale parameter.
 
     """
 
