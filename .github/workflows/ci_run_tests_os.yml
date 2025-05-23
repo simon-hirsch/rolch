@@ -55,7 +55,7 @@ jobs:
 
       - name: Add R shared libraries to LD_LIBRARY_PATH
         run: |
-          echo "LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python -m rpy2.situation LD_LIBRARY_PATH)" >> $GITHUB_ENV
           echo ${LD_LIBRARY_PATH}
 
       - name: Run tests with pytest
