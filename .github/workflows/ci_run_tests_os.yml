@@ -45,10 +45,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m ensurepip --upgrade
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade setuptools
-          python -m pip install --upgrade numpy flake8 pytest rpy2 build
-          if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
+          python -m pip install --upgrade setuptools numpy flake8 pytest rpy2 numba scipy scikit-learn build
 
       - name: Add R shared libraries to LD_LIBRARY_PATH
         run: |
