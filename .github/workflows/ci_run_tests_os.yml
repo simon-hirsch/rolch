@@ -28,11 +28,11 @@ jobs:
       - name: Smoke-test R
         run: Rscript -e 'print("hello")'
 
-      - name: Install R dependencies
+      - name: Install packages
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          dependencies: false
-          extra-packages: gamlss gamlss.dist
+          packages: |
+            any::gamlss.dist 
 
       - name: Set up Python
         uses: actions/setup-python@v4
