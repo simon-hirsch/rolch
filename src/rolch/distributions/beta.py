@@ -8,8 +8,6 @@ import scipy.stats as st
 from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import LogitLink
 
-LOG_LOWER_BOUND = 1e-25
-EXP_UPPER_BOUND = 25
 
 class DistributionBeta(ScipyMixin, Distribution):
     """The Beta Distribution for GAMLSS.
@@ -102,7 +100,7 @@ class DistributionBeta(ScipyMixin, Distribution):
 
             return ((1 - sigma**2) / sigma**2) * ( 
                 -spc.digamma(alpha) + spc.digamma(beta) + 
-                np.log(np.fmax(y, LOG_LOWER_BOUND)) - np.log(np.fmax(1-y, LOG_LOWER_BOUND))
+                np.log(y) - np.log(1-y)
                 )
         
         if param == 1:
