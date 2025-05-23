@@ -23,6 +23,7 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
+    DistributionBeta, 
     DistributionLogNormalMedian,
     DistributionLogNormal,
 )
@@ -50,6 +51,7 @@ from .link import (
     SqrtLink,
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
+    LogitLink,
 )
 from .methods import (
     LassoPathMethod,
@@ -78,6 +80,7 @@ __all__ = [
     "ElasticNetPathMethod",
     "OrdinaryLeastSquaresMethod",
     "IdentityLink",
+    "LogitLink",
     "LogLink",
     "LogIdentLink",
     "LogShiftTwoLink",
@@ -94,6 +97,7 @@ __all__ = [
     "DistributionT",
     "DistributionJSU",
     "DistributionGamma",
+    "DistributionBeta",
     "init_forget_vector",
     "init_gram",
     "update_gram",

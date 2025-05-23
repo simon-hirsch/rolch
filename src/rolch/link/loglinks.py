@@ -5,6 +5,8 @@ import numpy as np
 from ..base import LinkFunction
 from .robust_math import SMALL_NUMBER, robust_exp, robust_log
 
+#LOG_LOWER_BOUND = 1e-25
+#EXP_UPPER_BOUND = 25
 
 class LogLink(LinkFunction):
     """

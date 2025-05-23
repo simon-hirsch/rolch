@@ -6,6 +6,8 @@ from .softpluslinks import (
     InverseSoftPlusShiftValueLink,
 )
 from .sqrtlinks import SqrtLink, SqrtShiftTwoLink, SqrtShiftValueLink
+from .logitlinks import LogitLink
+
 
 __all__ = [
     "LogLink",
@@ -19,4 +21,5 @@ __all__ = [
     "InverseSoftPlusLink",
     "InverseSoftPlusShiftValueLink",
     "InverseSoftPlusShiftTwoLink",
+    "LogitLink",
 ]
