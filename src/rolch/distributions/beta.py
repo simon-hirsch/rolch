@@ -8,8 +8,6 @@ import scipy.stats as st
 from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import LogitLink
 
-SMALL_NUMBER = 1e-10
-LARGE_NUMBER = 1e+10
 LOG_LOWER_BOUND = 1e-25
 EXP_UPPER_BOUND = 25
 
@@ -102,32 +100,20 @@ class DistributionBeta(ScipyMixin, Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            '''return ((1 - sigma**2) / sigma**2) * ( 
+            return ((1 - sigma**2) / sigma**2) * ( 
                 -spc.digamma(alpha) + spc.digamma(beta) + 
                 np.log(np.fmax(y, LOG_LOWER_BOUND)) - np.log(np.fmax(1-y, LOG_LOWER_BOUND))
-                )'''
-            return ((1 - sigma**2) / sigma**2) * ( 
-                -spc.digamma(np.fmax(alpha, SMALL_NUMBER)) + spc.digamma(np.fmax(beta, SMALL_NUMBER)) + 
-                np.log(np.fmax(y, LOG_LOWER_BOUND)) - np.log(np.fmax(1-y, LOG_LOWER_BOUND))
-                )                                     ###beta dist with bounds on digamma 
-
+                )
+        
         if param == 1:
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            '''return -(2 / sigma**3) * ( 
+            return -(2 / sigma**3) * ( 
                 mu * ( -spc.digamma(alpha) + spc.digamma(alpha + beta) + np.log(y)) + (1 - mu) * ( 
                 ( -spc.digamma(beta) + spc.digamma(alpha + beta) + np.log(1-y) ) ) 
-                )'''                                    ##beta -- breaks without bounds
-        
-            return -(2 / sigma**3) * ( 
-                mu * ( -spc.digamma(np.fmax(alpha, SMALL_NUMBER)) + spc.digamma(np.fmax(alpha + beta, SMALL_NUMBER)) + 
-                np.log(np.fmax(y, LOG_LOWER_BOUND))) + (1 - mu) * ( 
-                ( -spc.digamma(np.fmax(beta, SMALL_NUMBER)) + spc.digamma(np.fmax(alpha + beta, SMALL_NUMBER)) 
-                + np.log(np.fmax(1-y, LOG_LOWER_BOUND)) ) ) 
                 )
             
-
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma = self.theta_to_params(theta)
@@ -136,33 +122,16 @@ class DistributionBeta(ScipyMixin, Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            #return - ( ( (1 - sigma**2)**2 ) / sigma**4 ) * ( 
-                #spc.polygamma(1, alpha) + spc.polygamma(1, beta) )      ##breaks, needs bounds on polygamma
-        
             return - ( ( (1 - sigma**2)**2 ) / sigma**4 ) * ( 
-                spc.polygamma(1, np.fmax(alpha, SMALL_NUMBER)) + spc.polygamma(1, np.fmax(beta, SMALL_NUMBER)) ) 
-
+                spc.polygamma(1, alpha) + spc.polygamma(1, beta) )
+        
         if param == 1:
             # SIGMA
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            safe_sigma = np.fmax(sigma, SMALL_NUMBER) 
-            safe_alpha = np.fmax(alpha, SMALL_NUMBER)
-            safe_beta = np.fmax(beta, SMALL_NUMBER)
-
-            '''return - (4 / sigma**3) * ( mu**2 * spc.polygamma(1, alpha) + (1-mu)**2 * spc.polygamma(1, beta) -
-                spc.polygamma(1, alpha + beta)
-                )'''         ####breaks here for log link instead of logit 
-        
-            return - (4 / sigma**3) * ( mu**2 * spc.polygamma(1, np.fmax(alpha, SMALL_NUMBER)) + (1-mu)**2 * 
-                spc.polygamma(1, np.fmax(beta, SMALL_NUMBER)) -
-                spc.polygamma(1, np.fmax(alpha + beta, SMALL_NUMBER))
-                )
-            '''return - (4 / safe_sigma**3) * ( mu**2 * spc.polygamma(1, safe_alpha) + (1-mu)**2 * 
-                spc.polygamma(1, safe_beta) -
-                spc.polygamma(1, safe_alpha + safe_beta)
-                )'''
+            return -(4 / (sigma ** 6)) * ((mu ** 2) * spc.polygamma(1, alpha) + ((1 - mu) ** 2) * 
+            spc.polygamma(1, beta) - spc.polygamma(1, alpha + beta))
             
 
     def dl2_dpp(
@@ -175,19 +144,10 @@ class DistributionBeta(ScipyMixin, Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            safe_sigma = np.fmax(sigma, SMALL_NUMBER) 
-            safe_alpha = np.fmax(alpha, SMALL_NUMBER)
-            safe_beta = np.fmax(beta, SMALL_NUMBER)
-
             return ( 2*(1 - sigma**2) / sigma**5 ) * ( 
-                mu*spc.polygamma(1, np.fmax(alpha, SMALL_NUMBER)) - (1 - mu) * 
-                spc.polygamma(1, np.fmax(beta, SMALL_NUMBER))
+                mu*spc.polygamma(1, alpha) - (1 - mu) * 
+                spc.polygamma(1, beta)
                 )
-        
-            '''return ( 2*(1 - safe_sigma**2) / safe_sigma**5 ) * ( 
-                mu*spc.polygamma(1, safe_alpha) - (1 - mu) * 
-                spc.polygamma(1, safe_beta)
-                )''' 
 
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
