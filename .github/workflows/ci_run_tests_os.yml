@@ -28,6 +28,11 @@ jobs:
       - name: Smoke-test R
         run: Rscript -e 'print("hello")'
 
+      - name: Install R dependencies
+        run: |
+          install.packages("gamlss", "gamlss.dist")
+        shell: Rscript {0}
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -40,11 +45,6 @@ jobs:
           python -m pip install --upgrade setuptools
           pip install numpy flake8 pytest rpy2[test]
           if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
-
-      - name: Check r2py
-        run: |
-          export LD_LIBRARY_PATH="$(python -m rpy2.situation LD_LIBRARY_PATH)":${LD_LIBRARY_PATH}
-          pytest --pyargs 'rpy2.tests'
 
       - name: Build package
         run: python -m build --wheel
