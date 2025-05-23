@@ -29,9 +29,9 @@ jobs:
         run: Rscript -e 'print("hello")'
 
       - name: Install R dependencies
-        run: |
-          install.packages("gamlss", "gamlss.dist")
-        shell: Rscript {0}
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: gamlss gamlss.dist
 
       - name: Set up Python
         uses: actions/setup-python@v4
