@@ -47,7 +47,7 @@ jobs:
           python -m ensurepip --upgrade
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
-          pip install numpy flake8 pytest rpy2[test]
+          python -m pip install --upgrade numpy flake8 pytest rpy2 build
           if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
 
       - name: Add R shared libraries to LD_LIBRARY_PATH
