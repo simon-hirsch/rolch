@@ -47,15 +47,15 @@ jobs:
           python -m ensurepip --upgrade
           python -m pip install --upgrade setuptools numpy flake8 pytest rpy2 numba scipy scikit-learn build
 
-      - name: Add R shared libraries to LD_LIBRARY_PATH
-        run: |
-          echo "LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):$LD_LIBRARY_PATH" >> $GITHUB_ENV
-
       - name: Build package
         run: python -m build --wheel
 
       - name: Install Package
         run: pip install dist/*
+
+      - name: Add R shared libraries to LD_LIBRARY_PATH
+        run: |
+          echo "LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
       - name: Run tests with pytest
         run: |
