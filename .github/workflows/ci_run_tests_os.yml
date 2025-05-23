@@ -47,6 +47,10 @@ jobs:
           pip install numpy flake8 pytest rpy2[test]
           if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
 
+      - name: Add R shared libraries to LD_LIBRARY_PATH
+        run: |
+          echo "LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):\$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
       - name: Build package
         run: python -m build --wheel
 
