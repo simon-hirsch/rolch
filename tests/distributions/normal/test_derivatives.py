@@ -25,7 +25,6 @@ def test_normal_distribution():
 
     # Obtain data and derivatives from R
     R_list = robjects.r(code)
-    mean_y_np = np.array(R_list.rx2("y"))
 
     # We take the data from R
     y = np.array(R_list.rx2("y"))
