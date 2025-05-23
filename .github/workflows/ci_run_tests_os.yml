@@ -31,6 +31,7 @@ jobs:
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: false
           extra-packages: gamlss gamlss.dist
 
       - name: Set up Python
