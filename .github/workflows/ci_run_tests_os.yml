@@ -27,39 +27,33 @@ jobs:
         with:
           r-version: 'release'
           use-public-rspm: true
-
       - name: Smoke-test R
         run: Rscript -e 'print("hello")'
-
       - name: Install packages
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           packages: |
-            any::gamlss.dist 
-
+            any::gamlss
+            any::gamlss.dist
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{matrix.python-version}}
-
       - name: Install dependencies
         run: |
           python -m ensurepip --upgrade
-          python -m pip install --upgrade setuptools numpy flake8 pytest rpy2 numba scipy scikit-learn build
-
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools
+          pip install numpy
+          pip install flake8 pytest rpy2
+          if [ -f requirements_tests.txt ]; then pip install -r requirements_tests.txt; fi
       - name: Build package
         run: python -m build --wheel
-
       - name: Install Package
         run: pip install dist/*
-
       - name: Add R shared libraries to LD_LIBRARY_PATH
         run: |
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python -m rpy2.situation LD_LIBRARY_PATH)" >> $GITHUB_ENV
-          echo ${LD_LIBRARY_PATH}
-
       - name: Run tests with pytest
         run: |
-          echo ${LD_LIBRARY_PATH}
           pytest tests
-
