@@ -14,12 +14,12 @@ class DistributionBeta(ScipyMixin, Distribution):
 
     The distribution function is defined as in GAMLSS as:
     $$
-    f(y|\mu,\sigma)=\\frac{\Gamma(\frac{1 - \sigma^2}{\sigma^2})}
+    f(y|\\mu,\\sigma)=\\frac{\\Gamma(\\frac{1 - \sigma^2}{\sigma^2})}
 	{
-	\Gamma(\\frac{\mu (1 - \sigma^2)}{\sigma^2})
-	\Gamma(\\frac{(1 - \mu) (1 - \sigma^2)}{\sigma^2})}
-	y^{\\frac{\mu (1 - \sigma^2)}{\sigma^2} - 1}
-	(1-y)^{\\frac{(1 - \mu) (1 - \sigma^2)}{\sigma^2} - 1}
+	\\Gamma(\\frac{\\mu (1 - \\sigma^2)}{\\sigma^2})
+	\Gamma(\\frac{(1 - \\mu) (1 - \sigma^2)}{\\sigma^2})}
+	y^{\\frac{\mu (1 - \\sigma^2)}{\\sigma^2} - 1}
+	(1-y)^{\\frac{(1 - \\mu) (1 - \\sigma^2)}{\\sigma^2} - 1}
     $$
 
 
@@ -29,22 +29,22 @@ class DistributionBeta(ScipyMixin, Distribution):
     !!! Note
         The function is parameterized as GAMLSS' BE() distribution.
 
-        This parameterization is different to the `scipy.stats.gamma(alpha, loc, scale)` parameterization.
+        This parameterization is different to the `scipy.stats.beta(alpha, beta, loc, scale)` parameterization.
 
         We can use `DistributionBeta().gamlss_to_scipy(mu, sigma)` to map the distribution parameters to scipy.
 
     The `scipy.stats.beta()` distribution is defined as:
     $$
-    f(x, \\alpha, \\beta) = \\frac{\Gamma(\\alpha + \\beta) x^{\\alpha - 1} {(1 - x)}^{\beta - 1}}{\Gamma(\\alpha) \Gamma(\\beta)}
+    f(x, \\alpha, \\beta) = \\frac{\\Gamma(\\alpha + \\beta) x^{\\alpha - 1} {(1 - x)}^{\\beta - 1}}{\Gamma(\\alpha) \\Gamma(\\beta)}
     $$
 
     with the paramters $\\alpha, \\beta >0$. The parameters can be mapped as follows:
     $$
-    \\alpha = \mu (1 - \sigma^2) / \sigma^2 \Leftrightarrow \mu = \\alpha / (\\alpha + \\beta)
+    \\alpha = \\mu (1 - \\sigma^2) / \\sigma^2 \\Leftrightarrow \\mu = \\alpha / (\\alpha + \\beta)
     $$
     and
     $$
-    \\beta = (1 - \mu) (1 - \sigma^2)/ \sigma^2 \Leftrightarrow \sigma = \sqrt{((\\alpha + \\beta + 1) )}
+    \\beta = (1 - \\mu) (1 - \\sigma^2)/ \\sigma^2 \\Leftrightarrow \\sigma = \\sqrt{((\\alpha + \\beta + 1) )}
     $$
 
 
