@@ -12,7 +12,7 @@ If your distributional regression model does not converge or fails to fit, you m
 - Check the data for features with zero variance. These cannot be handled by the `OnlineScaler()` and will cause missing / infinite values (due to the division by zero).
 - Is the distribution you're imposing on the data appropriate? Likelihood-based methods fail miserably if the distribution is not appropriate. This especially concerns heavy tails, skewness, and, potentially, distributions that only live on the positive side of the real line.
 
-If you have answered all of the above questions and the model still does not converge, [please open an issue with a reproducible example](https://github.com/simon-hirsch/rolch/issues). We will help you as best as we can.
+If you have answered all of the above questions and the model still does not converge, [please open an issue with a reproducible example](https://github.com/simon-hirsch/ondil/issues). We will help you as best as we can.
 
 ## Scaling
 

@@ -4,16 +4,16 @@ The Gramian
 
 ## API Reference
 
-::: rolch.init_forget_vector
+::: ondil.init_forget_vector
 
-::: rolch.init_gram
+::: ondil.init_gram
 
-::: rolch.init_y_gram
+::: ondil.init_y_gram
 
-::: rolch.init_inverted_gram
+::: ondil.init_inverted_gram
 
-::: rolch.update_gram
+::: ondil.update_gram
 
-::: rolch.update_y_gram
+::: ondil.update_y_gram
 
-::: rolch.update_inverted_gram
+::: ondil.update_inverted_gram
