@@ -1,4 +1,4 @@
-# ondil: Regularized Online Learning for Conditional Heteroskedasticity
+# `ondil`: Online Distributional Learning 
 
 [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) 
@@ -9,7 +9,7 @@
 
 ## Introduction
 
-This package provides an online estimation of models for distributional regression, respectively, models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
+This package provides an online estimation of distributional regression models. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
 
 Please have a look at the [documentation](https://simon-hirsch.github.io/ondil/) or the [example notebook](https://github.com/simon-hirsch/ondil/blob/main/example.ipynb).
 
