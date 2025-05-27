@@ -5,7 +5,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rolch"
+name = "ondil"
 version = "0.2.4"
 authors = [
   {name="Simon Hirsch", email="simon.hirsch@stud.uni-due.de"},
@@ -29,10 +29,10 @@ dependencies=[
 [project.optional-dependencies]
 pandas = ["pandas >= 1.26"]
 polars = ["polars"]
-all = ["rolch[pandas, polars]"]
+all = ["ondil[pandas, polars]"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [project.urls]
-Homepage = "https://github.com/simon-hirsch/rolch"
+Homepage = "https://github.com/simon-hirsch/ondil"

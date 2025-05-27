@@ -1,19 +1,19 @@
-# ROLCH: Regularized Online Learning for Conditional Heteroskedasticity
+# ondil: Regularized Online Learning for Conditional Heteroskedasticity
 
 [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) 
-![GitHub Release](https://img.shields.io/github/v/release/simon-hirsch/rolch?display_name=release&label=Release)
-[![Downloads](https://static.pepy.tech/badge/rolch)](https://pepy.tech/project/rolch) 
-[![Tests](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml)
-[![Docs](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml)
+![GitHub Release](https://img.shields.io/github/v/release/simon-hirsch/ondil?display_name=release&label=Release)
+[![Downloads](https://static.pepy.tech/badge/ondil)](https://pepy.tech/project/ondil) 
+[![Tests](https://github.com/simon-hirsch/ondil/actions/workflows/ci_run_tests.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/ondil/actions/workflows/ci_run_tests.yml)
+[![Docs](https://github.com/simon-hirsch/ondil/actions/workflows/ci_build_docs.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/ondil/actions/workflows/ci_build_docs.yml)
 
 ## Introduction
 
 This package provides an online estimation of models for distributional regression, respectively, models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
 
-Please have a look at the [documentation](https://simon-hirsch.github.io/rolch/) or the [example notebook](https://github.com/simon-hirsch/rolch/blob/main/example.ipynb).
+Please have a look at the [documentation](https://simon-hirsch.github.io/ondil/) or the [example notebook](https://github.com/simon-hirsch/ondil/blob/main/example.ipynb).
 
-We're actively working on the package and welcome contributions from the community. Have a look at the [Release Notes](https://github.com/simon-hirsch/rolch/releases) and the [Issue Tracker](https://github.com/simon-hirsch/rolch/issues).
+We're actively working on the package and welcome contributions from the community. Have a look at the [Release Notes](https://github.com/simon-hirsch/ondil/releases) and the [Issue Tracker](https://github.com/simon-hirsch/ondil/issues).
 
 ## Distributional Regression
 
@@ -30,7 +30,7 @@ This allows us to specify very flexible models that consider the conditional beh
 Basic estimation and updating procedure:
 
 ```python
-import rolch
+import ondil
 import numpy as np
 from sklearn.datasets import load_diabetes
 
@@ -44,8 +44,8 @@ equation = {
 }
 
 # Create the estimator
-online_gamlss_lasso = rolch.OnlineGamlss(
-    distribution=rolch.DistributionT(),
+online_gamlss_lasso = ondil.OnlineGamlss(
+    distribution=ondil.DistributionT(),
     method="lasso",
     equation=equation,
     fit_intercept=True,
@@ -80,9 +80,9 @@ print(prediction)
 
 ## Installation & Dependencies
 
-The package is available from [pypi](https://pypi.org/project/rolch/) - do `pip install rolch` and enjoy.
+The package is available from [pypi](https://pypi.org/project/ondil/) - do `pip install ondil` and enjoy.
 
-`ROLCH` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
+`ondil` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
 
 
 ## Authors
@@ -108,5 +108,5 @@ To get started, just create a fork and get going. We will modularize the code ov
 1) Clone this repo.
 2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`. 
 3) Run `python3 -m build` to build the wheel.
-4) Run `pip install dist/rolch-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
+4) Run `pip install dist/ondil-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
 5) Enjoy.O
