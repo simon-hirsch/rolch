@@ -9,7 +9,7 @@
 
 ## Introduction
 
-This package provides an online estimation of distributional regression models. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
+This package provides an online estimation of distributional regression The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
 
 Please have a look at the [documentation](https://simon-hirsch.github.io/ondil/) or the [example notebook](https://github.com/simon-hirsch/ondil/blob/main/example.ipynb).
 
@@ -84,16 +84,15 @@ The package is available from [pypi](https://pypi.org/project/ondil/) - do `pip 
 
 `ondil` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
 
-
 ## Authors
 
 - Simon Hirsch, University of Duisburg-Essen & Statkraft
 - Jonathan Berrisch, University of Duisburg-Essen
 - Florian Ziel, University of Duisburg-Essen
 
-## Acknowledgements & Disclosure
+## I was looking for `rolch` but I found `ondil`?
 
-Simon is employed at Statkraft and gratefully acknowledges support received from Statkraft for his PhD studies. This work contains the author's opinion and not necessarily reflects Statkraft's position.
+`rolch` (Regularized Online Learning for Conditional Heteroskedasticity) was the original name of this package, but we decided to rename it to `ondil` (Online Distributional Learning) to better reflect its purpose and functionality, since conditional heteroskedasticity (=non constant variance) is just one of the many applications for distribtuional regression models that can be estimated with this package.
 
 ## Contributing 
 
@@ -103,10 +102,14 @@ We're still in an early phase and welcome feedback, especially on the usability 
 
 To get started, just create a fork and get going. We will modularize the code over the next versions and increase our testing coverage. We use `ruff` and `black` as formatters.
 
+## Acknowledgements & Disclosure
+
+Simon is employed at Statkraft and gratefully acknowledges support received from Statkraft for his PhD studies. This work contains the author's opinion and not necessarily reflects Statkraft's position.
+
 ## Install from source:
 
 1) Clone this repo.
 2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`. 
 3) Run `python3 -m build` to build the wheel.
 4) Run `pip install dist/ondil-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
-5) Enjoy.O
+5) Enjoy.
