@@ -1,4 +1,3 @@
-
 from typing import Optional, Tuple
 
 import numpy as np
@@ -15,11 +14,11 @@ class DistributionBeta(ScipyMixin, Distribution):
     The distribution function is defined as in GAMLSS as:
     $$
     f(y|\\mu,\\sigma)=\\frac{\\Gamma(\\frac{1 - \sigma^2}{\sigma^2})}
-	{
-	\\Gamma(\\frac{\\mu (1 - \\sigma^2)}{\\sigma^2})
-	\Gamma(\\frac{(1 - \\mu) (1 - \sigma^2)}{\\sigma^2})}
-	y^{\\frac{\mu (1 - \\sigma^2)}{\\sigma^2} - 1}
-	(1-y)^{\\frac{(1 - \\mu) (1 - \\sigma^2)}{\\sigma^2} - 1}
+        {
+        \\Gamma(\\frac{\\mu (1 - \\sigma^2)}{\\sigma^2})
+        \Gamma(\\frac{(1 - \\mu) (1 - \sigma^2)}{\\sigma^2})}
+        y^{\\frac{\mu (1 - \\sigma^2)}{\\sigma^2} - 1}
+        (1-y)^{\\frac{(1 - \\mu) (1 - \\sigma^2)}{\\sigma^2} - 1}
     $$
 
 
@@ -57,10 +56,10 @@ class DistributionBeta(ScipyMixin, Distribution):
 
     parameter_names = {0: "mu", 1: "sigma"}
     parameter_support = {
-        0: ( np.nextafter(0, 1), np.nextafter(1, 0)),
-        1: (np.nextafter(0, 1), np.nextafter(1, 0) ),
+        0: (np.nextafter(0, 1), np.nextafter(1, 0)),
+        1: (np.nextafter(0, 1), np.nextafter(1, 0)),
     }
-    distribution_support = (np.nextafter(0, 1), np.nextafter(1, 0) )
+    distribution_support = (np.nextafter(0, 1), np.nextafter(1, 0))
     # Scipy equivalent and parameter mapping rolch -> scipy
     scipy_dist = st.beta
     # Theta columns do not map 1:1 to scipy parameters for beta
@@ -69,7 +68,7 @@ class DistributionBeta(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogitLink(),   
+        loc_link: LinkFunction = LogitLink(),
         scale_link: LinkFunction = LogitLink(),
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link})
@@ -98,20 +97,20 @@ class DistributionBeta(ScipyMixin, Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            return ((1 - sigma**2) / sigma**2) * ( 
-                -spc.digamma(alpha) + spc.digamma(beta) + 
-                np.log(y) - np.log(1-y)
-                )
-        
+            return ((1 - sigma**2) / sigma**2) * (
+                -spc.digamma(alpha) + spc.digamma(beta) + np.log(y) - np.log(1 - y)
+            )
+
         if param == 1:
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            return -(2 / sigma**3) * ( 
-                mu * ( -spc.digamma(alpha) + spc.digamma(alpha + beta) + np.log(y)) + (1 - mu) * ( 
-                ( -spc.digamma(beta) + spc.digamma(alpha + beta) + np.log(1-y) ) ) 
-                )
-            
+            return -(2 / sigma**3) * (
+                mu * (-spc.digamma(alpha) + spc.digamma(alpha + beta) + np.log(y))
+                + (1 - mu)
+                * (-spc.digamma(beta) + spc.digamma(alpha + beta) + np.log(1 - y))
+            )
+
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma = self.theta_to_params(theta)
@@ -120,17 +119,20 @@ class DistributionBeta(ScipyMixin, Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            return - ( ( (1 - sigma**2)**2 ) / sigma**4 ) * ( 
-                spc.polygamma(1, alpha) + spc.polygamma(1, beta) )
-        
+            return -(((1 - sigma**2) ** 2) / sigma**4) * (
+                spc.polygamma(1, alpha) + spc.polygamma(1, beta)
+            )
+
         if param == 1:
             # SIGMA
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            return -(4 / (sigma ** 6)) * ((mu ** 2) * spc.polygamma(1, alpha) + ((1 - mu) ** 2) * 
-            spc.polygamma(1, beta) - spc.polygamma(1, alpha + beta))
-            
+            return -(4 / (sigma**6)) * (
+                (mu**2) * spc.polygamma(1, alpha)
+                + ((1 - mu) ** 2) * spc.polygamma(1, beta)
+                - spc.polygamma(1, alpha + beta)
+            )
 
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
@@ -142,17 +144,14 @@ class DistributionBeta(ScipyMixin, Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            return ( 2*(1 - sigma**2) / sigma**5 ) * ( 
-                mu*spc.polygamma(1, alpha) - (1 - mu) * 
-                spc.polygamma(1, beta)
-                )
+            return (2 * (1 - sigma**2) / sigma**5) * (
+                mu * spc.polygamma(1, alpha) - (1 - mu) * spc.polygamma(1, beta)
+            )
 
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
         if param == 0:
-            return (np.repeat(np.mean(y, axis=axis), y.shape[0]) )/ 2 
+            return (np.repeat(np.mean(y, axis=axis), y.shape[0])) / 2
         if param == 1:
             return np.repeat(0.5, y.shape[0])
-
-

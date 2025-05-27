@@ -9,6 +9,7 @@ from rolch import (
     InverseSoftPlusLink,
     InverseSoftPlusShiftValueLink,
     LogIdentLink,
+    LogitLink, 
     LogLink,
     LogShiftValueLink,
     SqrtLink,

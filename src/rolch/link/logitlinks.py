@@ -1,9 +1,7 @@
-from typing import Tuple
-
 import numpy as np
 
 from ..base import LinkFunction
-from .robust_math import SMALL_NUMBER, robust_exp, robust_log
+from .robust_math import robust_exp, robust_log
 
 
 class LogitLink(LinkFunction):
@@ -17,18 +15,11 @@ class LogitLink(LinkFunction):
 
     def link(self, x: np.ndarray) -> np.ndarray:
         return robust_log(x/(1-x))
-        #return np.log(np.fmax( x/(1-x), LOG_LOWER_BOUND) )
 
     def inverse(self, x: np.ndarray) -> np.ndarray:
-        #exp_x_adj = np.exp( np.fmax ( np.fmin ( x, EXP_UPPER_BOUND) ,np.log(LOG_LOWER_BOUND)))
-        #return exp_x_adj / (exp_x_adj + 1)
-    
         return robust_exp/(robust_exp + 1)
 
     def inverse_derivative(self, x: np.ndarray) -> np.ndarray:
-        #exp_adj = np.exp( np.fmin (x, EXP_UPPER_BOUND) )
-        #return exp_adj / ( (exp_adj + 1) ** 2 )
-
         return robust_exp/ ( (robust_exp + 1) ** 2 )
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
