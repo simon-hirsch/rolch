@@ -1,9 +1,9 @@
-# `ondil`: Online Distributional Learning 
+# `ondil`: Online Distributional Learning
 
-[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) 
-[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) 
+[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT)
 ![GitHub Release](https://img.shields.io/github/v/release/simon-hirsch/ondil?display_name=release&label=Release)
-[![Downloads](https://static.pepy.tech/badge/ondil)](https://pepy.tech/project/ondil) 
+[![Downloads](https://static.pepy.tech/badge/ondil)](https://pepy.tech/project/ondil)
 [![Tests](https://github.com/simon-hirsch/ondil/actions/workflows/ci_run_tests.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/ondil/actions/workflows/ci_run_tests.yml)
 [![Docs](https://github.com/simon-hirsch/ondil/actions/workflows/ci_build_docs.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/ondil/actions/workflows/ci_build_docs.yml)
 
@@ -17,7 +17,7 @@ We're actively working on the package and welcome contributions from the communi
 
 ## Distributional Regression
 
-The main idea of distributional regression (or regression beyond the mean, multiparameter regression) is that the response variable $Y$ is distributed according to a specified distribution $\mathcal{F}(\theta)$, where $\theta$ is the parameter vector for the distribution. In the Gaussian case, we have $\theta = (\theta_1, \theta_2) = (\mu, \sigma)$. We then specify an individual regression model for all parameters of the distribution of the form 
+The main idea of distributional regression (or regression beyond the mean, multiparameter regression) is that the response variable $Y$ is distributed according to a specified distribution $\mathcal{F}(\theta)$, where $\theta$ is the parameter vector for the distribution. In the Gaussian case, we have $\theta = (\theta_1, \theta_2) = (\mu, \sigma)$. We then specify an individual regression model for all parameters of the distribution of the form
 
 $$g_k(\theta_k) = \eta_k = X_k\beta_k$$
 
@@ -94,9 +94,9 @@ The package is available from [pypi](https://pypi.org/project/ondil/) - do `pip 
 
 `rolch` (Regularized Online Learning for Conditional Heteroskedasticity) was the original name of this package, but we decided to rename it to `ondil` (Online Distributional Learning) to better reflect its purpose and functionality, since conditional heteroskedasticity (=non constant variance) is just one of the many applications for distribtuional regression models that can be estimated with this package.
 
-## Contributing 
+## Contributing
 
-We welcome every contribution from the community. Feel free to open an issue if you find bugs or want to propose changes. 
+We welcome every contribution from the community. Feel free to open an issue if you find bugs or want to propose changes.
 
 We're still in an early phase and welcome feedback, especially on the usability and "look and feel" of the package. Secondly, we're working to port distributions from the `R`-GAMLSS package and welcome according PRs.
 
@@ -106,10 +106,10 @@ To get started, just create a fork and get going. We will modularize the code ov
 
 Simon is employed at Statkraft and gratefully acknowledges support received from Statkraft for his PhD studies. This work contains the author's opinion and not necessarily reflects Statkraft's position.
 
-## Install from source:
+## Install from Source
 
 1) Clone this repo.
-2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`. 
+2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`.
 3) Run `python3 -m build` to build the wheel.
 4) Run `pip install dist/ondil-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
 5) Enjoy.
