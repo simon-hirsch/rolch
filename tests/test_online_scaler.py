@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
+from ondil import OnlineScaler
 from sklearn.datasets import make_regression
-
-from rolch import OnlineScaler
 
 N_FEATURES = [10, 100, 1000]
 N_SAMPLES = [100, 1000, 10000]

@@ -1,8 +1,7 @@
 import numpy as np
+from ondil import online_coordinate_descent_path
 from sklearn.datasets import load_diabetes
 from sklearn.linear_model import lasso_path
-
-from rolch import online_coordinate_descent_path
 
 
 def test_coordinate_descent():
