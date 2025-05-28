@@ -28,7 +28,7 @@ class DistributionLogistic(ScipyMixin, Distribution):
     def __init__(
         self,
         loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink()
+        scale_link: LinkFunction = LogLink(),
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link})
 
@@ -36,7 +36,6 @@ class DistributionLogistic(ScipyMixin, Distribution):
         mu = theta[:, 0]
         sigma = theta[:, 1]
         return {"loc": mu, "scale": sigma}
-
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -77,5 +76,5 @@ class DistributionLogistic(ScipyMixin, Distribution):
             return (y + np.mean(y, axis=axis)) / 2
         if param == 1:
             return np.full_like(
-                y, (np.sqrt(3) * np.std(y, axis=axis)) / np.sqrt(np.pi)
+                y, (np.sqrt(3) * np.std(y, axis=axis, ddof=1)) / np.sqrt(np.pi)
             )
