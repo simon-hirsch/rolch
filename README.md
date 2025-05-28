@@ -92,7 +92,7 @@ The package is available from [pypi](https://pypi.org/project/ondil/) - do `pip 
 
 ## I was looking for `rolch` but I found `ondil`?
 
-`rolch` (Regularized Online Learning for Conditional Heteroskedasticity) was the original name of this package, but we decided to rename it to `ondil` (Online Distributional Learning) to better reflect its purpose and functionality, since conditional heteroskedasticity (=non constant variance) is just one of the many applications for distribtuional regression models that can be estimated with this package.
+`rolch` (Regularized Online Learning for Conditional Heteroskedasticity) was the original name of this package, but we decided to rename it to `ondil` (Online Distributional Learning) to better reflect its purpose and functionality, since conditional heteroskedasticity (=non constant variance) is just one of the many applications for distributional regression models that can be estimated with this package.
 
 ## Contributing
 
@@ -110,6 +110,5 @@ Simon is employed at Statkraft and gratefully acknowledges support received from
 
 1) Clone this repo.
 2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`.
-3) Run `python3 -m build` to build the wheel.
-4) Run `pip install dist/ondil-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
-5) Enjoy.
+3) Run `pip install .` optionally using `--force` or `--force --no-deps` to ensure the package is build from the updated wheels. If you want to 100% sure no cached wheels are there or you need the tarball, run `python -m build` before installing.
+4) Enjoy.
