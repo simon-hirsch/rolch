@@ -1,6 +1,5 @@
 # %%
 import numpy as np
-import pytest
 import rpy2.robjects as robjects
 from ondil import OnlineGamlss, DistributionLogistic
 
@@ -11,7 +10,6 @@ y = mtcars[:, 0]
 X = mtcars[:, 1:]
 
 
-@pytest.mark.skip(reason="Skipping this test until others are fixed")
 def test_logistic_distribution():
     dist = DistributionLogistic()
 
@@ -56,3 +54,6 @@ def test_logistic_distribution():
     assert np.allclose(estimator.beta[1], coef_R_sg, atol=0.01), (
         "Scale coefficients don't match"
     )
+
+
+# %%
