@@ -1,3 +1,6 @@
+from typing import Literal
+import numpy as np
+
 from .elasticnet import ElasticNetPathMethod
 
 
@@ -24,11 +27,27 @@ class LassoPathMethod(ElasticNetPathMethod):
     We use `numba` to speed up the coordinate descent algorithm.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        lambda_n: int = 100,
+        lambda_eps: float = 1e-4,
+        early_stop: int = 0,
+        start_value_initial: Literal[
+            "previous_lambda", "previous_fit", "average"
+        ] = "previous_lambda",
+        start_value_update: Literal[
+            "previous_lambda", "previous_fit", "average"
+        ] = "previous_fit",
+        selection: Literal["cyclic", "random"] = "cyclic",
+        beta_lower_bound: np.ndarray | None = None,
+        beta_upper_bound: np.ndarray | None = None,
+        tolerance: float = 1e-4,
+        max_iterations: int = 1000,
+    ):
         """
         Initializes the lasso method with the specified parameters.
 
-        Parameters:
+        Args:
             lambda_n (int): Number of lambda values to use in the path. Default is 100.
             lambda_eps (float): Minimum lambda value as a fraction of the maximum lambda. Default is 1e-4.
             early_stop (int): Early stopping criterion. Will stop if the number of non-zero parameters is reached. Default is 0 (no early stopping).
@@ -40,4 +59,16 @@ class LassoPathMethod(ElasticNetPathMethod):
             tolerance (float): Tolerance for the optimization. Default is 1e-4.
             max_iterations (int): Maximum number of iterations for the optimization. Default is 1000.
         """
-        super().__init__(alpha=1.0, *args, **kwargs)
+        super().__init__(
+            alpha=1.0,
+            lambda_n=lambda_n,
+            lambda_eps=lambda_eps,
+            early_stop=early_stop,
+            start_value_initial=start_value_initial,
+            start_value_update=start_value_update,
+            selection=selection,
+            beta_lower_bound=beta_lower_bound,
+            beta_upper_bound=beta_upper_bound,
+            tolerance=tolerance,
+            max_iterations=max_iterations,
+        )
