@@ -1,12 +1,11 @@
 from itertools import product
 
 import numpy as np
+import ondil
 import pytest
 
-import rolch
-
 DISTRIBUTIONS = [
-    getattr(rolch.distributions, name)() for name in rolch.distributions.__all__
+    getattr(ondil.distributions, name)() for name in ondil.distributions.__all__
 ]
 
 

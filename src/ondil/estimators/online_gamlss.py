@@ -76,7 +76,7 @@ class OnlineGamlss(Estimator):
             estimator objects.
 
         Args:
-            distribution (rolch.Distribution): The parametric distribution.
+            distribution (ondil.Distribution): The parametric distribution.
             equation (Dict): The modelling equation. Follows the schema `{parameter[int]: column_identifier}`, where column_identifier can be either the strings `'all'`, `'intercept'` or a np.array of ints indicating the columns.
             forget (Union[float, Dict[int, float]], optional): The forget factor. Defaults to 0.0.
             method (Union[str, EstimationMethod, Dict[int, str], Dict[int, EstimationMethod]], optional): The estimation method. Defaults to "ols".
@@ -522,7 +522,7 @@ class OnlineGamlss(Estimator):
         """Fit the online GAMLSS model.
 
         !!! note
-            The user is only required to provide the design matrix $X$ for the first distribution parameters. If for some distribution parameter no design matrix is provided, `ROLCH` will model the parameter using an intercept.
+            The user is only required to provide the design matrix $X$ for the first distribution parameters. If for some distribution parameter no design matrix is provided, `ondil` will model the parameter using an intercept.
 
         !!! note
             The provision of bounds for the coefficient vectors is only possible for LASSO/coordinate descent estimation.

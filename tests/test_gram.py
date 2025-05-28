@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 import scipy.stats as st
-
-from rolch import (
+from ondil import (
     init_gram,
     init_inverted_gram,
     init_y_gram,

@@ -1,23 +1,23 @@
-# ROLCH: Regularized Online Learning for Conditional Heteroskedasticity
+# `ondil`: Online Distributional Learning
 
-[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/) 
-[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) 
-![GitHub Release](https://img.shields.io/github/v/release/simon-hirsch/rolch?display_name=release&label=Release)
-[![Downloads](https://static.pepy.tech/badge/rolch)](https://pepy.tech/project/rolch) 
-[![Tests](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml)
-[![Docs](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml)
+[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)
+[![License](https://img.shields.io/github/license/simon-hirsch/rolch)](https://opensource.org/license/gpl-3-0)
+![GitHub Release](https://img.shields.io/github/v/release/simon-hirsch/ondil?display_name=release&label=Release)
+[![Downloads](https://static.pepy.tech/badge/ondil)](https://pepy.tech/project/ondil)
+[![Tests](https://github.com/simon-hirsch/ondil/actions/workflows/ci_run_tests.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/ondil/actions/workflows/ci_run_tests.yml)
+[![Docs](https://github.com/simon-hirsch/ondil/actions/workflows/ci_build_docs.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/ondil/actions/workflows/ci_build_docs.yml)
 
 ## Introduction
 
-This package provides an online estimation of models for distributional regression, respectively, models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
+This package provides an online estimation of distributional regression The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
 
-Please have a look at the [documentation](https://simon-hirsch.github.io/rolch/) or the [example notebook](https://github.com/simon-hirsch/rolch/blob/main/example.ipynb).
+Please have a look at the [documentation](https://simon-hirsch.github.io/ondil/) or the [example notebook](https://github.com/simon-hirsch/ondil/blob/main/example.ipynb).
 
-We're actively working on the package and welcome contributions from the community. Have a look at the [Release Notes](https://github.com/simon-hirsch/rolch/releases) and the [Issue Tracker](https://github.com/simon-hirsch/rolch/issues).
+We're actively working on the package and welcome contributions from the community. Have a look at the [Release Notes](https://github.com/simon-hirsch/ondil/releases) and the [Issue Tracker](https://github.com/simon-hirsch/ondil/issues).
 
 ## Distributional Regression
 
-The main idea of distributional regression (or regression beyond the mean, multiparameter regression) is that the response variable $Y$ is distributed according to a specified distribution $\mathcal{F}(\theta)$, where $\theta$ is the parameter vector for the distribution. In the Gaussian case, we have $\theta = (\theta_1, \theta_2) = (\mu, \sigma)$. We then specify an individual regression model for all parameters of the distribution of the form 
+The main idea of distributional regression (or regression beyond the mean, multiparameter regression) is that the response variable $Y$ is distributed according to a specified distribution $\mathcal{F}(\theta)$, where $\theta$ is the parameter vector for the distribution. In the Gaussian case, we have $\theta = (\theta_1, \theta_2) = (\mu, \sigma)$. We then specify an individual regression model for all parameters of the distribution of the form
 
 $$g_k(\theta_k) = \eta_k = X_k\beta_k$$
 
@@ -30,7 +30,7 @@ This allows us to specify very flexible models that consider the conditional beh
 Basic estimation and updating procedure:
 
 ```python
-import rolch
+import ondil
 import numpy as np
 from sklearn.datasets import load_diabetes
 
@@ -44,8 +44,8 @@ equation = {
 }
 
 # Create the estimator
-online_gamlss_lasso = rolch.OnlineGamlss(
-    distribution=rolch.DistributionT(),
+online_gamlss_lasso = ondil.OnlineGamlss(
+    distribution=ondil.DistributionT(),
     method="lasso",
     equation=equation,
     fit_intercept=True,
@@ -80,10 +80,9 @@ print(prediction)
 
 ## Installation & Dependencies
 
-The package is available from [pypi](https://pypi.org/project/rolch/) - do `pip install rolch` and enjoy.
+The package is available from [pypi](https://pypi.org/project/ondil/) - do `pip install ondil` and enjoy.
 
-`ROLCH` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
-
+`ondil` is designed to have minimal dependencies. We rely on `python>=3.10`, `numpy`, `numba` and `scipy` in a reasonably up-to-date versions.
 
 ## Authors
 
@@ -91,22 +90,25 @@ The package is available from [pypi](https://pypi.org/project/rolch/) - do `pip 
 - Jonathan Berrisch, University of Duisburg-Essen
 - Florian Ziel, University of Duisburg-Essen
 
-## Acknowledgements & Disclosure
+## I was looking for `rolch` but I found `ondil`?
 
-Simon is employed at Statkraft and gratefully acknowledges support received from Statkraft for his PhD studies. This work contains the author's opinion and not necessarily reflects Statkraft's position.
+`rolch` (Regularized Online Learning for Conditional Heteroskedasticity) was the original name of this package, but we decided to rename it to `ondil` (Online Distributional Learning) to better reflect its purpose and functionality, since conditional heteroskedasticity (=non constant variance) is just one of the many applications for distributional regression models that can be estimated with this package.
 
-## Contributing 
+## Contributing
 
-We welcome every contribution from the community. Feel free to open an issue if you find bugs or want to propose changes. 
+We welcome every contribution from the community. Feel free to open an issue if you find bugs or want to propose changes.
 
 We're still in an early phase and welcome feedback, especially on the usability and "look and feel" of the package. Secondly, we're working to port distributions from the `R`-GAMLSS package and welcome according PRs.
 
 To get started, just create a fork and get going. We will modularize the code over the next versions and increase our testing coverage. We use `ruff` and `black` as formatters.
 
-## Install from source:
+## Acknowledgements & Disclosure
+
+Simon is employed at Statkraft and gratefully acknowledges support received from Statkraft for his PhD studies. This work contains the author's opinion and not necessarily reflects Statkraft's position.
+
+## Install from Source
 
 1) Clone this repo.
-2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`. 
-3) Run `python3 -m build` to build the wheel.
-4) Run `pip install dist/rolch-0.1.0-py3-none-any.whl` with the accurate version. If necessary, append `--force-reinstall`
-5) Enjoy.O
+2) Install the necessary dependencies from the `requirements.txt` using `conda create --name <env> --file requirements.txt`.
+3) Run `pip install .` optionally using `--force` or `--force --no-deps` to ensure the package is build from the updated wheels. If you want to 100% sure no cached wheels are there or you need the tarball, run `python -m build` before installing.
+4) Enjoy.

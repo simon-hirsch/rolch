@@ -1,6 +1,6 @@
 # Distributions
 
-This serves as reference for all distribution objects that we implement in the `ROLCH` package. 
+This serves as reference for all distribution objects that we implement in the `ondil` package. 
 
 !!! note 
     This page is somewhat under construction, since `MkDocs` [does not support docstring inheritance at the moment](https://github.com/mkdocstrings/mkdocstrings/issues/78).
@@ -12,43 +12,43 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 | Base Distribution | Description |
 |------------------|-------------|
-| [`Distribution`](#rolch.Distribution) | Base class for all distributions. |
-| [`ScipyMixin`](#rolch.base.ScipyMixin) | Base class for all distributions that are based on `scipy`. |
+| [`Distribution`](#ondil.Distribution) | Base class for all distributions. |
+| [`ScipyMixin`](#ondil.base.ScipyMixin) | Base class for all distributions that are based on `scipy`. |
 
 
 ## List of Distributions
 
 | Distribution         | Description                                      | `scipy` Equivalent          |
 |----------------------|--------------------------------------------------|---------------------------|
-| [`DistributionNormal`](#rolch.DistributionNormal) | Gaussian (mean and standard deviation) | `scipy.stats.norm` |
-| [`DistributionNormalMeanVariance`](#rolch.DistributionNormalMeanVariance) | Gaussian (mean and variance) | `scipy.stats.norm` |
-| [`DistributionT`](#rolch.DistributionT)           | Student's $t$ distribution       | `scipy.stats.t`     |
-| [`DistributionJSU`](#rolch.DistributionJSU)       | Johnson's SU distribution      | `scipy.stats.johnsonsu` |
-| [`DistributionGamma`](#rolch.DistributionGamma)   | Gamma distribution             | `scipy.stats.gamma` |
-| [`DistributionLogNormal`](#rolch.DistributionLogNormal) | Log-normal distribution        | `scipy.stats.lognorm` |
-| [`DistributionLogNormalMedian`](#rolch.DistributionLogNormalMedian) | Log-normal distribution (median) | - |
+| [`DistributionNormal`](#ondil.DistributionNormal) | Gaussian (mean and standard deviation) | `scipy.stats.norm` |
+| [`DistributionNormalMeanVariance`](#ondil.DistributionNormalMeanVariance) | Gaussian (mean and variance) | `scipy.stats.norm` |
+| [`DistributionT`](#ondil.DistributionT)           | Student's $t$ distribution       | `scipy.stats.t`     |
+| [`DistributionJSU`](#ondil.DistributionJSU)       | Johnson's SU distribution      | `scipy.stats.johnsonsu` |
+| [`DistributionGamma`](#ondil.DistributionGamma)   | Gamma distribution             | `scipy.stats.gamma` |
+| [`DistributionLogNormal`](#ondil.DistributionLogNormal) | Log-normal distribution        | `scipy.stats.lognorm` |
+| [`DistributionLogNormalMedian`](#ondil.DistributionLogNormalMedian) | Log-normal distribution (median) | - |
 
 
 
 ## API Reference
 
-::: rolch.DistributionNormal
+::: ondil.DistributionNormal
 
-::: rolch.DistributionNormalMeanVariance
+::: ondil.DistributionNormalMeanVariance
 
-::: rolch.DistributionT
+::: ondil.DistributionT
 
-::: rolch.DistributionJSU
+::: ondil.DistributionJSU
 
-::: rolch.DistributionGamma
+::: ondil.DistributionGamma
 
-::: rolch.DistributionLogNormal
+::: ondil.DistributionLogNormal
 
-::: rolch.DistributionLogNormalMedian
+::: ondil.DistributionLogNormalMedian
 
 
 ## Base Class
 
-::: rolch.base.Distribution
+::: ondil.base.Distribution
 
-::: rolch.base.ScipyMixin
+::: ondil.base.ScipyMixin

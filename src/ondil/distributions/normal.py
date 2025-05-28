@@ -29,7 +29,7 @@ class DistributionNormal(ScipyMixin, Distribution):
     parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
     distribution_support = (-np.inf, np.inf)
 
-    # Scipy equivalent and parameter mapping rolch -> scipy
+    # Scipy equivalent and parameter mapping ondil -> scipy
     scipy_dist = st.norm
     scipy_names = {"mu": "loc", "sigma": "scale"}
 
@@ -108,7 +108,7 @@ class DistributionNormalMeanVariance(ScipyMixin, Distribution):
     parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
     distribution_support = (-np.inf, np.inf)
 
-    # Scipy equivalent and parameter mapping rolch -> scipy
+    # Scipy equivalent and parameter mapping ondil -> scipy
     scipy_dist = st.norm
     scipy_names = {"mu": "loc", "sigma": "scale"}
 

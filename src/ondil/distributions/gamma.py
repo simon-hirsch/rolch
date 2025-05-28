@@ -51,7 +51,7 @@ class DistributionGamma(ScipyMixin, Distribution):
         1: (np.nextafter(0, 1), np.inf),
     }
     distribution_support = (np.nextafter(0, 1), np.inf)
-    # Scipy equivalent and parameter mapping rolch -> scipy
+    # Scipy equivalent and parameter mapping ondil -> scipy
     scipy_dist = st.gamma
     # Theta columns do not map 1:1 to scipy parameters for gamma
     # So we have to overload theta_to_scipy_params

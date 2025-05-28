@@ -4,7 +4,7 @@
 
 def test_import():
     try:
-        import rolch  # noqa
+        import ondil  # noqa
 
         failed = False
     except Exception:

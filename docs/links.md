@@ -9,9 +9,9 @@ For all link functions, we implement
 - the link \(g(x)\)
 - the inverse \(g^{-1}(x)\)
 - the derivative of the link function $\frac{\partial g(x)}{\partial x}$.
-- the first derivative _of the inverse_ of the link function \(\frac{\partial g(x)^{-1}}{\partial x}\). The choice of the inverse is justified by Equation (7) in Hirsch, Berrisch & Ziel ([2024](https://github.com/simon-hirsch/rolch/blob/main/paper.pdf)). 
+- the first derivative _of the inverse_ of the link function \(\frac{\partial g(x)^{-1}}{\partial x}\). The choice of the inverse is justified by Equation (7) in Hirsch, Berrisch & Ziel ([2024](https://github.com/simon-hirsch/ondil/blob/main/paper.pdf)). 
 
-The link functions implemented in `ROLCH` implemenent these as class methods each. Currently, we have implemented the identity-link, log-link and  shifted log-link functions.
+The link functions implemented in `ondil` implemenent these as class methods each. Currently, we have implemented the identity-link, log-link and  shifted log-link functions.
 
 
 ## Overview of Link Functions
@@ -36,35 +36,35 @@ Some link functions implement _shifted_ versions. The shifted link function is i
 
 ## Base Class
 
-::: rolch.base.LinkFunction
+::: ondil.base.LinkFunction
 
 ## API Reference
 
-::: rolch.link.IdentityLink
+::: ondil.link.IdentityLink
 
 ### Log-Link Functions
 
-::: rolch.link.LogLink
+::: ondil.link.LogLink
 
-::: rolch.link.LogShiftValueLink
+::: ondil.link.LogShiftValueLink
 
-::: rolch.link.LogShiftTwoLink
+::: ondil.link.LogShiftTwoLink
 
-::: rolch.link.LogIdentLink
+::: ondil.link.LogIdentLink
 
 ### Square Root Link Functions
 
-::: rolch.link.SqrtLink
+::: ondil.link.SqrtLink
 
-::: rolch.link.SqrtShiftValueLink
+::: ondil.link.SqrtShiftValueLink
 
-::: rolch.link.SqrtShiftTwoLink
+::: ondil.link.SqrtShiftTwoLink
 
 
 ### Inverse SoftPlus Link Functions
 
-::: rolch.link.InverseSoftPlusLink
+::: ondil.link.InverseSoftPlusLink
 
-::: rolch.link.InverseSoftPlusShiftValueLink
+::: ondil.link.InverseSoftPlusShiftValueLink
 
-::: rolch.link.InverseSoftPlusShiftTwoLink
+::: ondil.link.InverseSoftPlusShiftTwoLink

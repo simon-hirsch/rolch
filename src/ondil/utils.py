@@ -17,7 +17,7 @@ def handle_param_dict(
     parameters with the default. If the user passes just a bool, string, int, it will
     create a matching dictionary.
 
-    This is necessary since ROLCH expects at many places as many user given parameters
+    This is necessary since ondil expects at many places as many user given parameters
     as distribution parameters, but we don't know the number of distribution
     parameters a-priori at the estimator initialization.
 
