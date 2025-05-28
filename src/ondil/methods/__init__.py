@@ -8,6 +8,6 @@ __all__ = [
     "get_estimation_method",
     "LassoPathMethod",
     "RidgeMethod",
-    "ElasticnetPathMethod",
+    "ElasticNetPathMethod",
     "OrdinaryLeastSquaresMethod",
 ]
