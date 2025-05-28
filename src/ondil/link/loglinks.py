@@ -5,7 +5,6 @@ import numpy as np
 from ..base import LinkFunction
 from .robust_math import SMALL_NUMBER, robust_exp, robust_log
 
-
 class LogLink(LinkFunction):
     """
     The log-link function.

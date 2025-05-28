@@ -16,19 +16,20 @@ The link functions implemented in `ondil` implemenent these as class methods eac
 
 ## Overview of Link Functions
 
-| Link Function                  | Description                                                                                     |
-|--------------------------------|-------------------------------------------------------------------------------------------------|
-| `IdentityLink`                 | Implements the identity link function \(g(x) = x\).                                            |
-| `LogLink`                      | Implements the logarithmic link function \(g(x) = \log(x)\).                                   |
-| `LogShiftValueLink`            | Log link function with a shift value added to the inverse transformation.                      |
-| `LogShiftTwoLink`              | Log link function ensuring \(\hat{\theta} > 2\).                                              |
-| `LogIdentLink`                 | Combines identity and log transformations.                                                    |
-| `SqrtLink`                     | Implements the square root link function \(g(x) = \sqrt{x}\).                                 |
-| `SqrtShiftValueLink`           | Square root link function with a shift value added to the inverse transformation.              |
-| `SqrtShiftTwoLink`             | Square root link function ensuring \(\hat{\theta} > 2\).                                      |
-| `InverseSoftPlusLink`          | Implements the inverse softplus link function.                                                |
-| `InverseSoftPlusShiftValueLink`| Inverse softplus link function with a shift value added to the inverse transformation.         |
-| `InverseSoftPlusShiftTwoLink`  | Inverse softplus link function ensuring \(\hat{\theta} > 2\).                                 |
+| Link Function                   | Description                                                                            |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `IdentityLink`                  | Implements the identity link function \(g(x) = x\).                                    |
+| `LogLink`                       | Implements the logarithmic link function \(g(x) = \log(x)\).                           |
+| `LogShiftValueLink`             | Log link function with a shift value added to the inverse transformation.              |
+| `LogShiftTwoLink`               | Log link function ensuring \(\hat{\theta} > 2\).                                       |
+| `LogIdentLink`                  | Combines identity and log transformations.                                             |
+| `LogitLink`                     | Implements the logit link function \(g(x) = \log(x/(1-x))\).                           |
+| `SqrtLink`                      | Implements the square root link function \(g(x) = \sqrt{x}\).                          |
+| `SqrtShiftValueLink`            | Square root link function with a shift value added to the inverse transformation.      |
+| `SqrtShiftTwoLink`              | Square root link function ensuring \(\hat{\theta} > 2\).                               |
+| `InverseSoftPlusLink`           | Implements the inverse softplus link function.                                         |
+| `InverseSoftPlusShiftValueLink` | Inverse softplus link function with a shift value added to the inverse transformation. |
+| `InverseSoftPlusShiftTwoLink`   | Inverse softplus link function ensuring \(\hat{\theta} > 2\).                          |
 
 ## Shifted Link Functions
 
@@ -51,6 +52,10 @@ Some link functions implement _shifted_ versions. The shifted link function is i
 ::: ondil.link.LogShiftTwoLink
 
 ::: ondil.link.LogIdentLink
+
+### Logit Link Functions
+
+::: ondil.link.LogitLink
 
 ### Square Root Link Functions
 

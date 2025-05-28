@@ -28,6 +28,8 @@ from .distributions import (
     DistributionLogNormalMedian,
     DistributionLogNormal,
     DistributionLogistic,
+    DistributionBeta,
+
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -53,6 +55,7 @@ from .link import (
     SqrtLink,
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
+    LogitLink,
 )
 from .methods import (
     ElasticNetPathMethod,
@@ -81,6 +84,7 @@ __all__ = [
     "ElasticNetPathMethod",
     "OrdinaryLeastSquaresMethod",
     "IdentityLink",
+    "LogitLink",
     "LogLink",
     "LogIdentLink",
     "LogShiftTwoLink",
@@ -98,6 +102,7 @@ __all__ = [
     "DistributionT",
     "DistributionJSU",
     "DistributionGamma",
+    "DistributionBeta",
     "init_forget_vector",
     "init_gram",
     "update_gram",

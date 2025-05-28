@@ -8,6 +8,7 @@ from ondil import (
     InverseSoftPlusLink,
     InverseSoftPlusShiftValueLink,
     LogIdentLink,
+    LogitLink, 
     LogLink,
     LogShiftValueLink,
     SqrtLink,
