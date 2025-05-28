@@ -4,7 +4,7 @@ This PR introduces the **FILL DISTRIBUTION HERE**
 
 ## Checklist
 
-- [ ] Implement distribution in `src/ondil/distributions/new_dist.py
+- [ ] Implement distribution in `src/ondil/distributions/new_dist.py`
 - [ ] Add the distribution to the documentation under `docs/distributions.md`
 - [ ] Add a proper docstring describing the definition of the distribution and possible parameterizations
 - [ ] Implement tests for the derivatives using `rpy2`  - see `tests/distributions`
