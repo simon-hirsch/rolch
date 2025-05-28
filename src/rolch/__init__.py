@@ -91,6 +91,7 @@ __all__ = [
     "InverseSoftPlusShiftTwoLink",
     "DistributionNormal",
     "DistributionNormalMeanVariance",
+    "DistributionLogistic",
     "DistributionLogNormalMedian",
     "DistributionT",
     "DistributionJSU",
