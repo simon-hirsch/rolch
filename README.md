@@ -7,6 +7,10 @@
 [![Tests](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_run_tests.yml)
 [![Docs](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml/badge.svg?branch=main)](https://github.com/simon-hirsch/rolch/actions/workflows/ci_build_docs.yml)
 
+## Rename
+
+`rolch` is an acronym for "Regularized Online Learning for Conditional Heteroskedasticity". As distributional regression is more than conditinoal heteroskedasticity, we have decided to rename the package to `ondil`. This ist the last release under the name `rolch`. The new package will be available under the name `ondil` on PyPI and GitHub.
+
 ## Introduction
 
 This package provides an online estimation of models for distributional regression, respectively, models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
