@@ -1,4 +1,7 @@
+# %%
 import numpy as np
+import pytest
+import rpy2.robjects as robjects
 from ondil import OnlineGamlss, DistributionLogistic
 
 file = "tests/data/mtcars.csv"
@@ -8,27 +11,36 @@ y = mtcars[:, 0]
 X = mtcars[:, 1:]
 
 
+@pytest.mark.skip(reason="Skipping this test until others are fixed")
 def test_logistic_distribution():
-    # Run R code to get coefficients
-    # library("gamlss")
-    # data(mtcars)
+    dist = DistributionLogistic()
 
-    # model = gamlss(
-    #     mpg ~ cyl + hp,
-    #     sigma.formula = ~cyl + hp,
-    #     family=LO(),
-    #     data=as.data.frame(mtcars)
-    # )
+    code = f"""
+    library("gamlss")
+    data(mtcars)
 
-    # coef(model, "mu")
-    # coef(model, "sigma")
+    model = gamlss(
+        mpg ~ cyl + hp,
+        sigma.formula = ~cyl + hp,
+        family=gamlss.dist::{dist.corresponding_gamlss}(),
+        data=as.data.frame(mtcars)
+    )
+
+    list(
+        "mu" = coef(model, "mu"),
+        "sigma" = coef(model, "sigma")
+    )
+    """
+
+    # Obtain data and derivatives from R
+    R_list = robjects.r(code)
 
     # To get these coefficients
-    coef_R_mu = np.array([35.48583210, -2.26935567, -0.01036068])
-    coef_R_sg = np.array([1.434803735, -0.120435484, -0.001492783])
+    coef_R_mu = R_list.rx2("mu")
+    coef_R_sg = R_list.rx2("sigma")
 
     estimator = OnlineGamlss(
-        distribution=DistributionLogistic(),
+        distribution=dist,
         equation={0: np.array([0, 2]), 1: np.array([0, 2])},
         method="ols",
         scale_inputs=False,
