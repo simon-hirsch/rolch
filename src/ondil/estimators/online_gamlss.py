@@ -531,7 +531,6 @@ class OnlineGamlss(Estimator):
             X (np.ndarray): Data Matrix. Currently supporting only numpy, will support pandas and polars in the future.
             y (np.ndarray): Response variable $Y$.
             sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
-            beta_bounds (Dict[int, Tuple], optional): Bounds for the $\beta$ in the coordinate descent algorithm. The user needs to provide a `dict` with a mapping of tuples to distribution parameters 0, 1, 2, and 3 potentially. Defaults to None.
         """
 
         self._validate_inputs(X, y)
@@ -789,7 +788,6 @@ class OnlineGamlss(Estimator):
             it_outer += 1
 
             for param in self._param_order:
-
                 self.beta_iterations_inner[param][it_outer] = {}
                 self.beta_path_iterations_inner[param][it_outer] = {}
 
@@ -810,7 +808,6 @@ class OnlineGamlss(Estimator):
         return global_dev, it_outer
 
     def _outer_fit(self, X, y, w):
-
         global_di = -2 * self.distribution.logpdf(y, self.fv)
         global_dev = np.sum(w * global_di)
         global_dev_old = global_dev + 1000
@@ -843,7 +840,6 @@ class OnlineGamlss(Estimator):
             it_outer += 1
 
             for param in self._param_order:
-
                 self.beta_iterations_inner[param][it_outer] = {}
                 self.beta_path_iterations_inner[param][it_outer] = {}
 
@@ -876,7 +872,6 @@ class OnlineGamlss(Estimator):
         param,
         dv,
     ):
-
         dv_start = np.sum(-2 * self.distribution.logpdf(y, self.fv) * w)
         dv_iterations = np.repeat(dv_start, self.max_it_inner + 1)
         fv_it = copy.copy(self.fv)
