@@ -1,4 +1,4 @@
-site_name: "ondil: Regularized Online Learning for Conditional Heteroskedasticity"
+site_name: "ondil: Online Distributional Learning"
 
 nav:
   - Home: index.md
