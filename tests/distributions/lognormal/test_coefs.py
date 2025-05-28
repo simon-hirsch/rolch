@@ -1,5 +1,5 @@
 import numpy as np
-from rolch import OnlineGamlss, DistributionLogNormal
+from ondil import DistributionLogNormal, OnlineGamlss
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]

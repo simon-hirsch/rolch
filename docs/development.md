@@ -2,13 +2,13 @@
 
 First of all, we're happy that you want to take the time to contribute to this package and extending it. Thanks!
 
-This page is trying to give some guidance on how to write additional link functions or distributions and some of the ideas underlying the [`LinkFunction`][rolch.base.LinkFunction], the [`Distribution`][rolch.base.Distribution] and the [`ScipyMixin`][rolch.base.ScipyMixin] classes.
+This page is trying to give some guidance on how to write additional link functions or distributions and some of the ideas underlying the [`LinkFunction`][ondil.base.LinkFunction], the [`Distribution`][ondil.base.Distribution] and the [`ScipyMixin`][ondil.base.ScipyMixin] classes.
 
 ## Writing Link Functions
 
 Link functions map the predictors of the distribution parameter to the distribution parameter's support. Hence, we need to have the link function itself and its inverse. To calculate the score vector and the weights, we additionally need the first and second derivative of the link, as well as the derivative of the inverse.
 
-The [`LinkFunction`][rolch.base.LinkFunction] abstract base class enforces, that `SomeNewLink()` implements:
+The [`LinkFunction`][ondil.base.LinkFunction] abstract base class enforces, that `SomeNewLink()` implements:
 
 - The link: `SomeNewLink().link()`.
 - The inverse: `SomeNewLink().inverse()`.
@@ -16,7 +16,7 @@ The [`LinkFunction`][rolch.base.LinkFunction] abstract base class enforces, that
 - The second derivative of the link: `SomeNewLink().link_second_derivative()`.
 - The derivative of the inverse: `SomeNewLink().inverse_derivative()`.
 
-Additionally, each link defines the `SomeNewLink().link_support` as `tuple` of `float` values. This is used to ensure at the initialization of a distribution that the link functions support is inside the support of the distribution parameter. We allow the link to shorten the possible outcome space of the parameter, but we don't allow to return impossible values. As an example, you can constrain the degrees of freedom $\nu$ of the $t$-distribution by taking a [`LogShiftTwoLink()`][rolch.link.LogShiftTwoLink], which ensures that $\nu > 2$ (and therefore the variance exists), but you cannot choose the [`IdentityLink()`][rolch.link.IdentityLink], since the degrees of freedom must be positive.
+Additionally, each link defines the `SomeNewLink().link_support` as `tuple` of `float` values. This is used to ensure at the initialization of a distribution that the link functions support is inside the support of the distribution parameter. We allow the link to shorten the possible outcome space of the parameter, but we don't allow to return impossible values. As an example, you can constrain the degrees of freedom $\nu$ of the $t$-distribution by taking a [`LogShiftTwoLink()`][ondil.link.LogShiftTwoLink], which ensures that $\nu > 2$ (and therefore the variance exists), but you cannot choose the [`IdentityLink()`][ondil.link.IdentityLink], since the degrees of freedom must be positive.
 
 There are two ways to implement the support of the link function:
 
@@ -53,13 +53,13 @@ To ensure that we model the support correctly - think about, e.g. $\log(x)$, we 
 
 ## Writing Distributions
 
-Distributions are an integral part of the package. All distributions inherit from [`Distribution`][rolch.base.Distribution], an abstract base class. This class enforces that each distribution has certain methods and members and also provides some default methods.
+Distributions are an integral part of the package. All distributions inherit from [`Distribution`][ondil.base.Distribution], an abstract base class. This class enforces that each distribution has certain methods and members and also provides some default methods.
 
-The [`Distribution`][rolch.base.Distribution] class is a very general class. However, some distributions have the corresponding implementation in `scipy.stats`. To use this, the [`ScipyMixin`][rolch.base.ScipyMixin] class provides the already existing implementations of `cdf`, `pdf` etc. This makes implementing a new distribution very easy.
+The [`Distribution`][ondil.base.Distribution] class is a very general class. However, some distributions have the corresponding implementation in `scipy.stats`. To use this, the [`ScipyMixin`][ondil.base.ScipyMixin] class provides the already existing implementations of `cdf`, `pdf` etc. This makes implementing a new distribution very easy.
 
 ### Scipy Distributions
 
-Let's consider the `Normal` distribution as an example. The `Normal` distribution is implemented in `scipy.stats` as `scipy.stats.norm`. Hence, we can use the [`ScipyMixin`][rolch.base.ScipyMixin] together with [`Distribution`][rolch.base.Distribution] to implement the `Normal` distribution. The `Normal` distribution is implemented as follows:
+Let's consider the `Normal` distribution as an example. The `Normal` distribution is implemented in `scipy.stats` as `scipy.stats.norm`. Hence, we can use the [`ScipyMixin`][ondil.base.ScipyMixin] together with [`Distribution`][ondil.base.Distribution] to implement the `Normal` distribution. The `Normal` distribution is implemented as follows:
 
 ```python
 class DistributionNormal(Distribution, ScipyMixin):
@@ -71,12 +71,12 @@ class DistributionNormal(Distribution, ScipyMixin):
  parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
  distribution_support = (-np.inf, np.inf)
 
-    # Scipy equivalent and parameter mapping rolch -> scipy
+    # Scipy equivalent and parameter mapping ondil -> scipy
  scipy_dist = st.norm
  scipy_names = {"mu": "loc", "sigma": "scale"}
 ```
 
-First, we assign a name and declare the inheritance. Then, we define some class properties like `corresponding_gamlss`, `parameter_names`, `parameter_support` etc. These are enforced through `@property` decorators in [`Distribution`][rolch.base.Distribution] and [`ScipyMixin`][rolch.base.ScipyMixin].
+First, we assign a name and declare the inheritance. Then, we define some class properties like `corresponding_gamlss`, `parameter_names`, `parameter_support` etc. These are enforced through `@property` decorators in [`Distribution`][ondil.base.Distribution] and [`ScipyMixin`][ondil.base.ScipyMixin].
 
 Note that `parameter_names` relates the variable names used throughout the methods to the columns of the parameter array `theta`. In turn, `scipy_names` relates these variable names to the argument names of the `scipy.stats` distribution. This is necessary to map the parameters correctly.
 
@@ -125,7 +125,7 @@ Thats it! We implemented the `Normal` distribution.
 
 #### Special Cases
 
-Some distributions may be special. For example, our implementation of the Gamma distribution [`DistributionGamma`][rolch.distributions.DistributionGamma] uses a different parameterization than `scipy.stats.gamma`. In consequence, we cannot use `theta_to_scipy_params()` from [`ScipyMixin`][rolch.base.ScipyMixin] to map the parameters to `scipy`. In this case, we must implement the `theta_to_scipy_params()` method ourselves. This is done in the `DistributionGamma` class:
+Some distributions may be special. For example, our implementation of the Gamma distribution [`DistributionGamma`][ondil.distributions.DistributionGamma] uses a different parameterization than `scipy.stats.gamma`. In consequence, we cannot use `theta_to_scipy_params()` from [`ScipyMixin`][ondil.base.ScipyMixin] to map the parameters to `scipy`. In this case, we must implement the `theta_to_scipy_params()` method ourselves. This is done in the `DistributionGamma` class:
 
 ```python
 def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
@@ -144,12 +144,12 @@ def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
     return params
 ```
 
-By providing a method called `theta_to_scipy_params` in the distribution class, we overwrite the default implementation from [`ScipyMixin`][rolch.base.ScipyMixin] and can map the parameters correctly.
+By providing a method called `theta_to_scipy_params` in the distribution class, we overwrite the default implementation from [`ScipyMixin`][ondil.base.ScipyMixin] and can map the parameters correctly.
 
 ## Summary
 
-Implementing your own distribution is fairly straightforward, especially if there is already a `scipy.stats` implementation. A good starting point is to look at the [`DistributionNormal`][rolch.distributions.DistributionNormal] function.
+Implementing your own distribution is fairly straightforward, especially if there is already a `scipy.stats` implementation. A good starting point is to look at the [`DistributionNormal`][ondil.distributions.DistributionNormal] function.
 
-If things need to be adjusted, then [`DistributionGamma`][rolch.distributions.DistributionGamma] demonstrates how to do this.
+If things need to be adjusted, then [`DistributionGamma`][ondil.distributions.DistributionGamma] demonstrates how to do this.
 
-If you want to implement a distribution that is not available in `scipy.stats`, then you need to implement some methods, including `cdf`, `pdf`, and `rvs` yourself. In that case, your new class will inherit only from [`Distribution`][rolch.base.Distribution]. You can inspect [`ScipyMixin`][rolch.base.ScipyMixin] to see which other methods need to be implemented.
+If you want to implement a distribution that is not available in `scipy.stats`, then you need to implement some methods, including `cdf`, `pdf`, and `rvs` yourself. In that case, your new class will inherit only from [`Distribution`][ondil.base.Distribution]. You can inspect [`ScipyMixin`][ondil.base.ScipyMixin] to see which other methods need to be implemented.

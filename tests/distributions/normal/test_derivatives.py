@@ -1,6 +1,6 @@
 # %%
 import numpy as np
-from rolch import DistributionNormal
+from ondil import DistributionNormal
 
 
 def test_normal_distribution():

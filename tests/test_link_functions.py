@@ -3,8 +3,7 @@
 
 import numpy as np
 import pytest
-
-from rolch import (
+from ondil import (
     IdentityLink,
     InverseSoftPlusLink,
     InverseSoftPlusShiftValueLink,

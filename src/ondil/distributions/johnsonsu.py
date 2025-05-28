@@ -29,7 +29,7 @@ class DistributionJSU(ScipyMixin, Distribution):
     }
     distribution_support = (-np.inf, np.inf)
 
-    # Scipy equivalent and parameter mapping rolch -> scipy
+    # Scipy equivalent and parameter mapping ondil -> scipy
     scipy_dist = st.johnsonsu
     scipy_names = {"mu": "loc", "sigma": "scale", "nu": "a", "tau": "b"}
 

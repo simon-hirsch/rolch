@@ -1,20 +1,5 @@
 # ruff: noqa: E402
 
-import warnings
-
-warnings.simplefilter("default", DeprecationWarning)
-warnings.warn(
-    """ 
-    rolch was replaced by a new package ondil.
-    Active development of rolch has ended with this release.
-    Please use ondil for new projects and consider migrating existing projects to ondil.
-    The ondil package is available at https://github.com/simon-hirsch/ondil/
-    """,
-    DeprecationWarning,
-    stacklevel=1,
-)
-
-
 from importlib.metadata import version
 from importlib.util import find_spec
 
@@ -79,7 +64,7 @@ from .utils import (
 )
 from .warnings import OutOfSupportWarning
 
-__version__ = version("rolch")
+__version__ = version("ondil")
 
 __all__ = [
     "OutOfSupportWarning",
