@@ -1,5 +1,20 @@
 # ruff: noqa: E402
 
+import warnings
+
+warnings.simplefilter("default", DeprecationWarning)
+warnings.warn(
+    """ 
+    rolch was replaced by a new package ondil.
+    Active development of rolch has ended with this release.
+    Please use ondil for new projects and consider migrating existing projects to ondil.
+    The ondil package is available at https://github.com/simon-hirsch/ondil/
+    """,
+    DeprecationWarning,
+    stacklevel=1,
+)
+
+
 from importlib.metadata import version
 from importlib.util import find_spec
 
@@ -20,11 +35,11 @@ from .coordinate_descent import (
 from .distributions import (
     DistributionGamma,
     DistributionJSU,
+    DistributionLogNormal,
+    DistributionLogNormalMedian,
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
-    DistributionLogNormalMedian,
-    DistributionLogNormal,
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -52,10 +67,10 @@ from .link import (
     SqrtShiftValueLink,
 )
 from .methods import (
+    ElasticNetPathMethod,
     LassoPathMethod,
     OrdinaryLeastSquaresMethod,
     RidgeMethod,
-    ElasticNetPathMethod,
 )
 from .scaler import OnlineScaler
 from .utils import (
