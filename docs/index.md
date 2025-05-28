@@ -1,6 +1,6 @@
-# Welcome to `ondil` - Regularized Online Learning for Conditional Heteroskedasticity
+# Welcome to `ondil` - Online Distributional Learning
 
-`ondil` is a `Python` package for online distributional learning and online models for conditionally heteroskedastic data. We provide an online implementation of the well-known GAMLSS model using online coordinate descent (OCD).
+`ondil` is a `Python` package for online distributional learning. We provide an online implementation of the well-known GAMLSS model using online coordinate descent (OCD).
 
 !!! note
     `ondil` is currently in the first alpha phase. Please expect changes to happen frequently.
@@ -30,6 +30,9 @@ This allows us to specify very flexible models that consider the conditional beh
 ```shell
 pip install ondil
 ```
+## I was looking for `rolch` but I found `ondil`?
+
+`rolch` (Regularized Online Learning for Conditional Heteroskedasticity) was the original name of this package, but we decided to rename it to `ondil` (Online Distributional Learning) to better reflect its purpose and functionality, since conditional heteroskedasticity (=non constant variance) is just one of the many applications for distributional regression models that can be estimated with this package.
 
 ## Example
 
