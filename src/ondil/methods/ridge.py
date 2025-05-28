@@ -36,7 +36,7 @@ class RidgeMethod(EstimationMethod):
         """
         Initializes the Ridge method with the specified parameters.
 
-        Parameters:
+        Args:
             lambda_reg (float): Regularization parameter. Must be greater than 0. Higher values lead to more regularization. If not set, the average variance of the features is used as the default.
             selection (Literal["cyclic", "random"]): Method to select features during the path. Default is "cyclic".
             beta_lower_bound (np.ndarray | None): Lower bound for the coefficients. Default is None.
