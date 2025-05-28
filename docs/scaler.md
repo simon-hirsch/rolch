@@ -2,4 +2,4 @@
 
 ## API Reference
 
-::: rolch.OnlineScaler
+::: ondil.OnlineScaler

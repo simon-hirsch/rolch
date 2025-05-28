@@ -20,6 +20,8 @@ from .coordinate_descent import (
 from .distributions import (
     DistributionGamma,
     DistributionJSU,
+    DistributionLogNormal,
+    DistributionLogNormalMedian,
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
@@ -53,10 +55,10 @@ from .link import (
     SqrtShiftValueLink,
 )
 from .methods import (
+    ElasticNetPathMethod,
     LassoPathMethod,
     OrdinaryLeastSquaresMethod,
     RidgeMethod,
-    ElasticNetPathMethod,
 )
 from .scaler import OnlineScaler
 from .utils import (
@@ -65,7 +67,7 @@ from .utils import (
 )
 from .warnings import OutOfSupportWarning
 
-__version__ = version("rolch")
+__version__ = version("ondil")
 
 __all__ = [
     "OutOfSupportWarning",

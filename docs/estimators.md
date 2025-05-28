@@ -4,11 +4,11 @@ Estimator classes provide an `sklearn`-like API to fit, predict and update model
 
 ## Online GAMLSS
 
-::: rolch.OnlineGamlss
+::: ondil.OnlineGamlss
 
 ## Linear Models
 
-::: rolch.OnlineLinearModel
+::: ondil.OnlineLinearModel
 
-::: rolch.OnlineLasso
+::: ondil.OnlineLasso
 

@@ -5,7 +5,7 @@
 `EstimationMethod()` classes do the actual hard lifting of fitting coefficients (or weights). They take more technical parameters like the length of the regularization path or upper bounds on certain coefficients. These parameters depend on the individual estimation method. In general, we aim to provide sensible out-of-the-box defaults. This [page](estimators_and_methods.md) explains the difference in detail. `Estimator` classes often take a method parameter, to which either a string or an instance of the `EstimationMethod()` can be passed, e.g.
 
 ```python
-from rolch import OnlineLinearModel, LassoPathMethod
+from ondil import OnlineLinearModel, LassoPathMethod
 
 fit_intercept = True
 scale_inputs = True
@@ -39,10 +39,10 @@ More information on coordinate descent can also be found on this [page](coordina
     We don't document the classmethods of the `EstimationMethod` since these are only used internally.
 
 
-::: rolch.OrdinaryLeastSquaresMethod
+::: ondil.OrdinaryLeastSquaresMethod
 
-::: rolch.LassoPathMethod
+::: ondil.LassoPathMethod
 
-::: rolch.RidgeMethod
+::: ondil.RidgeMethod
 
-::: rolch.ElasticNetPathMethod
+::: ondil.ElasticNetPathMethod

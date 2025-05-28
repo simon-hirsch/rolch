@@ -21,7 +21,7 @@ class DistributionT(ScipyMixin, Distribution):
     }
     distribution_support = (-np.inf, np.inf)
 
-    # Scipy distribution and parameter mapping rolch -> scipy
+    # Scipy distribution and parameter mapping ondil -> scipy
     scipy_dist = st.t
     scipy_names = {"mu": "loc", "sigma": "scale", "nu": "df"}
 

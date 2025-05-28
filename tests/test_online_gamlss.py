@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
+from ondil.distributions import DistributionJSU
+from ondil.estimators import OnlineGamlss
 from sklearn.datasets import make_regression
-
-from rolch.distributions import DistributionJSU
-from rolch.estimators import OnlineGamlss
 
 FIT_INTERCEPT = [True, False]
 N_FEATURES = np.round(np.geomspace(11, 100, 5)).astype(int)
