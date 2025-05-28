@@ -60,7 +60,7 @@ class DistributionBeta(ScipyMixin, Distribution):
         1: (np.nextafter(0, 1), np.nextafter(1, 0)),
     }
     distribution_support = (np.nextafter(0, 1), np.nextafter(1, 0))
-    # Scipy equivalent and parameter mapping rolch -> scipy
+    # Scipy equivalent and parameter mapping ondil -> scipy
     scipy_dist = st.beta
     # Theta columns do not map 1:1 to scipy parameters for beta
     # So we have to overload theta_to_scipy_params

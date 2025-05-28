@@ -1,5 +1,5 @@
 import numpy as np
-from rolch import DistributionBeta
+from ondil import DistributionBeta
 
 
 def test_beta_distribution():
@@ -40,15 +40,13 @@ def test_beta_distribution():
     dl2_dpp_r = np.array([-856.6320126, 0.3953103, 11.2519330])
 
     assert np.allclose(dl1_dp1_0, dl1_dp1_0_r), "First derivative wrt mu doesn't match"
-    assert np.allclose(
-        dl1_dp1_1, dl1_dp1_1_r
-    ), "First derivative wrt sigma doesn't match"
+    assert np.allclose(dl1_dp1_1, dl1_dp1_1_r), (
+        "First derivative wrt sigma doesn't match"
+    )
     assert np.allclose(dl2_dp2_0, dl2_dp2_0_r), "Second derivative wrt mu doesn't match"
-    assert np.allclose(
-        dl2_dp2_1, dl2_dp2_1_r
-    ), "Second derivative wrt sigma doesn't match"
-    assert np.allclose(
-        dl2_dpp, dl2_dpp_r
-    ), "Second derivative wrt mu and sigma doesn't match"
-
-
+    assert np.allclose(dl2_dp2_1, dl2_dp2_1_r), (
+        "Second derivative wrt sigma doesn't match"
+    )
+    assert np.allclose(dl2_dpp, dl2_dpp_r), (
+        "Second derivative wrt mu and sigma doesn't match"
+    )
