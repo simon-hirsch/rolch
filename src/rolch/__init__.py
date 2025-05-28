@@ -5,8 +5,8 @@ import warnings
 warnings.simplefilter("default", DeprecationWarning)
 warnings.warn(
     """ 
-    rolch will be replaced by a new package ondil.
-    Active development of rolch will stop with this release.
+    rolch was replaced by a new package ondil.
+    Active development of rolch has ended with this release.
     Please use ondil for new projects and consider migrating existing projects to ondil.
     The ondil package is available at https://github.com/simon-hirsch/ondil/
     """,
