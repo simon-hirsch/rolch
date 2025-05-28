@@ -11,7 +11,6 @@ from .link import LinkFunction
 
 
 class Distribution(ABC):
-
     def __init__(self, links: dict[int, LinkFunction]) -> None:
         self.links = links
         self._validate_links()
@@ -121,7 +120,7 @@ class Distribution(ABC):
 
         This is a alias for the `ppf` method.
 
-        Parameters:
+        Args:
             q (np.ndarray): The quantiles to compute.
             theta (np.ndarray): The parameters of the distribution.
 
@@ -144,7 +143,7 @@ class Distribution(ABC):
         """
         Compute the cumulative distribution function (CDF) for the given data.
 
-        Parameters:
+        Args:
             y (np.ndarray): The data points at which to evaluate the CDF.
             theta (np.ndarray): The parameters of the distribution.
 
@@ -157,7 +156,7 @@ class Distribution(ABC):
         """
         Compute the probability density function (PDF) for the given data points.
 
-        Parameters:
+        Args:
             y (np.ndarray): An array of data points at which to evaluate the PDF.
             theta (np.ndarray): An array of parameters for the distribution.
 
@@ -170,7 +169,7 @@ class Distribution(ABC):
         """
         Compute the probability mass function (PMF) for the given data points.
 
-        Parameters:
+        Args:
             y (np.ndarray): An array of data points at which to evaluate the PDF.
             theta (np.ndarray): An array of parameters for the distribution.
 
@@ -183,7 +182,7 @@ class Distribution(ABC):
         """
         Percent Point Function (Inverse of CDF).
 
-        Parameters:
+        Args:
             q (np.ndarray): Quantiles.
             theta (np.ndarray): Distribution parameters.
 
@@ -196,7 +195,7 @@ class Distribution(ABC):
         """
         Generate random variates of given size and parameters.
 
-        Parameters:
+        Args:
             size (int): The number of random variates to generate.
             theta (np.ndarray): The parameters for the distribution.
 
@@ -220,7 +219,7 @@ class Distribution(ABC):
     def logcdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """Compute the log of the cumulative distribution function (CDF) for the given data points.
 
-        Parameters:
+        Args:
             y (np.ndarray): An array of data points at which to evaluate the log CDF.
             theta (np.ndarray): An array of parameters for the distribution.
 
@@ -230,7 +229,6 @@ class Distribution(ABC):
 
 
 class ScipyMixin(ABC):
-
     @property
     @abstractmethod
     def parameter_names(self) -> dict:
@@ -288,7 +286,7 @@ class ScipyMixin(ABC):
     def logpmf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """Compute the log of the probability mass function (PMF) for the given data points.
 
-        Parameters:
+        Args:
             y (np.ndarray): An array of data points at which to evaluate the log PMF.
             theta (np.ndarray): An array of parameters for the distribution.
 
@@ -300,7 +298,7 @@ class ScipyMixin(ABC):
     def logpdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """Compute the log of the probability density function (PDF) for the given data points.
 
-        Parameters:
+        Args:
             y (np.ndarray): An array of data points at which to evaluate the log PDF.
             theta (np.ndarray): An array of parameters for the distribution.
 
@@ -312,7 +310,7 @@ class ScipyMixin(ABC):
     def logcdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """Compute the log of the cumulative distribution function (CDF) for the given data points.
 
-        Parameters:
+        Args:
             y (np.ndarray): An array of data points at which to evaluate the log CDF.
             theta (np.ndarray): An array of parameters for the distribution.
 

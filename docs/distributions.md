@@ -10,23 +10,23 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ## Base Classes
 
-| Base Distribution | Description |
-|------------------|-------------|
-| [`Distribution`](#ondil.Distribution) | Base class for all distributions. |
-| [`ScipyMixin`](#ondil.base.ScipyMixin) | Base class for all distributions that are based on `scipy`. |
+| Base Distribution                          | Description                                                 |
+| ------------------------------------------ | ----------------------------------------------------------- |
+| [`Distribution`](#ondil.base.Distribution) | Base class for all distributions.                           |
+| [`ScipyMixin`](#ondil.base.ScipyMixin)     | Base class for all distributions that are based on `scipy`. |
 
 
 ## List of Distributions
 
-| Distribution         | Description                                      | `scipy` Equivalent          |
-|----------------------|--------------------------------------------------|---------------------------|
-| [`DistributionNormal`](#ondil.DistributionNormal) | Gaussian (mean and standard deviation) | `scipy.stats.norm` |
-| [`DistributionNormalMeanVariance`](#ondil.DistributionNormalMeanVariance) | Gaussian (mean and variance) | `scipy.stats.norm` |
-| [`DistributionT`](#ondil.DistributionT)           | Student's $t$ distribution       | `scipy.stats.t`     |
-| [`DistributionJSU`](#ondil.DistributionJSU)       | Johnson's SU distribution      | `scipy.stats.johnsonsu` |
-| [`DistributionGamma`](#ondil.DistributionGamma)   | Gamma distribution             | `scipy.stats.gamma` |
-| [`DistributionLogNormal`](#ondil.DistributionLogNormal) | Log-normal distribution        | `scipy.stats.lognorm` |
-| [`DistributionLogNormalMedian`](#ondil.DistributionLogNormalMedian) | Log-normal distribution (median) | - |
+| Distribution                                                              | Description                            | `scipy` Equivalent      |
+| ------------------------------------------------------------------------- | -------------------------------------- | ----------------------- |
+| [`DistributionNormal`](#ondil.DistributionNormal)                         | Gaussian (mean and standard deviation) | `scipy.stats.norm`      |
+| [`DistributionNormalMeanVariance`](#ondil.DistributionNormalMeanVariance) | Gaussian (mean and variance)           | `scipy.stats.norm`      |
+| [`DistributionT`](#ondil.DistributionT)                                   | Student's $t$ distribution             | `scipy.stats.t`         |
+| [`DistributionJSU`](#ondil.DistributionJSU)                               | Johnson's SU distribution              | `scipy.stats.johnsonsu` |
+| [`DistributionGamma`](#ondil.DistributionGamma)                           | Gamma distribution                     | `scipy.stats.gamma`     |
+| [`DistributionLogNormal`](#ondil.DistributionLogNormal)                   | Log-normal distribution                | `scipy.stats.lognorm`   |
+| [`DistributionLogNormalMedian`](#ondil.DistributionLogNormalMedian)       | Log-normal distribution (median)       | -                       |
 
 
 
