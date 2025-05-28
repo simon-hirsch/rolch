@@ -28,7 +28,7 @@ def test_coordinate_descent():
     is_regularized = np.repeat(True, J)
     beta_path = np.zeros((lambda_n, J))
 
-    rolch_lasso_path = online_coordinate_descent_path(
+    ondil_lasso_path = online_coordinate_descent_path(
         x_gram=x_gram,
         y_gram=y_gram,
         beta_path=beta_path,
@@ -51,12 +51,11 @@ def test_coordinate_descent():
 
     assert np.allclose(alphas, lambda_grid / X.shape[0]), "Lambdas don't match"
     assert np.all(
-        np.mean(np.isclose(sklearn_lasso_path - rolch_lasso_path, 0), axis=0) > 0.95
+        np.mean(np.isclose(sklearn_lasso_path - ondil_lasso_path, 0), axis=0) > 0.95
     ), "Betas don't match"
 
 
 def test_coordinate_descent_bounds():
-
     X, y = load_diabetes(return_X_y=True)
     X /= X.std(axis=0)
     J = X.shape[1]
@@ -73,7 +72,7 @@ def test_coordinate_descent_bounds():
     is_regularized = np.repeat(True, J)
     beta_path = np.zeros((lambda_n, J))
 
-    rolch_lasso_path_positive = online_coordinate_descent_path(
+    ondil_lasso_path_positive = online_coordinate_descent_path(
         x_gram=x_gram,
         y_gram=y_gram,
         beta_path=beta_path,
@@ -89,7 +88,7 @@ def test_coordinate_descent_bounds():
         max_iterations=1000,
     )[0]
 
-    rolch_lasso_path_negative = online_coordinate_descent_path(
+    ondil_lasso_path_negative = online_coordinate_descent_path(
         x_gram=x_gram,
         y_gram=y_gram,
         beta_path=beta_path,
@@ -105,5 +104,5 @@ def test_coordinate_descent_bounds():
         max_iterations=1000,
     )[0]
 
-    assert np.all(rolch_lasso_path_negative <= 0), "Path should contain only betas <= 0"
-    assert np.all(rolch_lasso_path_positive >= 0), "Path should contain only betas >= 0"
+    assert np.all(ondil_lasso_path_negative <= 0), "Path should contain only betas <= 0"
+    assert np.all(ondil_lasso_path_positive >= 0), "Path should contain only betas >= 0"
