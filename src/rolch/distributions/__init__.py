@@ -14,6 +14,5 @@ __all__ = [
     "DistributionGamma",
     "DistributionLogNormal",
     "DistributionLogNormalMedian",
-    "DistributionExponential",
     "DistributionLogistic",
 ]
