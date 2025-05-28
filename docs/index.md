@@ -1,17 +1,17 @@
-# Welcome to `ROLCH` - Regularized Online Learning for Conditional Heteroskedasticity
+# Welcome to `ondil` - Online Distributional Learning
 
-`ROLCH` is a `Python` package for online distributional learning and online models for conditionally heteroskedastic data. We provide an online implementation of the well-known GAMLSS model using online coordinate descent (OCD).
+`ondil` is a `Python` package for online distributional learning. We provide an online implementation of the well-known GAMLSS model using online coordinate descent (OCD).
 
 !!! note
-    `ROLCH` is currently in the first alpha phase. Please expect changes to happen frequently.
+    `ondil` is currently in the first alpha phase. Please expect changes to happen frequently.
 
 ## Introduction
 
 This package provides an online estimation of models for distributional regression, respectively, models for conditional heteroskedastic data. The main contribution is an online/incremental implementation of the generalized additive models for location, shape and scale (GAMLSS, see [Rigby & Stasinopoulos, 2005](https://academic.oup.com/jrsssc/article-abstract/54/3/507/7113027)) developed in [Hirsch, Berrisch & Ziel, 2024](https://arxiv.org/abs/2407.08750).
 
-Please have a look at the [documentation](https://simon-hirsch.github.io/rolch/) or the [example notebook](https://github.com/simon-hirsch/rolch/blob/main/example.ipynb).
+Please have a look at the [documentation](https://simon-hirsch.github.io/ondil/) or the [example notebook](https://github.com/simon-hirsch/ondil/blob/main/example.ipynb).
 
-We're actively working on the package and welcome contributions from the community. Have a look at the [Release Notes](https://github.com/simon-hirsch/rolch/releases) and the [Issue Tracker](https://github.com/simon-hirsch/rolch/issues).
+We're actively working on the package and welcome contributions from the community. Have a look at the [Release Notes](https://github.com/simon-hirsch/ondil/releases) and the [Issue Tracker](https://github.com/simon-hirsch/ondil/issues).
 
 ## Distributional Regression
 
@@ -25,18 +25,21 @@ This allows us to specify very flexible models that consider the conditional beh
 
 ## Installation
 
-`ROLCH` is available on the [Python Package Index](https://pypi.org/project/rolch/) and can be installed via `pip`:
+`ondil` is available on the [Python Package Index](https://pypi.org/project/ondil/) and can be installed via `pip`:
 
 ```shell
-pip install rolch
+pip install ondil
 ```
+## I was looking for `rolch` but I found `ondil`?
+
+`rolch` (Regularized Online Learning for Conditional Heteroskedasticity) was the original name of this package, but we decided to rename it to `ondil` (Online Distributional Learning) to better reflect its purpose and functionality, since conditional heteroskedasticity (=non constant variance) is just one of the many applications for distributional regression models that can be estimated with this package.
 
 ## Example
 
 The following few lines give an introduction. We use the `diabetes` data set and model the response variable \(Y\) as Student-\(t\) distributed, where all distribution parameters (location, scale and tail) are modelled conditional on the explanatory variables in \(X\). We use LASSO to estimate the coefficients and the Bayesian information criterion to select the best model along a grid of regularization strengths.
 
 ```python
-import rolch
+import ondil
 import numpy as np
 from sklearn.datasets import load_diabetes
 
@@ -50,8 +53,8 @@ equation = {
 }
 
 # Create the estimator
-online_gamlss_lasso = rolch.OnlineGamlss(
-    distribution=rolch.DistributionT(),
+online_gamlss_lasso = ondil.OnlineGamlss(
+    distribution=ondil.DistributionT(),
     method="lasso",
     equation=equation,
     fit_intercept=True,

@@ -24,8 +24,8 @@ First, we start with OLS:
 
 ```python
 # Set up packages and
-from rolch.estimators.online_linear_model import OnlineLinearModel
-from rolch.methods import LassoPathMethod, OrdinaryLeastSquaresMethod
+from ondil.estimators.online_linear_model import OnlineLinearModel
+from ondil.methods import LassoPathMethod, OrdinaryLeastSquaresMethod
 from sklearn.datasets import load_diabetes
 
 import matplotlib.pyplot as plt

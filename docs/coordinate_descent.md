@@ -6,8 +6,8 @@ This submodule holds the functions related to the online coordinate descent (OCO
 
 ## API Reference
 
-::: rolch.online_coordinate_descent
+::: ondil.online_coordinate_descent
 
-::: rolch.online_coordinate_descent_path
+::: ondil.online_coordinate_descent_path
 
-::: rolch.soft_threshold
+::: ondil.soft_threshold

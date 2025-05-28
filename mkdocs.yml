@@ -1,4 +1,4 @@
-site_name: "ROLCH: Regularized Online Learning for Conditional Heteroskedasticity"
+site_name: "ondil: Online Distributional Learning"
 
 nav:
   - Home: index.md
@@ -13,9 +13,9 @@ nav:
   - Model Selection : model_selection.md
   - Preprocessing: scaler.md
   - Development : development.md
-  - Issues [Github] : "https://github.com/simon-hirsch/rolch/issues"
-  - Source [Github] : "https://github.com/simon-hirsch/rolch/tree/main"
-  - Licence [Github] : "https://github.com/simon-hirsch/rolch/tree/main?tab=MIT-1-ov-file#readme"
+  - Issues [Github] : "https://github.com/simon-hirsch/ondil/issues"
+  - Source [Github] : "https://github.com/simon-hirsch/ondil/tree/main"
+  - Licence [Github] : "https://github.com/simon-hirsch/ondil/tree/main?tab=MIT-1-ov-file#readme"
 
 theme:
   name: "material"

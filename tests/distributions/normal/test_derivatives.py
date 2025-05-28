@@ -1,7 +1,7 @@
 # %%
 import numpy as np
 import rpy2.robjects as robjects
-from rolch import DistributionNormal
+from ondil import DistributionNormal
 
 
 def test_normal_distribution():
@@ -44,19 +44,19 @@ def test_normal_distribution():
     dl2_dpp = dist.dl2_dpp(y, theta=theta.T, params=(0, 1))
 
     # Compare with R results
-    assert np.allclose(
-        dl1_dp1_0, R_list.rx2("dldm")
-    ), "First derivative wrt mu doesn't match"
-    assert np.allclose(
-        dl1_dp1_1, R_list.rx2("dldd")
-    ), "First derivative wrt sigma doesn't match"
+    assert np.allclose(dl1_dp1_0, R_list.rx2("dldm")), (
+        "First derivative wrt mu doesn't match"
+    )
+    assert np.allclose(dl1_dp1_1, R_list.rx2("dldd")), (
+        "First derivative wrt sigma doesn't match"
+    )
 
-    assert np.allclose(
-        dl2_dp2_0, R_list.rx2("d2ldm2")
-    ), "Second derivative wrt mu doesn't match"
-    assert np.allclose(
-        dl2_dp2_1, R_list.rx2("d2ldd2")
-    ), "Second derivative wrt sigma doesn't match"
-    assert np.allclose(
-        dl2_dpp, R_list.rx2("d2ldmdd")
-    ), "Second derivative wrt mu and sigma doesn't match"
+    assert np.allclose(dl2_dp2_0, R_list.rx2("d2ldm2")), (
+        "Second derivative wrt mu doesn't match"
+    )
+    assert np.allclose(dl2_dp2_1, R_list.rx2("d2ldd2")), (
+        "Second derivative wrt sigma doesn't match"
+    )
+    assert np.allclose(dl2_dpp, R_list.rx2("d2ldmdd")), (
+        "Second derivative wrt mu and sigma doesn't match"
+    )
