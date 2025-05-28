@@ -25,7 +25,7 @@ class LogitLink(LinkFunction):
         return robust_exp(x) / ((robust_exp(x) + 1) ** 2)
 
     def link_derivative(self, x: np.ndarray) -> np.ndarray:
-        return 1 / (x(1 - x))
+        return 1 / (x * (1 - x))
 
     def link_second_derivative(self, x: np.ndarray) -> np.ndarray:
         return -(1 - 2 * x) / ((x**2) * ((1 - x) ** 2))
