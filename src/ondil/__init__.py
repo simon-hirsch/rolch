@@ -18,19 +18,18 @@ from .coordinate_descent import (
     soft_threshold,
 )
 from .distributions import (
+    DistributionBeta,
+    DistributionBetaInflated,
     DistributionGamma,
     DistributionJSU,
     DistributionLogNormal,
     DistributionLogNormalMedian,
+    DistributionLogistic,
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
-    DistributionLogNormalMedian,
-    DistributionLogNormal,
-    DistributionLogistic,
-    DistributionBeta,
-
 )
+
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
 from .gram import (
@@ -103,6 +102,8 @@ __all__ = [
     "DistributionJSU",
     "DistributionGamma",
     "DistributionBeta",
+    "DistributionBetaInflated",
+    "DistributionLogNormal",
     "init_forget_vector",
     "init_gram",
     "update_gram",

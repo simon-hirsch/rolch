@@ -1,20 +1,22 @@
+from .beta import DistributionBeta
+from .betainflated import DistributionBetaInflated
 from .gamma import DistributionGamma
 from .johnsonsu import DistributionJSU
-from .normal import DistributionNormal, DistributionNormalMeanVariance
-from .studentt import DistributionT
-from .beta import DistributionBeta
+from .logistic import DistributionLogistic
 from .lognormal import DistributionLogNormal
 from .lognormalmedian import DistributionLogNormalMedian
-from .logistic import DistributionLogistic
+from .normal import DistributionNormal, DistributionNormalMeanVariance
+from .studentt import DistributionT
 
 __all__ = [
-    "DistributionNormal",
-    "DistributionNormalMeanVariance",
-    "DistributionT",
-    "DistributionJSU",
-    "DistributionGamma",
     "DistributionBeta",
+    "DistributionBetaInflated",
+    "DistributionGamma",
+    "DistributionJSU",
     "DistributionLogNormal",
     "DistributionLogNormalMedian",
     "DistributionLogistic",
+    "DistributionNormal",
+    "DistributionNormalMeanVariance",
+    "DistributionT",
 ]
