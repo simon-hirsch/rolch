@@ -73,7 +73,7 @@ class DistributionLogistic(ScipyMixin, Distribution):
         self, y: np.ndarray, param: int = 0, axis: Optional[int] = None
     ) -> np.ndarray:
         if param == 0:
-            return (y + np.mean(y, axis=axis)) / 2
+            return np.full_like(y, np.mean(y, axis=axis))
         if param == 1:
             return np.full_like(
                 y, (np.sqrt(3) * np.std(y, axis=axis, ddof=1)) / np.sqrt(np.pi)
