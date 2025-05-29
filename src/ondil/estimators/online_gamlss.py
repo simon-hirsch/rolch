@@ -514,9 +514,6 @@ class OnlineGamlss(Estimator):
         !!! note
             The user is only required to provide the design matrix $X$ for the first distribution parameters. If for some distribution parameter no design matrix is provided, `ondil` will model the parameter using an intercept.
 
-        !!! note
-            The provision of bounds for the coefficient vectors is only possible for LASSO/coordinate descent estimation.
-
         Args:
             X (np.ndarray): Data Matrix. Currently supporting only numpy, will support pandas and polars in the future.
             y (np.ndarray): Response variable $Y$.
