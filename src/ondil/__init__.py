@@ -25,9 +25,11 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
-    DistributionBeta,
     DistributionLogNormalMedian,
     DistributionLogNormal,
+    DistributionLogistic,
+    DistributionBeta,
+
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -95,6 +97,7 @@ __all__ = [
     "InverseSoftPlusShiftTwoLink",
     "DistributionNormal",
     "DistributionNormalMeanVariance",
+    "DistributionLogistic",
     "DistributionLogNormalMedian",
     "DistributionT",
     "DistributionJSU",

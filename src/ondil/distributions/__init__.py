@@ -5,6 +5,7 @@ from .studentt import DistributionT
 from .beta import DistributionBeta
 from .lognormal import DistributionLogNormal
 from .lognormalmedian import DistributionLogNormalMedian
+from .logistic import DistributionLogistic
 
 __all__ = [
     "DistributionNormal",
@@ -15,4 +16,5 @@ __all__ = [
     "DistributionBeta",
     "DistributionLogNormal",
     "DistributionLogNormalMedian",
+    "DistributionLogistic",
 ]

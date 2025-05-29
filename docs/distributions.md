@@ -27,6 +27,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`DistributionGamma`](#ondil.DistributionGamma)                           | Gamma distribution                     | `scipy.stats.gamma`     |
 | [`DistributionLogNormal`](#ondil.DistributionLogNormal)                   | Log-normal distribution                | `scipy.stats.lognorm`   |
 | [`DistributionLogNormalMedian`](#ondil.DistributionLogNormalMedian)       | Log-normal distribution (median)       | -                       |
+| [`DistributionLogistic`](#ondil.DistributionLogistic)                     | Logistic distribution                  | `scipy.stats.logistic`  |
 
 
 
@@ -45,6 +46,8 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ::: ondil.DistributionLogNormal
 
 ::: ondil.DistributionLogNormalMedian
+
+::: ondil.DistributionLogistic
 
 
 ## Base Class
