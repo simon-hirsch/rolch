@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.special as spc
@@ -148,10 +148,8 @@ class DistributionBeta(ScipyMixin, Distribution):
                 mu * spc.polygamma(1, alpha) - (1 - mu) * spc.polygamma(1, beta)
             )
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
-        if param == 0:
-            return (np.repeat(np.mean(y, axis=axis), y.shape[0])) / 2
-        if param == 1:
-            return np.repeat(0.5, y.shape[0])
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
+        out = np.empty((y.shape[0], self.n_params))
+        out[:, 0] = np.mean(y, axis=0)
+        out[:, 1] = 0.5
+        return out

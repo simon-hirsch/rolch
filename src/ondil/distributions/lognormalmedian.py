@@ -70,11 +70,9 @@ class DistributionLogNormalMedian(ScipyMixin, Distribution):
         self._validate_dl2_dpp_inputs(y, theta, params)
         return np.zeros_like(y)
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
         log_y = np.log(y)
-        if param == 0:
-            return np.exp((log_y + np.mean(log_y, axis=axis)) / 2)
-        elif param == 1:
-            return np.full_like(y, np.std(log_y, axis=axis))
+        out = np.zeros((y.shape[0], self.n_params))
+        out[:, 0] = np.exp(np.median(log_y, axis=0))
+        out[:, 1] = np.std(log_y, axis=0)
+        return out

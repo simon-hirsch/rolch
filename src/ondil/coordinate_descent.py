@@ -3,18 +3,7 @@ from typing import Literal, Tuple
 import numba as nb
 import numpy as np
 
-DEFAULT_ESTIMATOR_KWARGS = {
-    "ic": {0: "bic", 1: "bic", 2: "bic", 3: "bic"},
-    "lambda_n": 100,
-    "lambda_eps": {0: 1e-4, 1: 1e-4, 2: 1e-8, 3: 1e-4},
-    "start_value": "previous_fit",
-    "tolerance": 1e-4,
-    "max_iterations": 1000,
-    "selection": "cyclic",
-}
 
-
-# @nb.njit(["float64(float64, float64)", "float32(float32, float32)"])
 @nb.njit()
 def soft_threshold(value: float, threshold: float):
     """The soft thresholding function.
