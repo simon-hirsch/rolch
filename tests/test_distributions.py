@@ -1,8 +1,9 @@
 from itertools import product
 
 import numpy as np
-import ondil
 import pytest
+
+import ondil
 
 DISTRIBUTIONS = [
     getattr(ondil.distributions, name)() for name in ondil.distributions.__all__
@@ -17,9 +18,7 @@ def test_raise_error_cross_derivative(distribution):
     lower = np.clip(distribution.distribution_support[0], -1e3, 1e3)
     upper = np.clip(distribution.distribution_support[1], -1e3, 1e3)
     y = np.random.uniform(low=lower, high=upper, size=1000)
-    theta = np.hstack(
-        [distribution.initial_values(y, param=p)[:, None] for p in range(n_params)]
-    )
+    theta = distribution.initial_values(y)
     for a, b in product(range(n_params), range(n_params)):
         if a == b:
             with pytest.raises(

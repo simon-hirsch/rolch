@@ -73,11 +73,9 @@ class DistributionLogNormal(ScipyMixin, Distribution):
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
         log_y = np.log(y)
-        if param == 0:
-            return np.full_like(y, np.mean(log_y, axis=axis))
-        if param == 1:
-            return np.full_like(y, np.std(log_y, axis=axis))
+        out = np.empty((y.shape[0], self.n_params))
+        out[:, 0] = np.mean(log_y)
+        out[:, 1] = np.std(log_y, ddof=1)
+        return out

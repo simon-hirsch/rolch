@@ -494,16 +494,6 @@ class OnlineGamlss(Estimator):
         if not (np.all(np.isfinite(y)) & np.all(np.isfinite(X))):
             raise ValueError("X and y should contain only finite values.")
 
-    def _make_initial_fitted_values(self, y: np.ndarray) -> np.ndarray:
-        out = np.stack(
-            [
-                self.distribution.initial_values(y, param=i)
-                for i in range(self.distribution.n_params)
-            ],
-            axis=1,
-        )
-        return out
-
     def _make_iter_schedule(self):
         return np.repeat(self.max_it_inner, repeats=self.max_it_outer)
 
@@ -545,7 +535,7 @@ class OnlineGamlss(Estimator):
         else:
             w = np.ones(y.shape[0])
 
-        self.fv = self._make_initial_fitted_values(y=y)
+        self.fv = self.distribution.initial_values(y=y)
         self.J = self.get_J_from_equation(X=X)
 
         # Fit scaler and transform

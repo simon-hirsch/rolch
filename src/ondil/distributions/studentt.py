@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.special as sp
@@ -109,13 +109,10 @@ class DistributionT(ScipyMixin, Distribution):
             _, sigma, nu = self.theta_to_params(theta)
             return 2 / (sigma * (nu + 3) * (nu + 1))
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
         params = st.t.fit(y)
-        if param == 0:
-            return np.full_like(y, params[1])
-        if param == 1:
-            return np.full_like(y, params[2])
-        if param == 2:
-            return np.full_like(y, params[0])
+        out = np.zeros((y.shape[0], self.n_params))
+        out[:, 0] = params[1]
+        out[:, 1] = params[2]
+        out[:, 2] = params[0]
+        return out
