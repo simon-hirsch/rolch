@@ -233,4 +233,52 @@ class DistributionBetaInflated(Distribution):
         sim_unif = st.uniform.rvs(size = size)
         return self.ppf(q = sim_unif, theta = theta)
 
+    def logpdf(self, y, theta):
+        mu, sigma, nu, tau = self.theta_to_params(theta)
+        alpha = mu * (1 - sigma**2) / sigma**2
+        beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
+        logpdf_beta = st.beta(alpha, beta, loc = 0, scale = 1).logpdf(y)
+
+        result = np.where(
+            (y < 0) | (y > 1),
+            0,
+            np.where(
+                y == 0,
+                np.log(nu) - np.log(1 + nu + tau),
+                np.where(
+                    y == 1,
+                    np.log(tau) - np.log(1 + nu + tau),
+                    logpdf_beta - np.log(1 + nu + tau)
+                )
+            )
+        )
+        return result
+
+    def logcdf(self, y, theta):
+        
+        mu, sigma, nu, tau = self.theta_to_params(theta)
+        alpha = mu * (1 - sigma**2) / sigma**2
+        beta = (1 - mu) * (1 - sigma**2) / sigma**2
+
+        cdf_beta = st.beta(alpha, beta, loc = 0, scale = 1).cdf(y)
+
+        result = np.where(
+            (y > 0) & (y < 1),
+            np.log(nu + cdf_beta),
+            np.where(
+                y == 0,
+                np.log(nu),
+                np.where(
+                    y == 1,
+                    (1 + nu + tau),
+                    0
+                )
+            )
+        )
+
+    def logpmf(self, y, theta):
+        return super().logpmf(y, theta)
+    
+    def calculate_conditional_initial_values(self, y, theta, param):
+        return super().calculate_conditional_initial_values(y, theta, param)
