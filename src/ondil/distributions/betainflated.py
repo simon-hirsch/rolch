@@ -118,16 +118,16 @@ class DistributionBetaInflated(Distribution):
 
         
         if sorted(params) == [0, 2]:
-            return 0         ###
+            return np.zeros_like(y)         ###
         
         if sorted(params) == [0, 3]:
-            return 0         ###
+            return np.zeros_like(y)         ###
 
         if sorted(params) == [1, 2]:
-            return 0         ###
+            return np.zeros_like(y)         ###
         
         if sorted(params) == [1, 3]:
-            return 0         ###
+            return np.zeros_like(y)         ###
 
         if sorted(params) == [2, 3]:
             return 1 / (1+nu+tau)**2        ###
@@ -136,9 +136,9 @@ class DistributionBetaInflated(Distribution):
         self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
     ) -> np.ndarray:
         if param == 0:
-            return (np.repeat(np.mean(y, axis=axis), y.shape[0]) )/ 2 
+            return np.full_like(y, np.mean(y, axis=axis)) 
         if param == 1:
-            return np.repeat(0.5, y.shape[0])
+            return np.full_like(y, 0.5) 
         if param == 2:
             return np.full_like(y, 5) 
         if param == 3:
