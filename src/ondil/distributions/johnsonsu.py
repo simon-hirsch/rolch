@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.stats as st
@@ -189,25 +189,17 @@ class DistributionJSU(ScipyMixin, Distribution):
             d2ldvdt = -(dldv * dldt)
             return d2ldvdt
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
+        out = np.empty((y.shape[0], self.n_params))
         if self.gamlss_init_values:
-            if param == 0:
-                return (np.repeat(np.mean(y), y.shape[0]) + y) / 2
-            if param == 1:
-                return np.full_like(y, 0.1)
-            if param == 2:
-                return np.zeros_like(y)
-            if param == 3:
-                return np.full_like(y, 0.5)
+            out[:, 0] = (np.repeat(np.mean(y), y.shape[0]) + y) / 2
+            out[:, 1] = 0.1
+            out[:, 2] = 0.0
+            out[:, 3] = 0.5
         else:
             params = st.johnsonsu.fit(y)
-            if param == 0:
-                return np.full_like(y, params[2])
-            if param == 1:
-                return np.full_like(y, params[3])
-            if param == 2:
-                return np.full_like(y, params[0])
-            if param == 3:
-                return np.full_like(y, params[1])
+            out[:, 0] = params[2]
+            out[:, 1] = params[3]
+            out[:, 2] = params[0]
+            out[:, 3] = params[1]
+        return out
