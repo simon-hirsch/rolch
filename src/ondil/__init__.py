@@ -29,6 +29,7 @@ from .distributions import (
     DistributionLogNormal,
     DistributionLogistic,
     DistributionBeta,
+    DistributionExponential,
 
 )
 from .error import OutOfSupportError
