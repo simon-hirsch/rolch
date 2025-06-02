@@ -53,4 +53,4 @@ class DistributionExponential(ScipyMixin, Distribution):
     def initial_values(
         self, y: np.ndarray, param: int = 0, axis: Optional[int] = None
     ) -> np.ndarray:
-        return (y + np.mean(y, axis=axis)) / 2
+        return np.full_like(y, np.mean(y, axis=axis))

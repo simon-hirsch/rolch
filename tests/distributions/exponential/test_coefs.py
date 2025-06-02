@@ -44,6 +44,6 @@ def test_exponential_distribution():
 
     estimator.fit(X=X, y=y)
 
-    assert np.allclose(estimator.beta[0], coef_R_mu, atol=0.01), (
+    assert np.allclose(estimator.beta[0], coef_R_mu, atol=0.0001), (
         "Location coefficients don't match"
     )
