@@ -50,7 +50,5 @@ class DistributionExponential(ScipyMixin, Distribution):
         self._validate_dl2_dpp_inputs(y, theta, params)
         return np.zeros_like(y)
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int] = None
-    ) -> np.ndarray:
-        return np.full_like(y, np.mean(y, axis=axis))
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
+        return np.full((y.shape[0], 1), np.mean(y, axis=axis))
