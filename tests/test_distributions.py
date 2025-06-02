@@ -36,7 +36,7 @@ def test_raise_error_cross_derivative(distribution):
     y = np.random.uniform(low=lower, high=upper, size=1000)
     theta = distribution.initial_values(y)
 
-    assert theta.shape == (y.shape[0], distribution.n_params)
+    assert theta.shape == (y.shape[0], n_params)
 
     for a, b in product(range(n_params), range(n_params)):
         if a == b:

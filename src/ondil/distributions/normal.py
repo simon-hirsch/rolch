@@ -80,10 +80,8 @@ class DistributionNormal(ScipyMixin, Distribution):
             return np.zeros_like(y)
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
-        out = np.empty((y.shape[0], self.n_params))
-        out[:, 0] = np.mean(y)
-        out[:, 1] = np.std(y, ddof=1)
-        return out
+        initial_params = [np.mean(y), np.std(y, ddof=1)]
+        return np.tile(initial_params, (y.shape[0], 1))
 
 
 class DistributionNormalMeanVariance(ScipyMixin, Distribution):
@@ -171,7 +169,5 @@ class DistributionNormalMeanVariance(ScipyMixin, Distribution):
             return np.zeros_like(y)
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
-        out = np.empty((y.shape[0], self.n_params))
-        out[:, 0] = np.mean(y)
-        out[:, 1] = np.var(y, ddof=1)
-        return out
+        initial_params = [np.mean(y), np.var(y, ddof=1)]
+        return np.tile(initial_params, (y.shape[0], 1))

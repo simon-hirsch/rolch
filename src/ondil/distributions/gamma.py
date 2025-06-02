@@ -115,7 +115,5 @@ class DistributionGamma(ScipyMixin, Distribution):
             return np.zeros_like(y)
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
-        out = np.zeros((y.shape[0], self.n_params))
-        out[:, 0] = np.mean(y)
-        out[:, 1] = 1
-        return out
+        initial_params = [np.mean(y), 1]
+        return np.tile(initial_params, (y.shape[0], 1))

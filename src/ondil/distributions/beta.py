@@ -149,7 +149,5 @@ class DistributionBeta(ScipyMixin, Distribution):
             )
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
-        out = np.empty((y.shape[0], self.n_params))
-        out[:, 0] = np.mean(y, axis=0)
-        out[:, 1] = 0.5
-        return out
+        initial_params = [np.mean(y, axis=0), 0.5]
+        return np.tile(initial_params, (y.shape[0], 1))

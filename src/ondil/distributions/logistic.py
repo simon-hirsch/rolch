@@ -71,7 +71,5 @@ class DistributionLogistic(ScipyMixin, Distribution):
         return np.zeros_like(y)
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
-        out = np.empty((y.shape[0], self.n_params))
-        out[:, 0] = np.mean(y)
-        out[:, 1] = (np.sqrt(3) * np.std(y, ddof=1)) / np.sqrt(np.pi)
-        return out
+        initial_params = [np.mean(y), (np.sqrt(3) * np.std(y, ddof=1)) / np.sqrt(np.pi)]
+        return np.tile(initial_params, (y.shape[0], 1))

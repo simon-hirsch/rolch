@@ -111,8 +111,4 @@ class DistributionT(ScipyMixin, Distribution):
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
         params = st.t.fit(y)
-        out = np.zeros((y.shape[0], self.n_params))
-        out[:, 0] = params[1]
-        out[:, 1] = params[2]
-        out[:, 2] = params[0]
-        return out
+        return np.tile([params[1], params[2], params[0]], (y.shape[0], 1))

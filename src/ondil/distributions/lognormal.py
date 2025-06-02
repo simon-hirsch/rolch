@@ -75,7 +75,5 @@ class DistributionLogNormal(ScipyMixin, Distribution):
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
         log_y = np.log(y)
-        out = np.empty((y.shape[0], self.n_params))
-        out[:, 0] = np.mean(log_y)
-        out[:, 1] = np.std(log_y, ddof=1)
-        return out
+        initial_params = [np.mean(log_y), np.std(log_y, ddof=1)]
+        return np.tile(initial_params, (y.shape[0], 1))
