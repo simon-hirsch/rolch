@@ -1,4 +1,5 @@
-from typing import Optional, Tuple
+from typing import Tuple
+
 import numpy as np
 import scipy.stats as st
 
@@ -69,12 +70,6 @@ class DistributionLogistic(ScipyMixin, Distribution):
         self._validate_dl2_dpp_inputs(y, theta, params)
         return np.zeros_like(y)
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int] = None
-    ) -> np.ndarray:
-        if param == 0:
-            return np.full_like(y, np.mean(y, axis=axis))
-        if param == 1:
-            return np.full_like(
-                y, (np.sqrt(3) * np.std(y, axis=axis, ddof=1)) / np.sqrt(np.pi)
-            )
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
+        initial_params = [np.mean(y), (np.sqrt(3) * np.std(y, ddof=1)) / np.sqrt(np.pi)]
+        return np.tile(initial_params, (y.shape[0], 1))

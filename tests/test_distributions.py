@@ -1,12 +1,29 @@
 from itertools import product
 
 import numpy as np
-import ondil
 import pytest
+
+import ondil
 
 DISTRIBUTIONS = [
     getattr(ondil.distributions, name)() for name in ondil.distributions.__all__
 ]
+
+
+@pytest.mark.parametrize("distribution", DISTRIBUTIONS)
+def test_initial_values(distribution):
+    n_params = distribution.n_params
+    lower = np.clip(distribution.distribution_support[0], -1e3, 1e3)
+    upper = np.clip(distribution.distribution_support[1], -1e3, 1e3)
+    y = np.random.uniform(low=lower, high=upper, size=1000)
+    theta = distribution.initial_values(y)
+    assert theta.shape == (y.shape[0], n_params), "Initial values shape mismatch"
+    assert np.all(
+        distribution.parameter_support[param][0]
+        <= theta[:, param]
+        <= distribution.parameter_support[param][1]
+        for param in range(n_params)
+    ), "Initial values out of parameter support"
 
 
 @pytest.mark.parametrize("distribution", DISTRIBUTIONS)
@@ -17,9 +34,10 @@ def test_raise_error_cross_derivative(distribution):
     lower = np.clip(distribution.distribution_support[0], -1e3, 1e3)
     upper = np.clip(distribution.distribution_support[1], -1e3, 1e3)
     y = np.random.uniform(low=lower, high=upper, size=1000)
-    theta = np.hstack(
-        [distribution.initial_values(y, param=p)[:, None] for p in range(n_params)]
-    )
+    theta = distribution.initial_values(y)
+
+    assert theta.shape == (y.shape[0], n_params)
+
     for a, b in product(range(n_params), range(n_params)):
         if a == b:
             with pytest.raises(

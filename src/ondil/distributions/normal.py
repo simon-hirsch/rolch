@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.stats as st
@@ -79,13 +79,9 @@ class DistributionNormal(ScipyMixin, Distribution):
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
-        if param == 0:
-            return np.repeat(np.mean(y, axis=axis), y.shape[0])
-        if param == 1:
-            return np.repeat(np.std(y, axis=axis), y.shape[0])
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
+        initial_params = [np.mean(y), np.std(y, ddof=1)]
+        return np.tile(initial_params, (y.shape[0], 1))
 
 
 class DistributionNormalMeanVariance(ScipyMixin, Distribution):
@@ -172,10 +168,6 @@ class DistributionNormalMeanVariance(ScipyMixin, Distribution):
         if sorted(params) == [0, 1]:
             return np.zeros_like(y)
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
-        if param == 0:
-            return np.repeat(np.mean(y, axis=axis), y.shape[0])
-        if param == 1:
-            return np.repeat(np.var(y, axis=axis), y.shape[0])
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
+        initial_params = [np.mean(y), np.var(y, ddof=1)]
+        return np.tile(initial_params, (y.shape[0], 1))

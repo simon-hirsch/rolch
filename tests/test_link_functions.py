@@ -3,12 +3,13 @@
 
 import numpy as np
 import pytest
+
 from ondil import (
     IdentityLink,
     InverseSoftPlusLink,
     InverseSoftPlusShiftValueLink,
     LogIdentLink,
-    LogitLink, 
+    LogitLink,
     LogLink,
     LogShiftValueLink,
     SqrtLink,
@@ -35,6 +36,16 @@ def test_link_real_line(linkfun):
     x = np.linspace(-100, 100, M)
     y = instance.inverse(instance.link(x))
     print(y)
+    assert np.allclose(x, y), "Links don't match"
+
+
+@pytest.mark.parametrize("linkfun", [LogitLink])
+def test_link_zero_one_domain(linkfun):
+    """Test links that are defined on the (0, 1) domain"""
+    instance = linkfun()
+    # Avoid exact 0 and 1 to stay within the domain
+    x = np.linspace(1e-10, 1 - 1e-10, M)
+    y = instance.inverse(instance.link(x))
     assert np.allclose(x, y), "Links don't match"
 
 

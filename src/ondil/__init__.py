@@ -28,6 +28,8 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
+    DistributionBeta,
+    DistributionExponential,
 )
 
 from .error import OutOfSupportError

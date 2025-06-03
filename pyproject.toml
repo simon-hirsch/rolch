@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ondil"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
   {name="Simon Hirsch", email="simon.hirsch@stud.uni-due.de"},
   {name="Jonathan Berrisch", email="jonathan.berrisch@uni-due.de"},
@@ -17,8 +17,24 @@ readme = "README.md"
 requires-python = ">=3.10, <3.14" # Introduce hard cap on python due to numba
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Telecommunications Industry",
+    "Intended Audience :: Other Audience",
 ]
 dependencies=[
     "scipy >= 1.00, <2.2.0",
