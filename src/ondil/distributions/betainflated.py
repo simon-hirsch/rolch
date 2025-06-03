@@ -7,29 +7,29 @@ import scipy.stats as st
 from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import LogitLink, LogLink
 
-class DistributionBetaInflated(Distribution):
-    """The Beta inflated Distribution for GAMLSS.
 
-    """
+class DistributionBetaInflated(Distribution):
+    """The Beta inflated Distribution for GAMLSS."""
+
     corresponding_gamlss: str = "BEINF"
 
-    parameter_names = {0: "mu", 1: "sigma", 2:"nu", 3:"tau"}
+    parameter_names = {0: "mu", 1: "sigma", 2: "nu", 3: "tau"}
     parameter_support = {
-        0: ( np.nextafter(0, 1), np.nextafter(1, 0)),
-        1: (np.nextafter(0, 1), np.nextafter(1, 0) ),
+        0: (np.nextafter(0, 1), np.nextafter(1, 0)),
+        1: (np.nextafter(0, 1), np.nextafter(1, 0)),
         2: (np.nextafter(0, 1), np.inf),  ##
-        3: (np.nextafter(0, 1), np.inf ) ##
+        3: (np.nextafter(0, 1), np.inf),  ##
     }
-    distribution_support = (0, 1 )
-   
+    distribution_support = (0, 1)
+
     def __init__(
         self,
-        loc_link: LinkFunction = LogitLink(),   
+        loc_link: LinkFunction = LogitLink(),
         scale_link: LinkFunction = LogitLink(),
-        skew_link: LinkFunction = LogLink(), ##
-        tail_link: LinkFunction = LogLink(), ##
+        skew_link: LinkFunction = LogLink(),  ##
+        tail_link: LinkFunction = LogLink(),  ##
     ) -> None:
-        super().__init__(links={0: loc_link, 1: scale_link, 2:skew_link, 3:tail_link})
+        super().__init__(links={0: loc_link, 1: scale_link, 2: skew_link, 3: tail_link})
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -39,9 +39,8 @@ class DistributionBetaInflated(Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            result = ((1 - sigma**2) / sigma**2) * ( 
-            -spc.digamma(alpha) + spc.digamma(beta) + 
-            np.log(y) - np.log(1-y)
+            result = ((1 - sigma**2) / sigma**2) * (
+                -spc.digamma(alpha) + spc.digamma(beta) + np.log(y) - np.log(1 - y)
             )
 
             return np.where((y == 0) | (y == 1), 0, result)
@@ -49,22 +48,24 @@ class DistributionBetaInflated(Distribution):
         if param == 1:
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
-            
-            result = -(2 / sigma**3) * ( 
-            mu * ( -spc.digamma(alpha) + spc.digamma(alpha + beta) + np.log(y)) + (1 - mu) * ( 
-            ( -spc.digamma(beta) + spc.digamma(alpha + beta) + np.log(1-y) ) ) 
+
+            result = -(2 / sigma**3) * (
+                mu * (-spc.digamma(alpha) + spc.digamma(alpha + beta) + np.log(y))
+                + (1 - mu)
+                * (-spc.digamma(beta) + spc.digamma(alpha + beta) + np.log(1 - y))
             )
 
             return np.where((y == 0) | (y == 1), 0, result)
 
-        
         if param == 2:
-
-            return np.where(y == 0, (1 / nu) - (1 / (1 + nu + tau)), 0 - (1 / (1 + nu + tau))) 
+            return np.where(
+                y == 0, (1 / nu) - (1 / (1 + nu + tau)), 0 - (1 / (1 + nu + tau))
+            )
 
         if param == 3:
-            
-            return np.where(y == 1, (1 / tau) - (1 / (1 + nu + tau)), 0 - (1 / (1 + nu + tau)))
+            return np.where(
+                y == 1, (1 / tau) - (1 / (1 + nu + tau)), 0 - (1 / (1 + nu + tau))
+            )
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -74,8 +75,9 @@ class DistributionBetaInflated(Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            result = - ( ( (1 - sigma**2)**2 ) / sigma**4 ) * ( 
-            spc.polygamma(1, alpha) + spc.polygamma(1, beta) )
+            result = -(((1 - sigma**2) ** 2) / sigma**4) * (
+                spc.polygamma(1, alpha) + spc.polygamma(1, beta)
+            )
 
             return np.where((y == 0) | (y == 1), 0, result)
 
@@ -84,20 +86,19 @@ class DistributionBetaInflated(Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            result = -(4 / (sigma ** 6)) * ((mu ** 2) * spc.polygamma(1, alpha) + ((1 - mu) ** 2) * 
-            spc.polygamma(1, beta) - spc.polygamma(1, alpha + beta))
+            result = -(4 / (sigma**6)) * (
+                (mu**2) * spc.polygamma(1, alpha)
+                + ((1 - mu) ** 2) * spc.polygamma(1, beta)
+                - spc.polygamma(1, alpha + beta)
+            )
 
             return np.where((y == 0) | (y == 1), 0, result)
 
         if param == 2:
-
-            return -(1 + tau)/ (nu * ((1 + nu + tau)**2) )
+            return -(1 + tau) / (nu * ((1 + nu + tau) ** 2))
 
         if param == 3:
-
-            return -(1 + nu)/ (tau * ((1 + nu + tau)**2) )
-
-
+            return -(1 + nu) / (tau * ((1 + nu + tau) ** 2))
 
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
@@ -109,42 +110,30 @@ class DistributionBetaInflated(Distribution):
             alpha = mu * (1 - sigma**2) / sigma**2
             beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-            result = ( 2*(1 - sigma**2) / sigma**5 ) * ( 
-            mu*spc.polygamma(1, alpha) - (1 - mu) * 
-            spc.polygamma(1, beta)
+            result = (2 * (1 - sigma**2) / sigma**5) * (
+                mu * spc.polygamma(1, alpha) - (1 - mu) * spc.polygamma(1, beta)
             )
 
             return np.where((y == 0) | (y == 1), 0, result)
 
-        
         if sorted(params) == [0, 2]:
-            return np.zeros_like(y)         ###
-        
+            return np.zeros_like(y)  ###
+
         if sorted(params) == [0, 3]:
-            return np.zeros_like(y)         ###
+            return np.zeros_like(y)  ###
 
         if sorted(params) == [1, 2]:
-            return np.zeros_like(y)         ###
-        
+            return np.zeros_like(y)  ###
+
         if sorted(params) == [1, 3]:
-            return np.zeros_like(y)         ###
+            return np.zeros_like(y)  ###
 
         if sorted(params) == [2, 3]:
-            return 1 / (1+nu+tau)**2        ###
+            return 1 / (1 + nu + tau) ** 2  ###
 
-    def initial_values(
-        self, y: np.ndarray, param: int = 0, axis: Optional[int | None] = None
-    ) -> np.ndarray:
-        if param == 0:
-            return np.full_like(y, np.mean(y, axis=axis)) 
-        if param == 1:
-            return np.full_like(y, 0.5) 
-        if param == 2:
-            return np.full_like(y, 5) 
-        if param == 3:
-            return np.full_like(y, 5)
-        
-    
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
+        return np.tile([np.mean(y), 0.5, 5, 5], (y.shape[0], 1))
+
     def cdf(self, y, theta, lower_tail=True, log_p=False):
         mu, sigma, nu, tau = self.theta_to_params(theta)
         alpha = mu * (1 - sigma**2) / sigma**2
@@ -155,15 +144,7 @@ class DistributionBetaInflated(Distribution):
         raw_cdf = np.where(
             (y > 0) & (y < 1),
             nu + cdf_beta,
-            np.where(
-                y == 0,
-                nu,
-                np.where(
-                    y == 1,
-                    1 + nu + tau,
-                    0
-                )
-            )
+            np.where(y == 0, nu, np.where(y == 1, 1 + nu + tau, 0)),
         )
 
         result = raw_cdf / (1 + nu + tau)
@@ -183,23 +164,19 @@ class DistributionBetaInflated(Distribution):
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-        pdf_beta = st.beta(alpha, beta, loc = 0, scale = 1).pdf(y)
-        
+        pdf_beta = st.beta(alpha, beta, loc=0, scale=1).pdf(y)
+
         result = np.where(
             (y < 0) | (y > 1),
             0,
             np.where(
                 y == 0,
                 nu / (1 + nu + tau),
-                np.where(
-                    y == 1,
-                    tau / (1 + nu + tau),
-                    pdf_beta / (1 + nu + tau)
-                )
-            )
+                np.where(y == 1, tau / (1 + nu + tau), pdf_beta / (1 + nu + tau)),
+            ),
         )
         return result
-        
+
     def ppf(self, q, theta):
         mu, sigma, nu, tau = self.theta_to_params(theta)
         alpha = mu * (1 - sigma**2) / sigma**2
@@ -214,31 +191,29 @@ class DistributionBetaInflated(Distribution):
 
         result = np.where(q <= lower, 0, result)
         result = np.where(q >= upper, 1, result)
-    
+
         middle = (q > lower) & (q < upper)
         adjusted_q = (q[middle] - lower) / (1 / denom)
         result[middle] = st.beta(alpha, beta).ppf(adjusted_q)
 
         result = np.where(q == 0, 0, result)
         result = np.where(q == 1, 1, result)
-    
+
         return result
 
     def pmf(self, y, theta):
-        raise NotImplementedError(
-            "PMF is not implemented for mixed distributions."
-        )
-    
+        raise NotImplementedError("PMF is not implemented for mixed distributions.")
+
     def rvs(self, size, theta):
-        sim_unif = st.uniform.rvs(size = size)
-        return self.ppf(q = sim_unif, theta = theta)
+        sim_unif = st.uniform.rvs(size=size)
+        return self.ppf(q=sim_unif, theta=theta)
 
     def logpdf(self, y, theta):
         mu, sigma, nu, tau = self.theta_to_params(theta)
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-        logpdf_beta = st.beta(alpha, beta, loc = 0, scale = 1).logpdf(y)
+        logpdf_beta = st.beta(alpha, beta, loc=0, scale=1).logpdf(y)
 
         result = np.where(
             (y < 0) | (y > 1),
@@ -249,36 +224,27 @@ class DistributionBetaInflated(Distribution):
                 np.where(
                     y == 1,
                     np.log(tau) - np.log(1 + nu + tau),
-                    logpdf_beta - np.log(1 + nu + tau)
-                )
-            )
+                    logpdf_beta - np.log(1 + nu + tau),
+                ),
+            ),
         )
         return result
 
     def logcdf(self, y, theta):
-        
         mu, sigma, nu, tau = self.theta_to_params(theta)
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-        cdf_beta = st.beta(alpha, beta, loc = 0, scale = 1).cdf(y)
+        cdf_beta = st.beta(alpha, beta, loc=0, scale=1).cdf(y)
 
         result = np.where(
             (y > 0) & (y < 1),
             np.log(nu + cdf_beta),
-            np.where(
-                y == 0,
-                np.log(nu),
-                np.where(
-                    y == 1,
-                    (1 + nu + tau),
-                    0
-                )
-            )
+            np.where(y == 0, np.log(nu), np.where(y == 1, (1 + nu + tau), 0)),
         )
 
     def logpmf(self, y, theta):
         return super().logpmf(y, theta)
-    
+
     def calculate_conditional_initial_values(self, y, theta, param):
         return super().calculate_conditional_initial_values(y, theta, param)
