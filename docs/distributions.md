@@ -29,6 +29,8 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`DistributionLogNormalMedian`](#ondil.DistributionLogNormalMedian)       | Log-normal distribution (median)       | -                       |
 | [`DistributionLogistic`](#ondil.DistributionLogistic)                     | Logistic distribution                  | `scipy.stats.logistic`  |
 | [`DistributionExponential`](#ondil.DistributionExponential)               | Exponential distribution               | `scipy.stats.expon`     |
+| [`DistributionBeta`](#ondil.DistributionBeta)                             | Beta distribution                      | `scipy.stats.beta`      |
+| [`DistributionGumbel`](#ondil.DistributionGumbel)                         | Gumbel distribution                    | `scipy.stats.gumbel_r`  |
 
 
 
@@ -52,6 +54,9 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ::: ondil.DistributionExponential
 
+::: ondil.DistributionBeta
+
+::: ondil.DistributionGumbel
 
 ## Base Class
 
