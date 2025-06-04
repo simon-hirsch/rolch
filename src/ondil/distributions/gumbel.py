@@ -7,13 +7,16 @@ from ..link import IdentityLink, LogLink
 
 class DistributionGumbel(ScipyMixin, Distribution):
     """
-    Gumbel (Extreme Value Type I, for maxima) distribution for GAMLSS.
+    Gumbel distribution for GAMLSS.
 
-    PDF: f(y|mu, sigma) = (1/sigma) * exp(-(z + exp(-z))), where z = (y - mu)/sigma
+    The probability density function is given by:
+    $$
+        f(y|\\mu, \\sigma) = (1/\\sigma) * \\exp(-(z + \\exp(-z)))
+    $$
+    where $z = (y - \\mu)/\\sigma$ and has the following parameters:
 
-    Parameters:
-        mu: location
-        sigma: scale (>0)
+    * $\\mu$: location
+    * $\\sigma$: scale (>0)
     """
 
     corresponding_gamlss: str = "GU"
