@@ -179,25 +179,22 @@ class DistributionBetaInflated(Distribution):
 
     def ppf(self, q, theta):
         mu, sigma, nu, tau = self.theta_to_params(theta)
+
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
+
         denom = 1 + nu + tau
-
-        q = np.asarray(q)
-        result = np.full_like(q, np.nan, dtype=np.float64)
-
         lower = nu / denom
         upper = (1 + nu) / denom
 
-        result = np.where(q <= lower, 0, result)
-        result = np.where(q >= upper, 1, result)
+        q = np.asarray(q, dtype=np.float64)
+        adjusted_q = (q - lower) * denom  # equivalent to (q - lower) / (1/denom)
 
-        middle = (q > lower) & (q < upper)
-        adjusted_q = (q[middle] - lower) / (1 / denom)
-        result[middle] = st.beta(alpha, beta).ppf(adjusted_q)
+        finite_result = st.beta.ppf(adjusted_q, a=alpha, b=beta)
 
-        result = np.where(q == 0, 0, result)
-        result = np.where(q == 1, 1, result)
+        one_result = np.where(np.logical_or(q == 1, q >= upper), 1.0, finite_result)
+        zero_result = np.where(np.logical_or(q == 0, q <= lower), 0.0, one_result)
+        result = np.where(np.logical_or(q < 0, q > 1), np.nan, zero_result)
 
         return result
 
@@ -235,13 +232,24 @@ class DistributionBetaInflated(Distribution):
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-        cdf_beta = st.beta(alpha, beta, loc=0, scale=1).cdf(y)
+        y = np.asarray(y, dtype=np.float64)
+        denom = 1 + nu + tau
 
-        result = np.where(
+        cdf_beta = st.beta(alpha, beta).cdf(y)
+
+        raw_cdf = np.where(
             (y > 0) & (y < 1),
-            np.log(nu + cdf_beta),
-            np.where(y == 0, np.log(nu), np.where(y == 1, (1 + nu + tau), 0)),
+            nu + cdf_beta,
+            np.where(y == 0, nu, np.where(y == 1, denom, 0)),
         )
+
+        with np.errstate(divide='ignore'):
+            log_result = np.log(raw_cdf / denom)
+
+        log_result = np.where(y < 0, -np.inf, log_result)
+        log_result = np.where(y > 1, 0.0, log_result)  
+
+        return log_result
 
     def logpmf(self, y, theta):
         return super().logpmf(y, theta)
