@@ -18,19 +18,17 @@ from .coordinate_descent import (
     soft_threshold,
 )
 from .distributions import (
+    DistributionBeta,
+    DistributionExponential,
     DistributionGamma,
+    DistributionGumbel,
     DistributionJSU,
+    DistributionLogistic,
     DistributionLogNormal,
     DistributionLogNormalMedian,
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
-    DistributionLogNormalMedian,
-    DistributionLogNormal,
-    DistributionLogistic,
-    DistributionBeta,
-    DistributionExponential,
-
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -50,13 +48,13 @@ from .link import (
     InverseSoftPlusShiftTwoLink,
     InverseSoftPlusShiftValueLink,
     LogIdentLink,
+    LogitLink,
     LogLink,
     LogShiftTwoLink,
     LogShiftValueLink,
     SqrtLink,
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
-    LogitLink,
 )
 from .methods import (
     ElasticNetPathMethod,
@@ -104,6 +102,9 @@ __all__ = [
     "DistributionJSU",
     "DistributionGamma",
     "DistributionBeta",
+    "DistributionLogNormal",
+    "DistributionExponential",
+    "DistributionGumbel",
     "init_forget_vector",
     "init_gram",
     "update_gram",
