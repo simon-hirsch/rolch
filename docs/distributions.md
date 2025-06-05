@@ -29,8 +29,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`DistributionLogNormalMedian`](#ondil.DistributionLogNormalMedian)       | Log-normal distribution (median)       | -                       |
 | [`DistributionLogistic`](#ondil.DistributionLogistic)                     | Logistic distribution                  | `scipy.stats.logistic`  |
 | [`DistributionExponential`](#ondil.DistributionExponential)               | Exponential distribution               | `scipy.stats.expon`     |
-
-
+| [`DistributionInverseGaussian`](#ondil.DistributionInverseGaussian)       | Inverse Gaussian distribution          | `scipy.stats.invgauss`  |
 
 ## API Reference
 
@@ -51,6 +50,8 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ::: ondil.DistributionLogistic
 
 ::: ondil.DistributionExponential
+
+::: ondil.DistributionInverseGaussian
 
 
 ## Base Class
