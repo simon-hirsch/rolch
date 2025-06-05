@@ -134,7 +134,7 @@ class DistributionBetaInflated(Distribution):
     def initial_values(self, y: np.ndarray) -> np.ndarray:
         return np.tile([np.mean(y), 0.5, 5, 5], (y.shape[0], 1))
 
-    def cdf(self, y, theta, lower_tail=True, log_p=False):
+    def cdf(self, y, theta):
         mu, sigma, nu, tau = self.theta_to_params(theta)
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = alpha * (1 - mu) / mu
@@ -148,11 +148,6 @@ class DistributionBetaInflated(Distribution):
         )
 
         result = raw_cdf / (1 + nu + tau)
-
-        if not lower_tail:
-            result = 1 - result
-        if log_p:
-            result = np.log(result)
 
         result = np.where(y < 0, 0, result)
         result = np.where(y > 1, 1, result)
