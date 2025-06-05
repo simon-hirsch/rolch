@@ -7,7 +7,7 @@ from ondil import DistributionInverseGaussian
 def test_inversegaussian_distribution():
     dist = DistributionInverseGaussian()
 
-    code = f"""
+    code = """
     library(gamlss.dist)
     set.seed(1)
     y <- rIG(3, mu = 2, sigma = 1)  # generate y values > 0
@@ -38,12 +38,12 @@ def test_inversegaussian_distribution():
     pdf = dist.pdf(y, theta=theta.T)
     ppf = dist.ppf(cdf, theta=theta.T)
 
-    assert np.allclose(
-        cdf, R_list.rx2("cdf")
-    ), "Probabilities don't match, inspect the cdf function"
-    assert np.allclose(
-        pdf, R_list.rx2("pdf")
-    ), "Densities don't match, inspect the pdf function"
-    assert np.allclose(
-        ppf, R_list.rx2("ppf"), atol=1e-3, rtol=1e-3
-    ), "Quantiles don't match, inspect the ppf function"
+    assert np.allclose(cdf, R_list.rx2("cdf")), (
+        "Probabilities don't match, inspect the cdf function"
+    )
+    assert np.allclose(pdf, R_list.rx2("pdf")), (
+        "Densities don't match, inspect the pdf function"
+    )
+    assert np.allclose(ppf, R_list.rx2("ppf"), atol=1e-3, rtol=1e-3), (
+        "Quantiles don't match, inspect the ppf function"
+    )
