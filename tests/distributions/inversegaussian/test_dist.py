@@ -44,6 +44,9 @@ def test_inversegaussian_distribution():
     assert np.allclose(pdf, R_list.rx2("pdf")), (
         "Densities don't match, inspect the pdf function"
     )
+    # Note the discussion in the PR here: There is a numerical precision missmatch in 
+    # the implementations provided by scipy and R::GAMLSS
+    # https://github.com/simon-hirsch/ondil/pull/118#issuecomment-2942992914
     assert np.allclose(ppf, R_list.rx2("ppf"), atol=1e-3, rtol=1e-3), (
         "Quantiles don't match, inspect the ppf function"
     )
