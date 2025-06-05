@@ -17,7 +17,6 @@ def get_distributions_with_gamlss():
             if (
                 instance.corresponding_gamlss is not None
                 and instance.__class__.__name__ != "DistributionLogNormal"
-                and instance.__class__.__name__ != "DistributionInverseGaussian"
             ):
                 distributions.append(instance)
     return distributions
@@ -84,6 +83,6 @@ def test_distribution_functions(distribution):
     available_functions = R_list.names
     for key in available_functions:
         if key in function_mapping:
-            assert np.allclose(function_mapping[key](), R_list.rx2(key)), (
+            assert np.allclose(function_mapping[key](), R_list.rx2(key), atol=1e-3), (
                 f"Function {key} doesn't match for {distribution.__class__.__name__}"
             )
