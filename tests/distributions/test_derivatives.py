@@ -27,6 +27,9 @@ CLIP_BOUNDS = (-1e5, 1e5)
 def test_distribution_derivatives(distribution):
     """Test that Python derivatives match R GAMLSS derivatives for different distributions."""
 
+    # Set seed for reproducibility
+    np.random.seed(42)
+
     # Generate random data within distribution support
     y = np.random.uniform(
         np.clip(distribution.distribution_support[0], *CLIP_BOUNDS),
