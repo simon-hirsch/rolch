@@ -14,13 +14,13 @@ CLIP_BOUNDS = (-1e5, 1e5)
         ondil.distributions.DistributionLogistic(),
         ondil.distributions.DistributionNormal(),
         ondil.distributions.DistributionLogNormalMedian(),
-        # ondil.distributions.DistributionExponential(),
+        ondil.distributions.DistributionExponential(),
         ondil.distributions.DistributionGamma(),
         ondil.distributions.DistributionInverseGaussian(),
         ondil.distributions.DistributionBeta(),
         ondil.distributions.DistributionJSU(),
         ondil.distributions.DistributionT(),
-        # ondil.distributions.DistributionNormalMeanVariance(),
+        ondil.distributions.DistributionNormalMeanVariance(),
     ],
     ids=lambda dist: dist.__class__.__name__,
 )
@@ -54,10 +54,11 @@ def test_distribution_derivatives(distribution):
     # Obtain derivatives from R
     code = f"""
         dist <- gamlss.dist::{distribution.corresponding_gamlss}()
-        derivative_funcs <- c('dldm', 'dldd', 'd2ldm2', 'd2ldd2', 'd2ldmdd')
-        setNames(lapply(derivative_funcs, function(f) {{
+        all_derivative_funcs <- c("dldm", "dldd", "d2ldm2", "d2ldd2", "d2ldmdd")
+        available_funcs <- all_derivative_funcs[sapply(all_derivative_funcs, function(f) !is.null(dist[[f]]))]
+        setNames(lapply(available_funcs, function(f) {{
           do.call(dist[[f]], mget(names(formals(dist[[f]])), envir = .GlobalEnv))
-        }}), derivative_funcs)
+        }}), available_funcs)
         """
 
     R_list = robjects.r(code)
@@ -71,8 +72,10 @@ def test_distribution_derivatives(distribution):
         "d2ldmdd": lambda: distribution.dl2_dpp(y, theta=theta, params=(0, 1)),
     }
 
-    # Compare R and Python derivatives
-    for key, python_func in derivative_mapping.items():
-        assert np.allclose(python_func(), R_list.rx2(key)), (
-            f"Derivative {key} doesn't match for {distribution.__class__.__name__}"
-        )
+    # Compare R and Python derivatives - only for available derivatives
+    available_derivatives = R_list.names
+    for key in available_derivatives:
+        if key in derivative_mapping:
+            assert np.allclose(derivative_mapping[key](), R_list.rx2(key)), (
+                f"Derivative {key} doesn't match for {distribution.__class__.__name__}"
+            )
