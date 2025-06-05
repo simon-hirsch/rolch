@@ -62,7 +62,7 @@ class DistributionInverseGaussian(ScipyMixin, Distribution):
 
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
         mu, sigma = self.theta_to_params(theta)
-        return {"mu": mu * sigma**2, "loc": 0, "scale": 1 / sigma**2}
+        return {"mu": mu * sigma**2, "loc": np.zeros_like(mu), "scale": 1 / sigma**2}
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         mu, sigma = self.theta_to_params(theta)
