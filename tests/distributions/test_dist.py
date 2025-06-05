@@ -1,0 +1,89 @@
+import numpy as np
+import pytest
+import rpy2.robjects as robjects
+import ondil.distributions
+import inspect
+
+N = 100
+CLIP_BOUNDS = (-1e5, 1e5)
+
+
+def get_distributions_with_gamlss():
+    """Get all distribution classes that have a corresponding_gamlss attribute."""
+    distributions = []
+    for name, obj in inspect.getmembers(ondil.distributions):
+        if hasattr(obj, "corresponding_gamlss"):
+            instance = obj()
+            if (
+                instance.corresponding_gamlss is not None
+                and instance.__class__.__name__ != "DistributionLogNormal"
+                and instance.__class__.__name__ != "DistributionInverseGaussian"
+            ):
+                distributions.append(instance)
+    return distributions
+
+
+@pytest.mark.parametrize(
+    "distribution",
+    get_distributions_with_gamlss(),
+    ids=lambda dist: dist.__class__.__name__,
+)
+def test_distribution_functions(distribution):
+    """Test that Python distribution functions match R GAMLSS functions."""
+
+    # Set seed for reproducibility
+    np.random.seed(42)
+
+    # Generate random data within distribution support
+    x = np.random.uniform(
+        np.clip(distribution.distribution_support[0], *CLIP_BOUNDS),
+        np.clip(distribution.distribution_support[1], *CLIP_BOUNDS),
+        N,
+    )
+    robjects.globalenv["x"] = robjects.FloatVector(x)
+    robjects.globalenv["q"] = robjects.FloatVector(x)
+    prob_grid = np.linspace(0.01, 1 - 0.01, N)
+    robjects.globalenv["p"] = robjects.FloatVector(prob_grid)
+
+    # Generate random parameters within support bounds
+    theta = np.array(
+        [
+            np.random.uniform(
+                np.clip(distribution.parameter_support[i][0], *CLIP_BOUNDS),
+                np.clip(distribution.parameter_support[i][1], *CLIP_BOUNDS),
+                N,
+            )
+            for i in range(distribution.n_params)
+        ]
+    ).T
+
+    # Assign R variables programmatically
+    for i, param_name in distribution.parameter_names.items():
+        robjects.globalenv[param_name] = robjects.FloatVector(theta[:, i])
+
+    code = f"""
+        available_vars <- c("x", "q", "p", "mu", "sigma", "nu", "tau")
+        list(
+          "cdf" = do.call(gamlss.dist::p{distribution.corresponding_gamlss}, mget(intersect(available_vars, names(formals(gamlss.dist::p{distribution.corresponding_gamlss}))), envir = .GlobalEnv)),
+          "pdf" = do.call(gamlss.dist::d{distribution.corresponding_gamlss}, mget(intersect(available_vars, names(formals(gamlss.dist::d{distribution.corresponding_gamlss}))), envir = .GlobalEnv)),
+          "ppf" = do.call(gamlss.dist::q{distribution.corresponding_gamlss}, mget(intersect(available_vars, names(formals(gamlss.dist::q{distribution.corresponding_gamlss}))), envir = .GlobalEnv))
+        )
+        """
+
+    # Execute the R code to obtain the results
+    R_list = robjects.r(code)
+
+    # Map R function names to Python method calls
+    function_mapping = {
+        "cdf": lambda: distribution.cdf(x, theta=theta),
+        "pdf": lambda: distribution.pdf(x, theta=theta),
+        "ppf": lambda: distribution.ppf(prob_grid, theta=theta),
+    }
+
+    # Compare R and Python functions - only for available functions
+    available_functions = R_list.names
+    for key in available_functions:
+        if key in function_mapping:
+            assert np.allclose(function_mapping[key](), R_list.rx2(key)), (
+                f"Function {key} doesn't match for {distribution.__class__.__name__}"
+            )
