@@ -3,25 +3,33 @@ import numpy as np
 import pytest
 import rpy2.robjects as robjects
 import ondil.distributions
+import inspect
 
 N = 100
 CLIP_BOUNDS = (-1e5, 1e5)
 
 
+def get_distributions_with_gamlss():
+    """Get all distribution classes that have a corresponding_gamlss attribute."""
+    distributions = []
+    for name, obj in inspect.getmembers(ondil.distributions):
+        if (
+            inspect.isclass(obj)
+            and name.startswith("Distribution")
+            and hasattr(obj, "corresponding_gamlss")
+        ):
+            instance = obj()
+            if (
+                hasattr(instance, "corresponding_gamlss")
+                and instance.corresponding_gamlss is not None
+            ):
+                distributions.append(instance)
+    return distributions
+
+
 @pytest.mark.parametrize(
     "distribution",
-    [
-        ondil.distributions.DistributionLogistic(),
-        ondil.distributions.DistributionNormal(),
-        ondil.distributions.DistributionLogNormalMedian(),
-        ondil.distributions.DistributionExponential(),
-        ondil.distributions.DistributionGamma(),
-        ondil.distributions.DistributionInverseGaussian(),
-        ondil.distributions.DistributionBeta(),
-        ondil.distributions.DistributionJSU(),
-        ondil.distributions.DistributionT(),
-        ondil.distributions.DistributionNormalMeanVariance(),
-    ],
+    get_distributions_with_gamlss(),
     ids=lambda dist: dist.__class__.__name__,
 )
 def test_distribution_derivatives(distribution):
