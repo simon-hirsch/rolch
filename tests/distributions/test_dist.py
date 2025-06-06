@@ -8,6 +8,12 @@ N = 100
 CLIP_BOUNDS = (-1e5, 1e5)
 
 
+# Distributions that need higher tolerance
+SPECIAL_TOLERANCE_DISTRIBUTIONS = {
+    "DistributionInverseGaussian": 1e-3,
+}
+
+
 def get_distributions_with_gamlss():
     """Get all distribution classes that have a corresponding_gamlss attribute."""
     distributions = []
@@ -81,8 +87,15 @@ def test_distribution_functions(distribution):
 
     # Compare R and Python functions - only for available functions
     available_functions = R_list.names
+
+    # Get tolerance for this distribution
+    atol = SPECIAL_TOLERANCE_DISTRIBUTIONS.get(
+        distribution.__class__.__name__,
+        1e-8,  # default np.allclose tolerance
+    )
+
     for key in available_functions:
         if key in function_mapping:
-            assert np.allclose(function_mapping[key](), R_list.rx2(key), atol=1e-3), (
+            assert np.allclose(function_mapping[key](), R_list.rx2(key), atol=atol), (
                 f"Function {key} doesn't match for {distribution.__class__.__name__}"
             )
