@@ -20,16 +20,17 @@ from .coordinate_descent import (
 from .distributions import (
     DistributionBeta,
     DistributionBetaInflated,
+    DistributionExponential,
     DistributionGamma,
+    DistributionInverseGaussian,
     DistributionJSU,
+    DistributionLogistic,
     DistributionLogNormal,
     DistributionLogNormalMedian,
     DistributionLogistic,
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
-    DistributionBeta,
-    DistributionExponential,
 )
 
 from .error import OutOfSupportError
@@ -50,13 +51,13 @@ from .link import (
     InverseSoftPlusShiftTwoLink,
     InverseSoftPlusShiftValueLink,
     LogIdentLink,
+    LogitLink,
     LogLink,
     LogShiftTwoLink,
     LogShiftValueLink,
     SqrtLink,
     SqrtShiftTwoLink,
     SqrtShiftValueLink,
-    LogitLink,
 )
 from .methods import (
     ElasticNetPathMethod,
@@ -106,6 +107,8 @@ __all__ = [
     "DistributionBeta",
     "DistributionBetaInflated",
     "DistributionLogNormal",
+    "DistributionExponential",
+    "DistributionInverseGaussian",
     "init_forget_vector",
     "init_gram",
     "update_gram",
