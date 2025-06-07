@@ -1,0 +1,5 @@
+pull_request_templates:
+  - name: "New Distribution"
+    path: "new_distribution.md"
+  - name: "✨ Feature"
+    path: "other_pr.md"
