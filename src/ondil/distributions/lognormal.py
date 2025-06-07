@@ -1,10 +1,11 @@
-from typing import Dict, Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import IdentityLink, LogLink
+from ..link.robust_math import robust_exp
 
 
 class DistributionLogNormal(ScipyMixin, Distribution):
@@ -20,6 +21,16 @@ class DistributionLogNormal(ScipyMixin, Distribution):
     f(y | \\theta_0, \\theta_1) = \\frac{1}{y\\theta_1\\sqrt{2\pi}}\exp\\left(-\\frac{(\\log y - \\theta_0)^2}{2\\theta_1^2}\\right).
     $$
     where $y$ is the observed data, $\\mu = \\theta_0$ is the location parameter and $\\sigma = \\theta_1$ is the scale parameter.
+
+    !!! note
+        Note that re-parameterization used to move from scipy.stats to GAMLSS is:
+        $$
+            \\mu = \\exp(\\theta_0)
+        $$
+        and can therefore be numercially unstable for large values of $\\theta_0$.
+        We have re-implemented the PDF, CDF, PPF according to avoid this issue,
+        however the rvs method still uses the scipy.stats implementation which is not
+        numerically stable for large values of $\\theta_0$.
 
     """
 
@@ -45,7 +56,7 @@ class DistributionLogNormal(ScipyMixin, Distribution):
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
         mu = theta[:, 0]
         sigma = theta[:, 1]
-        return {"s": sigma, "scale": np.exp(mu), "loc": 0}
+        return {"s": sigma, "scale": robust_exp(mu), "loc": 0}
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -77,3 +88,40 @@ class DistributionLogNormal(ScipyMixin, Distribution):
         log_y = np.log(y)
         initial_params = [np.mean(log_y), np.std(log_y, ddof=1)]
         return np.tile(initial_params, (y.shape[0], 1))
+
+    def pdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Probability density function of the Log-Normal distribution.
+        """
+        mu, sigma = self.theta_to_params(theta)
+        return (
+            1
+            / (y * sigma * np.sqrt(2 * np.pi))
+            * np.exp(-((np.log(y) - mu) ** 2) / (2 * sigma**2))
+        )
+
+    def cdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Cumulative distribution function of the Log-Normal distribution.
+        """
+        mu, sigma = self.theta_to_params(theta)
+        return st.norm.cdf((np.log(y) - mu) / sigma)
+
+    def ppf(self, p: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        """
+        Percent-point function (quantile function) of the Log-Normal distribution.
+        """
+        mu, sigma = self.theta_to_params(theta)
+        return np.exp(mu + sigma * st.norm.ppf(p))
+
+    def logpdf(self, y, theta):
+        """
+        Logarithm of the probability density function of the Log-Normal distribution.
+        """
+        mu, sigma = self.theta_to_params(theta)
+        return np.log(1 / (y * sigma * np.sqrt(2 * np.pi))) + (
+            -((np.log(y) - mu) ** 2) / (2 * sigma**2)
+        )
+
+    def logcdf(self, y, theta):
+        return np.log(self.cdf(y, theta))
