@@ -29,6 +29,7 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
+    DistributionPowerExponential,
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel

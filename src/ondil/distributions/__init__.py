@@ -8,6 +8,7 @@ from .lognormal import DistributionLogNormal
 from .lognormalmedian import DistributionLogNormalMedian
 from .normal import DistributionNormal, DistributionNormalMeanVariance
 from .studentt import DistributionT
+from .powerexponential import DistributionPowerExponential
 
 __all__ = [
     "DistributionNormal",
@@ -21,4 +22,5 @@ __all__ = [
     "DistributionLogistic",
     "DistributionExponential",
     "DistributionInverseGaussian",
+    "DistributionPowerExponential",
 ]
