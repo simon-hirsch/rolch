@@ -16,7 +16,7 @@ def test_beta_distribution():
     tau <- runif(1)
 
 
-    y <- gamlss.dist::rBEINF(n, mu, sigma, nu, tau)
+    y <- gamlss.dist::r{dist.corresponding_gamlss}(n, mu, sigma, nu, tau)
     x1 <- rnorm(n)
     x2 <- rnorm(n)
 
@@ -25,7 +25,7 @@ def test_beta_distribution():
     sigma.formula = ~x1 + x2,
     nu.formula = ~x1 + x2,
     tau.formula = ~x1 + x2,
-    family = BEINF()
+    family = {dist.corresponding_gamlss}()
     )
 
     list(
@@ -51,17 +51,8 @@ def test_beta_distribution():
     x2 = np.array(R_list.rx2("x2"))
     X = np.column_stack((x1, x2))
 
-    theta = np.array(
-        [
-            R_list.rx2("mu"),  # mu
-            R_list.rx2("sigma"),  # sigma
-            R_list.rx2("nu"),  # nu
-            R_list.rx2("tau"),  # tau
-        ]
-    )
-
     estimator = OnlineGamlss(
-        distribution=DistributionBetaInflated(),
+        distribution=dist,
         equation={0: "all", 1: "all", 2: "all", 3: "all"},
         method="ols",
         scale_inputs=False,

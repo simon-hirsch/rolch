@@ -1,4 +1,5 @@
 from .beta import DistributionBeta
+from .exponential import DistributionExponential
 from .betainflated import DistributionBetaInflated
 from .gamma import DistributionGamma
 from .inversegaussian import DistributionInverseGaussian
@@ -8,18 +9,18 @@ from .lognormal import DistributionLogNormal
 from .lognormalmedian import DistributionLogNormalMedian
 from .normal import DistributionNormal, DistributionNormalMeanVariance
 from .studentt import DistributionT
-from .exponential import DistributionExponential
 
 __all__ = [
-    "DistributionBeta",
+    "DistributionNormal",
+    "DistributionNormalMeanVariance",
+    "DistributionT",
+    "DistributionJSU",
     "DistributionBetaInflated",
     "DistributionGamma",
-    "DistributionJSU",
+    "DistributionBeta",
     "DistributionLogNormal",
     "DistributionLogNormalMedian",
     "DistributionLogistic",
-    "DistributionNormalMeanVariance",
-    "DistributionT",
     "DistributionExponential",
     "DistributionInverseGaussian",
 ]
