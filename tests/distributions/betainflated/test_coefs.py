@@ -4,9 +4,9 @@ from ondil import DistributionBetaInflated, OnlineGamlss
 
 
 def test_beta_distribution():
-    dist = DistributionBetaInflated
+    dist = DistributionBetaInflated()
 
-    code = f"""
+    code = """
     library(gamlss)
     set.seed(1)
     n <- 2000
@@ -14,20 +14,16 @@ def test_beta_distribution():
     sigma <- runif(1)
     nu <- runif(1)
     tau <- runif(1)
-
-
-    y <- gamlss.dist::r{dist.corresponding_gamlss}(n, mu, sigma, nu, tau)
+    y <- gamlss.dist::rBEINF(n, mu, sigma, nu, tau)
     x1 <- rnorm(n)
     x2 <- rnorm(n)
-
     model <- gamlss(
     y ~ x1 + x2,
     sigma.formula = ~x1 + x2,
     nu.formula = ~x1 + x2,
     tau.formula = ~x1 + x2,
-    family = {dist.corresponding_gamlss}()
+    family = BEINF()
     )
-
     list(
     "y" = y,
     "x1" = x1, 
