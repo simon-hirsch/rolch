@@ -114,7 +114,7 @@ class DistributionLogNormal(ScipyMixin, Distribution):
         mu, sigma = self.theta_to_params(theta)
         return np.exp(mu + sigma * st.norm.ppf(p))
 
-    def logpdf(self, y, theta):
+    def logpdf(self, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
         """
         Logarithm of the probability density function of the Log-Normal distribution.
         """
