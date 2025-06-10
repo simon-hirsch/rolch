@@ -176,21 +176,11 @@ class DistributionPowerExponential(Distribution):
 
     def initial_values(self, y: np.ndarray, param=None, axis=None) -> np.ndarray:
 
-        y = np.asarray(y)
+    def initial_values(self, y: np.ndarray) -> np.ndarray:
         mu_init = np.full_like(y, np.mean(y))
         sigma_init = np.full_like(y, np.std(y, ddof=1))
         nu_init = np.full_like(y, np.log(2))
-
-        if param is None:
-            return np.stack((mu_init, sigma_init, nu_init), axis=1)
-        elif param == 0:
-            return mu_init
-        elif param == 1:
-            return sigma_init
-        elif param == 2:
-            return nu_init
-        else:
-            raise ValueError("Invalid parameter index")
+        return np.stack((mu_init, sigma_init, nu_init), axis=1)
 
     def theta_to_params(self, theta: np.ndarray) -> Tuple[np.ndarray, ...]:
         theta = np.atleast_2d(theta)  # This ensures it's always 2D
