@@ -5,6 +5,7 @@ from scipy.stats import gamma as gamma_dist
 from ..base import Distribution, LinkFunction
 from ..link import IdentityLink, LogLink
 
+
 class DistributionPowerExponential(Distribution):
     """
     Power Exponential distribution (GAMLSS: PE).
@@ -144,9 +145,9 @@ class DistributionPowerExponential(Distribution):
         part2 = digamma(p) * (np.log(2) + 3 - 3 * digamma(3 / nu) - nu)
         part3 = -3 * digamma(3 / nu) * (1 + np.log(2))
         part4 = -(nu + np.log(2)) * np.log(2)
-        part5 = -nu + (nu ** 4) * (dlogc_dv ** 2)
+        part5 = -nu + (nu**4) * (dlogc_dv**2)
 
-        d2ldv2 = -(part1 + part2 + part3 + part4 + part5) / (nu ** 3)
+        d2ldv2 = -(part1 + part2 + part3 + part4 + part5) / (nu**3)
         d2ldv2 = np.where(d2ldv2 < -1e-15, d2ldv2, -1e-15)
         return d2ldv2
 
@@ -158,12 +159,14 @@ class DistributionPowerExponential(Distribution):
             z = self._z(y, mu, sigma)
             c = self._c(nu)
             dldm = (np.sign(z) * nu / (2 * sigma * np.abs(z))) * (np.abs(z / c) ** nu)
-            closed_form = -(nu ** 2 * gamma(2 - 1 / nu) * gamma(3 / nu)) / ((sigma * gamma(1 / nu)) ** 2)
-            d2ldm2 = np.where(nu < 1.05, -dldm ** 2, closed_form)
+            closed_form = -(nu**2 * gamma(2 - 1 / nu) * gamma(3 / nu)) / (
+                (sigma * gamma(1 / nu)) ** 2
+            )
+            d2ldm2 = np.where(nu < 1.05, -(dldm**2), closed_form)
             return d2ldm2
 
         if param == 1:
-            return -nu / (sigma ** 2)
+            return -nu / (sigma**2)
 
         if param == 2:
             return self.d2ldv2(y, theta)
@@ -173,8 +176,6 @@ class DistributionPowerExponential(Distribution):
         if set(params) == {0, 1}:
             return np.zeros_like(y)
         return -self.dl1_dp1(y, theta, params[0]) * self.dl1_dp1(y, theta, params[1])
-
-    def initial_values(self, y: np.ndarray, param=None, axis=None) -> np.ndarray:
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
         mu_init = np.full_like(y, np.mean(y))
