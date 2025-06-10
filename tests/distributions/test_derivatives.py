@@ -2,22 +2,11 @@
 import numpy as np
 import pytest
 import rpy2.robjects as robjects
-import ondil.distributions
-import inspect
+
+from .utils import get_distributions_with_gamlss
 
 N = 100
 CLIP_BOUNDS = (-1e5, 1e5)
-
-
-def get_distributions_with_gamlss():
-    """Get all distribution classes that have a corresponding_gamlss attribute."""
-    distributions = []
-    for name, obj in inspect.getmembers(ondil.distributions):
-        if hasattr(obj, "corresponding_gamlss"):
-            instance = obj()
-            if instance.corresponding_gamlss is not None:
-                distributions.append(instance)
-    return distributions
 
 
 @pytest.mark.parametrize(
