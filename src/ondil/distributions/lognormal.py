@@ -27,7 +27,7 @@ class DistributionLogNormal(ScipyMixin, Distribution):
         $$
             \\mu = \\exp(\\theta_0)
         $$
-        and can therefore be numercially unstable for large values of $\\theta_0$.
+        and can therefore be numerically unstable for large values of $\\theta_0$.
         We have re-implemented the PDF, CDF, PPF according to avoid this issue,
         however the rvs method still uses the scipy.stats implementation which is not
         numerically stable for large values of $\\theta_0$.
