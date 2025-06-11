@@ -19,6 +19,7 @@ from .coordinate_descent import (
 )
 from .distributions import (
     DistributionBeta,
+    DistributionBetaInflated,
     DistributionExponential,
     DistributionGamma,
     DistributionGumbel,
@@ -103,6 +104,7 @@ __all__ = [
     "DistributionJSU",
     "DistributionGamma",
     "DistributionBeta",
+    "DistributionBetaInflated",
     "DistributionLogNormal",
     "DistributionExponential",
     "DistributionGumbel",

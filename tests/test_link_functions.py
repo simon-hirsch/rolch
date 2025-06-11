@@ -23,6 +23,7 @@ from ondil import (
 
 REAL_LINE_LINKS = [IdentityLink]
 POSITIVE_LINE_LINKS = [LogLink, SqrtLink, LogIdentLink, InverseSoftPlusLink]
+POSITIVE_RESTRICTED_LINE_LINKS = [LogitLink] ##domain (0,1)
 SHIFTED_LINKS = [LogShiftValueLink, SqrtShiftValueLink, InverseSoftPlusShiftValueLink]
 VALUES = np.array([2, 5, 10, 25, 100])
 M = 10000
@@ -55,6 +56,15 @@ def test_link_positive_line(linkfun):
     x = np.linspace(1e-10, 100, M)
     y = instance.inverse(instance.link(x))
     assert np.allclose(x, y), "Links don't match"
+
+@pytest.mark.parametrize("linkfun", POSITIVE_RESTRICTED_LINE_LINKS)
+def test_link_positive_restricted_line(linkfun):
+    """Test links that are defined on (eps, 1-eps)"""
+    instance = linkfun()
+    eps = 1e-10
+    x = np.linspace(eps, 1-eps, M)
+    y = instance.inverse(instance.link(x))
+    assert np.allclose(x, y), "Links don't match" 
 
 
 @pytest.mark.parametrize("linkfun", SHIFTED_LINKS)

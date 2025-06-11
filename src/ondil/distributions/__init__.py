@@ -1,5 +1,6 @@
 from .beta import DistributionBeta
 from .exponential import DistributionExponential
+from .betainflated import DistributionBetaInflated
 from .gamma import DistributionGamma
 from .gumbel import DistributionGumbel
 from .inversegaussian import DistributionInverseGaussian
@@ -15,6 +16,7 @@ __all__ = [
     "DistributionNormalMeanVariance",
     "DistributionT",
     "DistributionJSU",
+    "DistributionBetaInflated",
     "DistributionGamma",
     "DistributionBeta",
     "DistributionLogNormal",
