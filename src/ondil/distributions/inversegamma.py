@@ -49,6 +49,7 @@ class DistributionInverseGamma(ScipyMixin, Distribution):
         return {"a": alpha, "scale": scale, "loc": 0}
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma = self.theta_to_params(theta)
         alpha = 1.0 / sigma**2
 
@@ -61,6 +62,7 @@ class DistributionInverseGamma(ScipyMixin, Distribution):
             return (-2 / sigma**3) * term
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
+        self._validate_dln_dpn_inputs(y, theta, param)
         mu, sigma = self.theta_to_params(theta)
         alpha = 1.0 / sigma ** 2
 
@@ -80,6 +82,7 @@ class DistributionInverseGamma(ScipyMixin, Distribution):
         return st.invgamma.rvs(a=alpha, scale=scale, size=n)
 
     def dl2_dpp(self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)) -> np.ndarray:
+        self._validate_dl2_dpp_inputs(y, theta, params)
         mu, sigma = self.theta_to_params(theta)
         if sorted(params) == [0, 1]:
             return -(2 / (mu * sigma * (1 + sigma**2)))
