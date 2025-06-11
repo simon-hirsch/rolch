@@ -7,7 +7,7 @@ from ..link import IdentityLink, LogLink
 
 class DistributionGumbel(ScipyMixin, Distribution):
     """
-    Gumbel distribution for GAMLSS.
+    The Gumbel distribution.
 
     The probability density function is given by:
     $$
@@ -50,7 +50,7 @@ class DistributionGumbel(ScipyMixin, Distribution):
         raise ValueError("param must be 0 (mu) or 1 (sigma)")
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
-        mu, sigma = self.theta_to_params(theta)
+        _, sigma = self.theta_to_params(theta)
         if param == 0:
             # d^2 logL / d mu^2
             return -1 / sigma**2
