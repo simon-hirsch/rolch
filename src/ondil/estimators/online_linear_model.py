@@ -1,3 +1,4 @@
+import numbers
 import warnings
 from typing import Literal, Optional
 
@@ -23,7 +24,7 @@ class OnlineLinearModel(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
     "Simple Online Linear Regression for the expected value."
 
     _parameter_constraints = {
-        "forget": [Interval(0.0, 1.0, closed="left")],
+        "forget": [Interval(numbers.Real, 0.0, 1.0, closed="left")],
         "fit_intercept": [bool],
         "scale_inputs": [bool, np.ndarray],
         "regularize_intercept": [bool],
