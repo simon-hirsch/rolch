@@ -30,6 +30,8 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`DistributionLogistic`](#ondil.DistributionLogistic)                     | Logistic distribution                  | `scipy.stats.logistic`  |
 | [`DistributionExponential`](#ondil.DistributionExponential)               | Exponential distribution               | `scipy.stats.expon`     |
 | [`DistributionInverseGaussian`](#ondil.DistributionInverseGaussian)       | Inverse Gaussian distribution          | `scipy.stats.invgauss`  |
+| [`DistributionBeta`](#ondil.DistributionBeta)                             | Beta distribution                      | `scipy.stats.beta`      |
+| [`DistributionBetaInflated`](#ondil.DistributionBetaInflated)             | Beta Inflated distribution             | -                       |
 | [`DistributionReverseGumbel`](#ondil.DistributionReverseGumbel)           | Reverse Gumbel distribution            | `scipy.stats.gumbel_r`  |
 
 ## API Reference
@@ -54,8 +56,11 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ::: ondil.DistributionInverseGaussian
 
-::: ondil.DistributionReverseGumbel
+::: ondil.DistributionBeta
 
+::: ondil.DistributionBetaInflated
+
+::: ondil.DistributionReverseGumbel
 
 ## Base Class
 
