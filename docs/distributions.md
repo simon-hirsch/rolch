@@ -32,6 +32,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`DistributionInverseGaussian`](#ondil.DistributionInverseGaussian)       | Inverse Gaussian distribution          | `scipy.stats.invgauss`  |
 | [`DistributionBeta`](#ondil.DistributionBeta)                             | Beta distribution                      | `scipy.stats.beta`      |
 | [`DistributionBetaInflated`](#ondil.DistributionBetaInflated)             | Beta Inflated distribution             | -                       |
+|  [`DistributionPowerExponential`](#ondil.DistributionPowerExponential)    | Power Exponential distribution         | -                       |
 
 ## API Reference
 
@@ -58,6 +59,9 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ::: ondil.DistributionBeta
 
 ::: ondil.DistributionBetaInflated
+
+::: ondil.DistributionPowerExponential
+
 
 ## Base Class
 
