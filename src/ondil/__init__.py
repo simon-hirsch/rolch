@@ -108,6 +108,7 @@ __all__ = [
     "DistributionLogNormal",
     "DistributionExponential",
     "DistributionInverseGaussian",
+    "DistributionPowerExponential",
     "init_forget_vector",
     "init_gram",
     "update_gram",
