@@ -31,6 +31,7 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
+    DistributionReverseGumbel,
     DistributionInverseGamma,
 )
 from .error import OutOfSupportError
@@ -111,6 +112,7 @@ __all__ = [
     "DistributionGumbel",
     "DistributionInverseGaussian",
     "DistributionInverseGamma",
+    "DistributionReverseGumbel",
     "init_forget_vector",
     "init_gram",
     "update_gram",

@@ -10,6 +10,7 @@ from .lognormal import DistributionLogNormal
 from .lognormalmedian import DistributionLogNormalMedian
 from .normal import DistributionNormal, DistributionNormalMeanVariance
 from .studentt import DistributionT
+from .reversegumbel import DistributionReverseGumbel
 from .inversegamma import DistributionInverseGamma
 
 __all__ = [
@@ -26,5 +27,6 @@ __all__ = [
     "DistributionExponential",
     "DistributionGumbel",
     "DistributionInverseGaussian",
+    "DistributionReverseGumbel",
     "DistributionInverseGamma",
 ]
