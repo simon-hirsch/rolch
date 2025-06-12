@@ -30,6 +30,7 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
+    DistributionPowerExponential,
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -107,6 +108,7 @@ __all__ = [
     "DistributionLogNormal",
     "DistributionExponential",
     "DistributionInverseGaussian",
+    "DistributionPowerExponential",
     "init_forget_vector",
     "init_gram",
     "update_gram",
