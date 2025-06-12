@@ -105,44 +105,29 @@ class OnlineScaler:
                 self.n_observations += 1
                 weight = sample_weight[i]
 
-                if True:
-                    # Exponential forgetting case
-                    old_m = self.m
-                    old_w = self.w
+                # Exponential forgetting case
+                old_m = self.m
+                old_w = self.w
 
-                    # Update cumulative weight first
-                    self.w = old_w * (1 - self.forget) + weight
+                # Update cumulative weight first
+                self.w = old_w * (1 - self.forget) + weight
 
-                    # Update mean using exponential forgetting formula
-                    self.m = (
-                        old_m * old_w * (1 - self.forget)
-                        + X[i, self._selection] * weight
-                    ) / self.w
+                # Update mean using exponential forgetting formula
+                self.m = (
+                    old_m * old_w * (1 - self.forget) + X[i, self._selection] * weight
+                ) / self.w
 
-                    # Update variance using the correct formula for exponential forgetting
-                    # This maintains the interpretation of variance as E[X^2] - E[X]^2
-                    diff_old = X[i, self._selection] - old_m
-                    diff_new = X[i, self._selection] - self.m
+                # Update variance using the correct formula for exponential forgetting
+                # This maintains the interpretation of variance as E[X^2] - E[X]^2
+                diff_old = X[i, self._selection] - old_m
+                diff_new = X[i, self._selection] - self.m
 
-                    # Update M (sum of squared deviations)
-                    self.M = self.M * (1 - self.forget) + weight * diff_old * diff_new
+                # Update M (sum of squared deviations)
+                self.M = self.M * (1 - self.forget) + weight * diff_old * diff_new
 
-                    # Update variance
-                    self.v = self.M / self.w
-                else:
-                    # Weighted online updates without forgetting
-                    old_sum_weights = self.sum_weights
-                    self.sum_weights += weight
+                # Update variance
+                self.v = self.M / self.w
 
-                    if self.sum_weights > 0:
-                        # Weighted online mean update
-                        diff = X[i, self._selection] - self.m
-                        self.m += (weight / self.sum_weights) * diff
-
-                        # Weighted online variance update using Welford's method
-                        diff2 = X[i, self._selection] - self.m
-                        self.M += weight * diff * diff2
-                        self.v = self.M / self.sum_weights
         else:
             pass
 
@@ -199,7 +184,7 @@ W = np.random.uniform(
 ).reshape(-1, 1)  # Uniform weights for each sample
 
 # %%
-forget = 0.1
+forget = 0.000001
 os = OnlineScaler(
     forget=forget,
 )
