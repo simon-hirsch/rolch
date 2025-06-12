@@ -1,8 +1,7 @@
 import numpy as np
 
-from .utils import (
-    calculate_asymptotic_training_length,
-    calculate_effective_training_length,
+from .gram import (
+    init_forget_vector,
 )
 
 
@@ -44,57 +43,82 @@ class OnlineScaler:
         self.m = 0
         self.M = 0
         self.v = 0
+        self.w = 0  # Track cumulative weights for exponential forgetting
         self.n_observations = X.shape[0]
-        self.n_asymmptotic = calculate_asymptotic_training_length(self.forget)
+        self.sum_weights = 0  # Track sum of weights for weighted updates
 
-    def fit(self, X: np.ndarray) -> None:
+    def fit(self, X: np.ndarray, sample_weight: np.ndarray = None) -> None:
         """Fit the OnlineScaler() Object for the first time.
 
         Args:
             X (np.ndarray): Matrix of covariates X.
+            sample_weight (np.ndarray, optional): Weights for each sample. Defaults to None (uniform weights).
         """
         self._prepare_estimator(X)
         if self._do_scale:
-            # Calculate the mean of each column of x_init and assing it to self.m
-            self.m = np.mean(X[:, self._selection], axis=0)
-            # Calculate the variance of each column of x_init and assing it to self.v
-            self.v = np.var(X[:, self._selection], axis=0)
-            self.M = self.v * self.n_observations
+            if sample_weight is None:
+                sample_weight = np.ones(X.shape[0])
+
+            forget_vector = init_forget_vector(self.forget, X.shape[0])
+            effective_weights = sample_weight * forget_vector
+
+            # Calculate weighted mean and variance
+            self.sum_weights = np.sum(effective_weights)
+            self.w = self.sum_weights  # Initialize cumulative weight
+            self.m = np.average(
+                X[:, self._selection], weights=effective_weights, axis=0
+            )
+
+            # Calculate weighted variance
+            diff_sq = (X[:, self._selection] - self.m) ** 2
+            self.v = np.average(diff_sq, weights=effective_weights, axis=0)
+            self.M = self.v * self.sum_weights
         else:
             pass
 
-    def update(self, X: np.ndarray) -> None:
+    def update(self, X: np.ndarray, sample_weight: np.ndarray = None) -> None:
         """Wrapper for partial_fit to align API."""
-        self.partial_fit(X)
+        self.partial_fit(X, sample_weight)
 
-    def partial_fit(self, X: np.ndarray) -> None:
+    def partial_fit(self, X: np.ndarray, sample_weight: np.ndarray = None) -> None:
         """Update the `OnlineScaler()` for new rows of X.
 
         Args:
             X (np.ndarray): New data for X.
+            sample_weight (np.ndarray, optional): Weights for each sample. Defaults to None (uniform weights).
         """
+        if sample_weight is None:
+            sample_weight = np.ones(X.shape[0])
+
         # Loop over all rows of new X
         if self._do_scale:
             for i in range(X.shape[0]):
                 self.n_observations += 1
-                n_seen = calculate_effective_training_length(
-                    self.forget, self.n_observations
-                )
+                weight = sample_weight[i]
 
-                forget_scaled = self.forget * np.maximum(
-                    self.n_asymmptotic / n_seen, 1.0
-                )
+                # Exponential forgetting case
+                old_m = self.m
+                old_w = self.w
 
-                diff = X[i, self._selection] - self.m
-                incr = forget_scaled * diff
+                # Update cumulative weight first
+                self.w = old_w * (1 - self.forget) + weight
 
-                if forget_scaled > 0:
-                    self.m += incr
-                    self.v = (1 - forget_scaled) * (self.v + forget_scaled * diff**2)
-                else:
-                    self.m += diff / self.n_observations
-                    self.M += diff * (X[i, self._selection] - self.m)
-                    self.v = self.M / self.n_observations
+                # Update mean using exponential forgetting formula
+                self.m = (
+                    old_m * old_w * (1 - self.forget) + X[i, self._selection] * weight
+                ) / self.w
+
+                # Update variance using the correct formula for exponential forgetting
+                # This maintains the interpretation of variance as E[X^2] - E[X]^2
+                diff_old = X[i, self._selection] - old_m
+                diff_new = X[i, self._selection] - self.m
+
+                # Update M (sum of squared deviations)
+                self.M = self.M * (1 - self.forget) + weight * diff_old * diff_new
+
+                # Update variance
+                self.v = self.M / self.w
+
         else:
             pass
 
