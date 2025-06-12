@@ -11,8 +11,8 @@ DTYPES = [bool, int]
 # We don't jet test online updates with forget
 
 
-@pytest.mark.parametrize("n_features", N_FEATURES)
-@pytest.mark.parametrize("n_samples", N_SAMPLES)
+@pytest.mark.parametrize("n_features", N_FEATURES, ids=lambda x: f"n_features_{x}")
+@pytest.mark.parametrize("n_samples", N_SAMPLES, ids=lambda x: f"n_samples_{x}")
 def test_standard_scaling(n_features, n_samples):
     X, _ = make_regression(n_features=n_features, n_samples=n_samples)
     expected_out = (X - X.mean(axis=0, keepdims=True)) / X.std(axis=0, keepdims=True)
@@ -23,9 +23,9 @@ def test_standard_scaling(n_features, n_samples):
     np.testing.assert_array_almost_equal(expected_out, out)
 
 
-@pytest.mark.parametrize("n_features", N_FEATURES)
-@pytest.mark.parametrize("n_samples", N_SAMPLES)
-@pytest.mark.parametrize("selection_dtype", DTYPES)
+@pytest.mark.parametrize("n_features", N_FEATURES, ids=lambda x: f"n_features_{x}")
+@pytest.mark.parametrize("n_samples", N_SAMPLES, ids=lambda x: f"n_samples_{x}")
+@pytest.mark.parametrize("selection_dtype", DTYPES, ids=lambda x: f"dtype_{x.__name__}")
 def test_standard_scaling_feature_selection(n_features, n_samples, selection_dtype):
 
     if selection_dtype == bool:
@@ -44,8 +44,8 @@ def test_standard_scaling_feature_selection(n_features, n_samples, selection_dty
     np.testing.assert_array_almost_equal(expected_out, out)
 
 
-@pytest.mark.parametrize("n_features", N_FEATURES)
-@pytest.mark.parametrize("n_samples", N_SAMPLES)
+@pytest.mark.parametrize("n_features", N_FEATURES, ids=lambda x: f"n_features_{x}")
+@pytest.mark.parametrize("n_samples", N_SAMPLES, ids=lambda x: f"n_samples_{x}")
 def test_standard_scaling_dont_scale(n_features, n_samples):
     X, _ = make_regression(n_features=n_features, n_samples=n_samples)
     expected_out = X
@@ -56,9 +56,9 @@ def test_standard_scaling_dont_scale(n_features, n_samples):
     np.testing.assert_array_almost_equal(expected_out, out)
 
 
-@pytest.mark.parametrize("horizon", HORIZON)
-@pytest.mark.parametrize("n_features", N_FEATURES)
-@pytest.mark.parametrize("n_samples", N_SAMPLES)
+@pytest.mark.parametrize("horizon", HORIZON, ids=lambda x: f"horizon_{x}")
+@pytest.mark.parametrize("n_features", N_FEATURES, ids=lambda x: f"n_features_{x}")
+@pytest.mark.parametrize("n_samples", N_SAMPLES, ids=lambda x: f"n_samples_{x}")
 def test_online_update_batch(n_features, n_samples, horizon):
     X, _ = make_regression(n_features=n_features, n_samples=n_samples)
     expected_out = (X - X.mean(axis=0, keepdims=True)) / X.std(axis=0, keepdims=True)
