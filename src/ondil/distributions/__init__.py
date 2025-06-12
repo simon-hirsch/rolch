@@ -11,6 +11,7 @@ from .lognormalmedian import DistributionLogNormalMedian
 from .normal import DistributionNormal, DistributionNormalMeanVariance
 from .studentt import DistributionT
 from .inversegamma import DistributionInverseGamma
+
 __all__ = [
     "DistributionNormal",
     "DistributionNormalMeanVariance",

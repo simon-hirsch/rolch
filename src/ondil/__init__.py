@@ -110,6 +110,7 @@ __all__ = [
     "DistributionExponential",
     "DistributionGumbel",
     "DistributionInverseGaussian",
+    "DistributionInverseGamma",
     "init_forget_vector",
     "init_gram",
     "update_gram",

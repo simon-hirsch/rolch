@@ -29,10 +29,12 @@ def test_inverse_gamma_distribution():
     R_list = robjects.r(code)
 
     y = np.array(R_list.rx2("y"))
-    theta = np.array([
-        R_list.rx2("mu"),     # mu
-        R_list.rx2("sigma"),  # sigma
-    ])
+    theta = np.array(
+        [
+            R_list.rx2("mu"),  # mu
+            R_list.rx2("sigma"),  # sigma
+        ]
+    )
 
     # Compute values using Python
     cdf = dist.cdf(y, theta=theta.T)

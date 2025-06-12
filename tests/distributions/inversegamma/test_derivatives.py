@@ -32,10 +32,12 @@ def test_inverse_gamma_derivatives():
 
     # Extract data from R
     y = np.array(R_list.rx2("y"))
-    theta = np.array([
-        R_list.rx2("mu"),
-        R_list.rx2("sigma"),
-    ])
+    theta = np.array(
+        [
+            R_list.rx2("mu"),
+            R_list.rx2("sigma"),
+        ]
+    )
 
     # Compute Python derivatives
     dl1_dp1_0 = dist.dl1_dp1(y, theta=theta.T, param=0)
