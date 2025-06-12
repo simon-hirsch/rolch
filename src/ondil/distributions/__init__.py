@@ -2,6 +2,7 @@ from .beta import DistributionBeta
 from .exponential import DistributionExponential
 from .betainflated import DistributionBetaInflated
 from .gamma import DistributionGamma
+from .gumbel import DistributionGumbel
 from .inversegaussian import DistributionInverseGaussian
 from .johnsonsu import DistributionJSU
 from .logistic import DistributionLogistic
@@ -22,6 +23,7 @@ __all__ = [
     "DistributionLogNormalMedian",
     "DistributionLogistic",
     "DistributionExponential",
+    "DistributionGumbel",
     "DistributionInverseGaussian",
     "DistributionInverseGamma",
 ]
