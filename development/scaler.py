@@ -1,21 +1,37 @@
 # %%
 import numpy as np
-import sys
 
 
-def calculate_asymptotic_training_length(forget: float):
-    if forget == 0:
-        # Return the highest possible value that is no infinity
-        return sys.maxsize
+def init_forget_vector(forget: float, size: int) -> np.ndarray:
+    """Initialise an exponentially discounted vector of weights.
+
+    Recursively initialise a vector of exponentially discounted weights of `size` N.
+
+    The weight for $n$-th observation is defined as $(1 - \\text{forget})^{(N - n)}$
+
+    Note that this functions assumes that the first observation is the oldest observation
+    and the last observation is the newest observation. This is in line with the standard
+    `pandas` way of sorting `pd.DataFrame`s with `Datetime`-indices.
+
+    !!! numba "Numba"
+        This function uses `numba` just-in-time-compilation.
+
+    Args:
+        forget (float): Forget factor.
+        size (int): Length of the output vector.
+
+    Returns:
+        np.ndarray: Vector of exponentially discounted weights.
+    """
+    gamma = 1 - forget
+    if gamma == 1:
+        out = np.ones(size)
     else:
-        return 1 / forget
-
-
-def calculate_effective_training_length(forget: float, n_obs: int):
-    if forget == 0:
-        return n_obs
-    else:
-        return (1 - (1 - forget) ** n_obs) / forget
+        out = np.empty(size)
+        out[-1] = 1
+        for i in range(size - 1, 0, -1):
+            out[i - 1] = out[i] * gamma
+    return out
 
 
 class OnlineScaler:
@@ -59,7 +75,6 @@ class OnlineScaler:
         self.w = 0  # Track cumulative weights for exponential forgetting
         self.n_observations = X.shape[0]
         self.sum_weights = 0  # Track sum of weights for weighted updates
-        self.n_asymmptotic = calculate_asymptotic_training_length(self.forget)
 
     def fit(self, X: np.ndarray, sample_weight: np.ndarray = None) -> None:
         """Fit the OnlineScaler() Object for the first time.
@@ -73,14 +88,19 @@ class OnlineScaler:
             if sample_weight is None:
                 sample_weight = np.ones(X.shape[0])
 
+            forget_vector = init_forget_vector(self.forget, X.shape[0])
+            effective_weights = sample_weight * forget_vector
+
             # Calculate weighted mean and variance
-            self.sum_weights = np.sum(sample_weight)
+            self.sum_weights = np.sum(effective_weights)
             self.w = self.sum_weights  # Initialize cumulative weight
-            self.m = np.average(X[:, self._selection], weights=sample_weight, axis=0)
+            self.m = np.average(
+                X[:, self._selection], weights=effective_weights, axis=0
+            )
 
             # Calculate weighted variance
             diff_sq = (X[:, self._selection] - self.m) ** 2
-            self.v = np.average(diff_sq, weights=sample_weight, axis=0)
+            self.v = np.average(diff_sq, weights=effective_weights, axis=0)
             self.M = self.v * self.sum_weights
         else:
             pass
@@ -168,7 +188,7 @@ class OnlineScaler:
 np.random.seed(42)
 
 N = 15  # Number of samples
-N_init = 1
+N_init = 10
 assert N > N_init, "N must be greater than N_init for this test."
 
 X = np.random.uniform(
@@ -184,13 +204,18 @@ W = np.random.uniform(
 ).reshape(-1, 1)  # Uniform weights for each sample
 
 # %%
-forget = 0.000001
+forget = 0.01
 os = OnlineScaler(
     forget=forget,
 )
 os.fit(X[0:N_init,], sample_weight=W[0:N_init,].flatten())
 print(os.m)
-print(np.average(X[0:N_init,], weights=W[0:N_init,]))
+
+W_forget = init_forget_vector(forget, N_init)
+
+print(
+    np.average(X[0:N_init,], weights=(W_forget * W[0:N_init,].flatten()).reshape(-1, 1))
+)
 
 # %% Test the update method
 for i in range(N_init, N):
@@ -205,7 +230,6 @@ for i in range(N_init, N):
             effective_weights.append(W[j, 0] * decay_factor)
         effective_weights = np.array(effective_weights)
 
-        # Normalize weights
         true_mean = np.average(
             X[0 : (i + 1),], weights=effective_weights.reshape(-1, 1)
         )
@@ -214,7 +238,6 @@ for i in range(N_init, N):
         )
 
     true_std = np.sqrt(true_var)
-
     mean_diff = round(abs(true_mean - os.m[0]), 8)
     var_diff = round(abs(true_var - os.v[0]), 8)
     std_diff = round(abs(true_std - np.sqrt(os.v[0])), 8)
