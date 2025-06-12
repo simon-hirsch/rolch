@@ -56,6 +56,7 @@ class OnlineScaler:
         self.m = 0
         self.M = 0
         self.v = 0
+        self.w = 0  # Track cumulative weights for exponential forgetting
         self.n_observations = X.shape[0]
         self.sum_weights = 0  # Track sum of weights for weighted updates
         self.n_asymmptotic = calculate_asymptotic_training_length(self.forget)
@@ -74,6 +75,7 @@ class OnlineScaler:
 
             # Calculate weighted mean and variance
             self.sum_weights = np.sum(sample_weight)
+            self.w = self.sum_weights  # Initialize cumulative weight
             self.m = np.average(X[:, self._selection], weights=sample_weight, axis=0)
 
             # Calculate weighted variance
@@ -103,20 +105,30 @@ class OnlineScaler:
                 self.n_observations += 1
                 weight = sample_weight[i]
 
-                if self.forget > 0:
+                if True:
                     # Exponential forgetting case
-                    n_seen = calculate_effective_training_length(
-                        self.forget, self.n_observations
-                    )
-                    forget_scaled = self.forget * np.maximum(
-                        self.n_asymmptotic / n_seen, 1.0
-                    )
+                    old_m = self.m
+                    old_w = self.w
 
-                    diff = X[i, self._selection] - self.m
-                    incr = forget_scaled * diff
+                    # Update cumulative weight first
+                    self.w = old_w * (1 - self.forget) + weight
 
-                    self.m += incr
-                    self.v = (1 - forget_scaled) * (self.v + forget_scaled * diff**2)
+                    # Update mean using exponential forgetting formula
+                    self.m = (
+                        old_m * old_w * (1 - self.forget)
+                        + X[i, self._selection] * weight
+                    ) / self.w
+
+                    # Update variance using the correct formula for exponential forgetting
+                    # This maintains the interpretation of variance as E[X^2] - E[X]^2
+                    diff_old = X[i, self._selection] - old_m
+                    diff_new = X[i, self._selection] - self.m
+
+                    # Update M (sum of squared deviations)
+                    self.M = self.M * (1 - self.forget) + weight * diff_old * diff_new
+
+                    # Update variance
+                    self.v = self.M / self.w
                 else:
                     # Weighted online updates without forgetting
                     old_sum_weights = self.sum_weights
@@ -180,27 +192,42 @@ X = np.random.uniform(
     N,
 ).reshape(-1, 1)
 
-# %%
-forget = 0.0
-os = OnlineScaler(
-    forget=0.0,
-)
-os.fit(X[0:N_init,], sample_weight=W[0:N_init,].flatten())
-print(os.m)
-print(np.average(X[0:N_init,], weights=W[0:N_init,]))
-
 W = np.random.uniform(
     0.1,
     1.0,
     (N, 1),
 ).reshape(-1, 1)  # Uniform weights for each sample
 
+# %%
+forget = 0.1
+os = OnlineScaler(
+    forget=forget,
+)
+os.fit(X[0:N_init,], sample_weight=W[0:N_init,].flatten())
+print(os.m)
+print(np.average(X[0:N_init,], weights=W[0:N_init,]))
+
 # %% Test the update method
 for i in range(N_init, N):
     os.partial_fit(X[i,].reshape(-1, 1), sample_weight=W[i,])
 
-    true_mean = np.average(X[0 : (i + 1),], weights=W[0 : (i + 1),])
-    true_var = np.average((X[0 : (i + 1),] - true_mean) ** 2, weights=W[0 : (i + 1),])
+    # For exponential forgetting, we need to compute the effective weights
+    if True:
+        # Compute weights with exponential decay
+        effective_weights = []
+        for j in range(i + 1):
+            decay_factor = (1 - forget) ** (i - j)
+            effective_weights.append(W[j, 0] * decay_factor)
+        effective_weights = np.array(effective_weights)
+
+        # Normalize weights
+        true_mean = np.average(
+            X[0 : (i + 1),], weights=effective_weights.reshape(-1, 1)
+        )
+        true_var = np.average(
+            (X[0 : (i + 1),] - true_mean) ** 2, weights=effective_weights.reshape(-1, 1)
+        )
+
     true_std = np.sqrt(true_var)
 
     mean_diff = round(abs(true_mean - os.m[0]), 8)
