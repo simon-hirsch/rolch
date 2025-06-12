@@ -32,7 +32,6 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`DistributionBeta`](#ondil.DistributionBeta)                             | Beta distribution                      | `scipy.stats.beta`      |
 | [`DistributionGumbel`](#ondil.DistributionGumbel)                         | Gumbel distribution                    | `scipy.stats.gumbel_r`  |
 | [`DistributionInverseGaussian`](#ondil.DistributionInverseGaussian)       | Inverse Gaussian distribution          | `scipy.stats.invgauss`  |
-| [`DistributionBeta`](#ondil.DistributionBeta)                             | Beta distribution                      | `scipy.stats.beta`      |
 | [`DistributionBetaInflated`](#ondil.DistributionBetaInflated)             | Beta Inflated distribution             | -                       |
 | [`DistributionReverseGumbel`](#ondil.DistributionReverseGumbel)           | Reverse Gumbel distribution            | `scipy.stats.gumbel_r`  |
 | [`DistributionInverseGamma`](#ondil.DistributionInverseGamma)             | Inverse Gamma distribution             | `scipy.stats.invgamma`  |
@@ -59,12 +58,9 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ::: ondil.DistributionInverseGaussian
 
-::: ondil.DistributionInverseGaussian
-
 ::: ondil.DistributionBeta
 
 ::: ondil.DistributionGumbel
-::: ondil.DistributionBeta
 
 ::: ondil.DistributionBetaInflated
 
