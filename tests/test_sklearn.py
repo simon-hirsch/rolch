@@ -6,7 +6,7 @@ import ondil
 # https://scikit-learn.org/stable/modules/generated/sklearn.utils.estimator_checks.check_estimator.html#sklearn.utils.estimator_checks.check_estimator
 
 
-@pytest.mark.parametrize("scale_inputs", [False])
+@pytest.mark.parametrize("scale_inputs", [False, True])
 @pytest.mark.parametrize("fit_intercept", [False, True])
 @pytest.mark.parametrize("method", ["ols", "lasso", "elasticnet"])
 @pytest.mark.parametrize("ic", ["aic", "bic", "hqc", "max"])
