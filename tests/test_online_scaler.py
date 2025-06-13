@@ -14,18 +14,28 @@ from ondil.gram import init_forget_vector
     [0, 0.01, 0.1],
     ids=["no_forgetting", "forget_0.01", "forget_0.1"],
 )
-def test_online_scaler(N_init, D, forget, selection_dtype):
+@pytest.mark.parametrize(
+    "sample_weight",
+    [True, False],
+    ids=["sample_weight", "no_sample_weight"],
+)
+def test_online_scaler(N_init, D, forget, selection_dtype, sample_weight):
     """Test OnlineScaler with various combinations of parameters."""
     # Skip invalid combinations
     N = 100
 
     X = np.random.uniform(0, 10, N * D).reshape(-1, D)
     X_init = X[0:N_init,]
-    W_sample = np.random.uniform(0.1, 1.0, (N, 1)).reshape(-1, 1)
 
     # Calculate effective weights for comparison
     W_forget = init_forget_vector(forget, N).reshape(-1, 1)
-    W_effective = W_forget * W_sample
+
+    if sample_weight:
+        W_sample = np.random.uniform(0.1, 1.0, (N, 1)).reshape(-1, 1)
+        W_effective = W_forget * W_sample
+    else:
+        W_sample = None
+        W_effective = W_forget
 
     if selection_dtype is bool:
         to_scale = np.random.choice([True, False], D)
@@ -53,7 +63,10 @@ def test_online_scaler(N_init, D, forget, selection_dtype):
 
     # Setup and fit the OnlineScaler
     os = OnlineScaler(forget=forget, to_scale=to_scale)
-    os.fit(X_init, sample_weight=W_sample[0:N_init,].flatten())
+    if sample_weight:
+        os.fit(X_init, sample_weight=W_sample[0:N_init,].flatten())
+    else:
+        os.fit(X_init)
 
     # # Assert initial fit is correct
     assert np.allclose(os.m, true_mean_init[to_scale]), (
@@ -75,7 +88,10 @@ def test_online_scaler(N_init, D, forget, selection_dtype):
 
     # Test partial fit updates
     for i in range(N_init, N):
-        os.partial_fit(X[i : i + 1,], sample_weight=W_sample[i,])
+        if sample_weight:
+            os.partial_fit(X[i : i + 1,], sample_weight=W_sample[i,])
+        else:
+            os.partial_fit(X[i : i + 1,])
 
         # Calculate true mean and variance for all columns
         true_mean = np.array(
