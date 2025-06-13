@@ -10,7 +10,9 @@ DISTRIBUTIONS = [
 ]
 
 
-@pytest.mark.parametrize("distribution", DISTRIBUTIONS)
+@pytest.mark.parametrize(
+    "distribution", DISTRIBUTIONS, ids=lambda dist: dist.__class__.__name__
+)
 def test_initial_values(distribution):
     n_params = distribution.n_params
     lower = np.clip(distribution.distribution_support[0], -1e3, 1e3)
@@ -26,7 +28,9 @@ def test_initial_values(distribution):
     ), "Initial values out of parameter support"
 
 
-@pytest.mark.parametrize("distribution", DISTRIBUTIONS)
+@pytest.mark.parametrize(
+    "distribution", DISTRIBUTIONS, ids=lambda dist: dist.__class__.__name__
+)
 def test_raise_error_cross_derivative(distribution):
     n_params = distribution.n_params
     # We just want some values here on a reasonable space to ensure that

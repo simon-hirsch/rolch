@@ -19,8 +19,10 @@ from .coordinate_descent import (
 )
 from .distributions import (
     DistributionBeta,
+    DistributionBetaInflated,
     DistributionExponential,
     DistributionGamma,
+    DistributionGumbel,
     DistributionInverseGaussian,
     DistributionJSU,
     DistributionLogistic,
@@ -29,6 +31,8 @@ from .distributions import (
     DistributionNormal,
     DistributionNormalMeanVariance,
     DistributionT,
+    DistributionReverseGumbel,
+    DistributionInverseGamma,
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -102,9 +106,13 @@ __all__ = [
     "DistributionJSU",
     "DistributionGamma",
     "DistributionBeta",
+    "DistributionBetaInflated",
     "DistributionLogNormal",
     "DistributionExponential",
+    "DistributionGumbel",
     "DistributionInverseGaussian",
+    "DistributionInverseGamma",
+    "DistributionReverseGumbel",
     "init_forget_vector",
     "init_gram",
     "update_gram",

@@ -8,10 +8,11 @@ FIT_INTERCEPT = [True, False]
 N_FEATURES = np.round(np.geomspace(11, 100, 5)).astype(int)
 
 
-@pytest.mark.parametrize("n_features", N_FEATURES)
-@pytest.mark.parametrize("fit_intercept", FIT_INTERCEPT)
+@pytest.mark.parametrize("n_features", N_FEATURES, ids=lambda x: f"n_features_{x}")
+@pytest.mark.parametrize(
+    "fit_intercept", FIT_INTERCEPT, ids=lambda x: f"fit_intercept_{x}"
+)
 def test_get_J_from_equation(n_features, fit_intercept):
-
     equation = {
         0: "all",  # should adjust to n_features
         1: "intercept",
@@ -36,14 +37,11 @@ def test_get_J_from_equation(n_features, fit_intercept):
     )
 
     J = estimator.get_J_from_equation(X)
-    assert J[0] == EXPECTED[0][fit_intercept], "Wrong J for param == 0"
-    assert J[1] == EXPECTED[1][fit_intercept], "Wrong J for param == 1"
-    assert J[2] == EXPECTED[2][fit_intercept], "Wrong J for param == 2"
-    assert J[3] == EXPECTED[3][fit_intercept], "Wrong J for param == 3"
+    for param, expected_dict in EXPECTED.items():
+        assert J[param] == expected_dict[fit_intercept], f"Wrong J for param == {param}"
 
 
 def test_get_J_from_equation_warnings():
-
     n_features = 10
     fit_intercept = True
 
