@@ -51,7 +51,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         "abs_tol_inner": [Interval(numbers.Real, 0.0, None, closed="left")],
         "rel_tol_outer": [Interval(numbers.Real, 0.0, None, closed="left")],
         "rel_tol_inner": [Interval(numbers.Real, 0.0, None, closed="left")],
-        "rss_tol_inner": [Interval(numbers.Real, 0.0, None, closed="left")],
         "step_size": [numbers.Real, dict],
         "verbose": [Interval(numbers.Integral, 0, None, closed="left")],
         "debug": [bool],
@@ -73,19 +72,18 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         model_selection: Literal["local_rss", "global_ll"] = "local_rss",
         prefit_initial: int = 0,
         prefit_update: int = 0,
+        step_size: float | Dict[int, float] = 1.0,
+        verbose: int = 0,
+        debug: bool = False,
+        param_order: np.ndarray | None = None,
         cautious_updates: bool = False,
+        cond_start_val: bool = False,
         max_it_outer: int = 30,
         max_it_inner: int = 30,
         abs_tol_outer: float = 1e-3,
         abs_tol_inner: float = 1e-3,
         rel_tol_outer: float = 1e-5,
         rel_tol_inner: float = 1e-5,
-        rss_tol_inner: float = 1.5,
-        step_size: float | Dict[int, float] = 1.0,
-        verbose: int = 0,
-        debug: bool = False,
-        param_order: np.ndarray | None = None,
-        cond_start_val: bool = False,
         min_it_outer: int = 1,
     ):
         """The `OnlineGamlss()` provides the fit, update and predict methods for linear parametric GAMLSS models.
@@ -113,23 +111,26 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             Please don't use debug more for production models since it saves the `X` matrix and its scaled counterpart, so you will get large
             estimator objects.
 
+        !!! warning `cond_start_val=False`
+            The `cond_start_val` parameter is considered experimental and may not work as expected.
+
+        !!! warning `cautious_updates=True`
+            The `cautious_updates` parameter is considered experimental and may not work as expected.
+
         Args:
-            distribution (ondil.Distribution): The parametric distribution.
-            equation (Dict): The modelling equation. Follows the schema `{parameter[int]: column_identifier}`, where column_identifier can be either the strings `'all'`, `'intercept'` or a np.array of ints indicating the columns.
-            forget (Union[float, Dict[int, float]], optional): The forget factor. Defaults to 0.0.
-            method (Union[str, EstimationMethod, Dict[int, str], Dict[int, EstimationMethod]], optional): The estimation method. Defaults to "ols".
-            scale_inputs (bool, optional): Whether to scale the input matrices. Defaults to True.
-            fit_intercept (Union[bool, Dict[int, bool]], optional): Whether to fit an intercept. Defaults to True.
-            regularize_intercept (Union[bool, Dict[int, bool]], optional): Whether to regularize the intercept. Defaults to False.
-            ic (Union[str, Dict], optional): Information criterion for model selection. Defaults to "aic".
-            max_it_outer (int, optional): Maximum outer iterations for the RS algorithm. Defaults to 30.
-            max_it_inner (int, optional): Maximum inner iterations for the RS algorithm. Defaults to 30.
-            abs_tol_outer (float, optional): Absolute tolerance on the deviance in the outer fit. Defaults to 1e-3.
-            abs_tol_inner (float, optional): Absolute tolerance on the deviance in the inner fit. Defaults to 1e-3.
-            rel_tol_outer (float, optional): Relative tolerance on the deviance in the outer fit. Defaults to 1e-5.
-            rel_tol_inner (float, optional): Relative tolerance on the deviance in the inner fit. Defaults to 1e-5.
-            rss_tol_inner (float, optional): Tolerance for increasing RSS in the inner fit. Defaults to 1.5.
-            verbose (int, optional): Verbosity level. Level 0 will print no messages. Level 1 will print messages according to the start and end of each fit / update call and on finished outer iterations. Level 2 will print messages on each parameter fit in each outer iteration. Level 3 will print messages on each inner iteration. Defaults to 0.
+            distribution (ondil.Distribution): The parametric distribution to use for modeling the response variable.
+            equation (Dict[int, Union[str, np.ndarray, list]], optional): The modeling equation for each distribution parameter. The dictionary should map parameter indices to either the strings `'all'`, `'intercept'`, a numpy array of column indices, or a list of column names. Defaults to None, which uses all covariates for the first parameter and intercepts for others.
+            forget (float | Dict[int, float], optional): The forget factor for exponential weighting of past observations. Can be a single float for all parameters or a dictionary mapping parameter indices to floats. Defaults to 0.0.
+            method (str | EstimationMethod | Dict[int, str] | Dict[int, EstimationMethod], optional): The estimation method for each parameter. Can be a string, EstimationMethod, or a dictionary mapping parameter indices. Defaults to "ols".
+            scale_inputs (bool | np.ndarray, optional): Whether to scale the input features. Can be a boolean or a numpy array specifying scaling per feature. Defaults to True.
+            fit_intercept (bool | Dict[int, bool], optional): Whether to fit an intercept for each parameter. Can be a boolean or a dictionary mapping parameter indices. Defaults to True.
+            regularize_intercept (bool | Dict[int, bool], optional): Whether to regularize the intercept for each parameter. Can be a boolean or a dictionary mapping parameter indices. Defaults to False.
+            ic (str | Dict, optional): Information criterion for model selection (e.g., "aic", "bic"). Can be a string or a dictionary mapping parameter indices. Defaults to "aic".
+            model_selection (Literal["local_rss", "global_ll"], optional): Model selection strategy. "local_rss" selects based on local residual sum of squares, "global_ll" uses global log-likelihood. Defaults to "local_rss".
+            prefit_initial (int, optional): Number of initial outer iterations with only one inner iteration (for stabilization). Defaults to 0.
+            prefit_update (int, optional): Number of initial outer iterations with only one inner iteration during updates. Defaults to 0.
+            step_size (float | Dict[int, float], optional): Step size for parameter updates. Can be a float or a dictionary mapping parameter indices. Defaults to 1.0.
+            verbose (int, optional): Verbosity level for logging. 0 = silent, 1 = high-level, 2 = per-parameter, 3 = per-iteration. Defaults to 0.
             debug (bool, optional): Enable debug mode. Debug mode will save additional data to the estimator object.
                 Currently, we save
 
@@ -140,8 +141,25 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                     * self._debug_dl1dlp1
                     * self._debug_dl2dlp2
                     * self._debug_eta
+                    * self._debug_fv
+                    * self._debug_coef
+                    * self._debug_coef_path
 
                 to the the estimator. Debug mode works in batch and online settings. Note that debug mode is not recommended for production use. Defaults to False.
+            param_order (np.ndarray | None, optional): Order in which to fit the distribution parameters. Defaults to None (natural order).
+            cautious_updates (bool, optional): If True, use smaller step sizes and more iterations when new data are outliers. Defaults to False.
+            cond_start_val (bool, optional): If True, use conditional start values for parameters (experimental). Defaults to False.
+            max_it_outer (int, optional): Maximum number of outer iterations for the fitting algorithm. Defaults to 30.
+            max_it_inner (int, optional): Maximum number of inner iterations for the fitting algorithm. Defaults to 30.
+            abs_tol_outer (float, optional): Absolute tolerance for convergence in the outer loop. Defaults to 1e-3.
+            abs_tol_inner (float, optional): Absolute tolerance for convergence in the inner loop. Defaults to 1e-3.
+            rel_tol_outer (float, optional): Relative tolerance for convergence in the outer loop. Defaults to 1e-5.
+            rel_tol_inner (float, optional): Relative tolerance for convergence in the inner loop. Defaults to 1e-5.
+            min_it_outer (int, optional): Minimum number of outer iterations before checking for convergence. Defaults to 1.
+
+        Returns:
+            OnlineGamlss: The OnlineGamlss instance.
+
         """
         self.distribution = distribution
         self.equation = equation
@@ -164,7 +182,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         self.abs_tol_inner = abs_tol_inner
         self.rel_tol_outer = rel_tol_outer
         self.rel_tol_inner = rel_tol_inner
-        self.rss_tol_inner = rss_tol_inner
 
         self.step_size = step_size
         self.cautious_updates = cautious_updates
@@ -1200,14 +1217,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             self._rss[param] = rss_it
             self._rss_iterations[param, it_outer - 1, it_inner - 1] = rss_it
 
-            # TODO: Think where this should go (at all?)
-            # # Check if the local RSS are decreasing
-            # if (it_inner > 1) or (it_outer > 1):
-            #     if rss_it > (self.rss_tol_inner * self._rss[param]):
-            #         message = f"Inner iteration {it_inner}: Fitting Parameter {param}: Current RSS {rss_it} > {self.rss_tol_inner} * {self._rss[param]}"
-            #         self._print_message(message=message, level=3)
-            #         break
-
             if self._method[param]._path_based_method:
                 self._model_selection_data[param] = model_selection_data_it
                 self._best_ic[param] = best_ic_it
@@ -1325,12 +1334,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                 + (1 - self._forget[param]) ** y.shape[0]
                 * (self._rss_old[param] * self._mean_of_weights[param])
             ) / denom
-
-            # TODO: Do we need the rss_tol_inner here?
-            # if (it_inner > 1) or (it_outer > 1):
-            #     if sum_of_rss_it > (self.rss_tol_inner * self._rss[param]):
-            #         print("Breaking RSS in Update step.")
-            #         break
 
             # Calculate the fitted values and the deviance
             fv_it_new[:, param] = self.distribution.link_inverse(
