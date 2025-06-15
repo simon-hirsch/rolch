@@ -63,7 +63,7 @@ def test_get_J_from_equation_warnings():
     )
     estimator._prepare_estimator()
     with pytest.raises(ValueError, match="Shape does not match for param 2."):
-        J = estimator.get_J_from_equation(X)
+        _ = estimator.get_J_from_equation(X)
 
     # Test for parameter three
     equation_fail_3 = {
