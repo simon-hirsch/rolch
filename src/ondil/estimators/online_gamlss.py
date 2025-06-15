@@ -85,7 +85,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         rel_tol_outer: float = 1e-5,
         rel_tol_inner: float = 1e-5,
         min_it_outer: int = 1,
-    ):
+    ) -> "OnlineGamlss":
         """The `OnlineGamlss()` provides the fit, update and predict methods for linear parametric GAMLSS models.
 
         For a response variable $Y$ which is distributed according to the distribution $\mathcal{F}(\\theta)$
@@ -98,7 +98,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         space of the link function). The model is fitted using iterative re-weighted least squares (IRLS).
 
 
-        !!! note Tips and Tricks
+        !!! note "Tips and Tricks"
             If you're facing issues with non-convergence and/or matrix inversion problems, please enable the `debug` mode and increase the
             logging level by increasing `verbose`.
             In debug mode, the estimator will save the weights, working vectors, derivatives each iteration in a
@@ -107,14 +107,14 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             Very small and/or very large weights (implicitly second derivatives) can be a sign that either start values are not chosen appropriately or
             that the distributional assumption does not fit the data well.
 
-        !!! warning Debug Mode
+        !!! warning "Debug Mode"
             Please don't use debug more for production models since it saves the `X` matrix and its scaled counterpart, so you will get large
             estimator objects.
 
-        !!! warning `cond_start_val=False`
+        !!! warning "Conditional start values `cond_start_val=False`"
             The `cond_start_val` parameter is considered experimental and may not work as expected.
 
-        !!! warning `cautious_updates=True`
+        !!! warning "Cautious updates `cautious_updates=True`"
             The `cautious_updates` parameter is considered experimental and may not work as expected.
 
         Args:
@@ -672,7 +672,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         X: np.ndarray,
         y: np.ndarray,
         sample_weight: Optional[np.ndarray] = None,
-    ):
+    ) -> "OnlineGamlss":
         """Fit the online GAMLSS model.
 
         This method initializes the model with the given covariate data matrix $X$ and response variable $Y$.
@@ -1413,7 +1413,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             NotFittedError: If the model is not fitted yet.
 
         Returns:
-            Prediction (np.ndarray): Predictions
+            Predictions (np.ndarray): Predictions
         """
         theta = self.predict_distribution_parameters(X)
         return self.distribution.mean(theta)
@@ -1427,7 +1427,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             NotFittedError: If the model is not fitted yet.
 
         Returns:
-            np.ndarray: Predicted median of the distribution. Shape will be (n_samples,).
+            Predictions (np.ndarray): Predicted median of the distribution. Shape will be (n_samples,).
         """
         theta = self.predict_distribution_parameters(X)
         return self.distribution.median(theta)
@@ -1449,7 +1449,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             ValueError: Raises if `what` is not in `["link", "response"]`.
 
         Returns:
-            np.ndarray: Predicted values for the distribution.
+            Predictions (np.ndarray): Predicted values for the distribution of shape (n_samples, n_params) where n_params is the number of distribution parameters.
         """
         check_is_fitted(self)
         X = validate_data(self, X=X, reset=False, dtype=[np.float64, np.float32])
