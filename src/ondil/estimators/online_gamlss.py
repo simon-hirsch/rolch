@@ -542,6 +542,48 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             reps=(self.max_it_outer, self.max_it_inner, 1),
         ).astype(float)
 
+    def get_debug_information(
+        self,
+        variable: str = "coef",
+        param: int = 0,
+        it_outer: int = 1,
+        it_inner: int = 1,
+    ):
+        """Get debug information for a specific variable, parameter, outer iteration and inner iteration.
+
+        We currently support the following variables:
+
+        * "X_dict": The design matrix for the distribution parameter.
+        * "X_scaled": The scaled design matrix.
+        * "weights": The sample weights for the distribution parameter.
+        * "working_vectors": The working vectors for the distribution parameter.
+        * "dl1dlp1": The first derivative of the log-likelihood with respect to the distribution parameter.
+        * "dl2dlp2": The second derivative of the log-likelihood with respect to the distribution parameter.
+        * "eta": The linear predictor for the distribution parameter.
+        * "fv": The fitted values for the distribution parameter.
+        * "dv": The deviance for the distribution parameter.
+        * "coef": The coefficients for the distribution parameter.
+        * "coef_path": The coefficients path for the distribution parameter.
+
+        Args:
+            variable (str): The variable to get debug information for. Defaults to "coef".
+            param (int): The distribution parameter to get debug information for. Defaults to 0.
+            it_outer (int): The outer iteration to get debug information for. Defaults to 1.
+            it_inner (int): The inner iteration to get debug information for. Defaults to 1.
+        Returns:
+            Any: The debug information for the specified variable, parameter, outer iteration and inner iteration.
+        Raises:
+            ValueError: If debug mode is not enabled.
+
+        """
+        if not self.debug:
+            raise ValueError(
+                "Debug mode is not enabled. Please set debug=True when initializing the OnlineGamlss estimator."
+            )
+
+        key = (param, it_outer, it_inner + 1)
+        return getattr(self, f"_debug_{variable}")[key]
+
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
@@ -606,6 +648,8 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             self._debug_eta = {}
             self._debug_fv = {}
             self._debug_dv = {}
+            self._debug_coef = {}
+            self._debug_coef_path = {}
 
         self._x_gram = {}
         self._y_gram = {}
@@ -634,13 +678,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         # Betas might be different across distribution parameters
         # So this is a dict of dicts
         # TODO: This should go to the _debug section
-        self._beta_iterations = {i: {} for i in range(self.distribution.n_params)}
-        self._beta_iterations_inner = {i: {} for i in range(self.distribution.n_params)}
-        self._beta_path_iterations_inner = {
-            i: {} for i in range(self.distribution.n_params)
-        }
-        self._beta_path_iterations = {i: {} for i in range(self.distribution.n_params)}
-
         self.coef_ = {
             p: np.zeros(self.n_features_[p]) for p in range(self.distribution.n_params)
         }
@@ -730,6 +767,9 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             self._debug_dl1dlp1 = {}
             self._debug_dl2dlp2 = {}
             self._debug_eta = {}
+            self._debug_fv = {}
+            self._debug_coef = {}
+            self._debug_coef_path = {}
 
         ## Reset rss and ic to avoid confusion
         ## These are only for viewing, not read!!
@@ -827,8 +867,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             it_outer += 1
 
             for param in self._param_order:
-                self._beta_iterations_inner[param][it_outer] = {}
-                self._beta_path_iterations_inner[param][it_outer] = {}
 
                 global_dev = self._inner_update(
                     X=X,
@@ -881,9 +919,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             it_outer += 1
 
             for param in self._param_order:
-                self._beta_iterations_inner[param][it_outer] = {}
-                self._beta_path_iterations_inner[param][it_outer] = {}
-
                 global_dev = self._inner_fit(
                     X=X,
                     y=y,
@@ -892,10 +927,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                     it_outer=it_outer,
                     dv=global_dev,
                 )
-
-                self._beta_iterations[param][it_outer] = self.coef_[param]
-                self._beta_path_iterations[param][it_outer] = self.coef_path_[param]
-
                 message = f"Outer iteration {it_outer}: Fitted param {param}: current deviance {global_dev}"
                 self._print_message(message=message, level=2)
 
@@ -1017,6 +1048,10 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                     y_gram=y_gram_it,
                     is_regularized=self._is_regularized[param],
                 )
+
+            if self.debug:
+                self._debug_coef[key] = copy.copy(beta_it)
+                self._debug_coef_path[key] = copy.copy(beta_path_it)
 
             # Calculate the prediction, residuals and RSS
             f = init_forget_vector(self._forget[param], y.shape[0])
@@ -1159,7 +1194,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                 self._debug_dl1dlp1[key] = copy.copy(dl1dp1)
                 self._debug_dl2dlp2[key] = copy.copy(dl2dp2)
                 self._debug_eta[key] = copy.copy(eta)
-                # self._debug_x[key] = copy.copy(X[param])
+                self._debug_fv[key] = copy.copy(fv_it)
 
             x_gram_it = self._method[param].update_x_gram(
                 gram=self._x_gram[param],
@@ -1204,6 +1239,10 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                 )
                 beta_path_it = None
                 model_selection_data_it = None
+
+            if self.debug:
+                self._debug_coef[key] = copy.copy(beta_it)
+                self._debug_coef_path[key] = copy.copy(beta_path_it)
 
             # Calculate the prediction, residuals and RSS
             f = init_forget_vector(self._forget[param], y.shape[0])
