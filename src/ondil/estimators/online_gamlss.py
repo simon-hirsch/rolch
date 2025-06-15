@@ -157,6 +157,22 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             rel_tol_inner (float, optional): Relative tolerance for convergence in the inner loop. Defaults to 1e-5.
             min_it_outer (int, optional): Minimum number of outer iterations before checking for convergence. Defaults to 1.
 
+        Attributes:
+            distribution (Distribution): The distribution used for modeling.
+            equation (Dict[int, Union[str, np.ndarray, list]]): The modeling equation for each distribution parameter.
+            forget (Dict[int, float]): Forget factor for each distribution parameter.
+            fit_intercept (Dict[int, bool]): Whether to fit an intercept for each parameter.
+            regularize_intercept (Dict[int, bool]): Whether to regularize the intercept for each parameter.
+            ic (Dict[int, str]): Information criterion for model selection for each parameter.
+            method (Dict[int, EstimationMethod]): Estimation method for each parameter.
+            scale_inputs (bool | np.ndarray): Whether to scale the input features.
+            param_order (np.ndarray | None): Order in which to fit the distribution parameters.
+            n_observations_ (float): Total number of observations used for fitting.
+            n_training_ (Dict[int, int]): Effective training length for each distribution parameter.
+            n_features_ (Dict[int, int]): Number of features used for each distribution parameter.
+            coef_ (np.ndarray): Coefficients for the fitted model, shape (n_params, n_features).
+            coef_path_ (np.ndarray): Coefficients path for the fitted model, shape (n_params, n_iterations, n_features). Only available if `method` is a path-based method like LASSO.
+
         Returns:
             OnlineGamlss: The OnlineGamlss instance.
 
@@ -618,48 +634,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             A=list(self._step_size.values()),
             reps=(self.max_it_outer, self.max_it_inner, 1),
         ).astype(float)
-
-    def get_debug_information(
-        self,
-        variable: str = "coef",
-        param: int = 0,
-        it_outer: int = 1,
-        it_inner: int = 1,
-    ):
-        """Get debug information for a specific variable, parameter, outer iteration and inner iteration.
-
-        We currently support the following variables:
-
-        * "X_dict": The design matrix for the distribution parameter.
-        * "X_scaled": The scaled design matrix.
-        * "weights": The sample weights for the distribution parameter.
-        * "working_vectors": The working vectors for the distribution parameter.
-        * "dl1dlp1": The first derivative of the log-likelihood with respect to the distribution parameter.
-        * "dl2dlp2": The second derivative of the log-likelihood with respect to the distribution parameter.
-        * "eta": The linear predictor for the distribution parameter.
-        * "fv": The fitted values for the distribution parameter.
-        * "dv": The deviance for the distribution parameter.
-        * "coef": The coefficients for the distribution parameter.
-        * "coef_path": The coefficients path for the distribution parameter.
-
-        Args:
-            variable (str): The variable to get debug information for. Defaults to "coef".
-            param (int): The distribution parameter to get debug information for. Defaults to 0.
-            it_outer (int): The outer iteration to get debug information for. Defaults to 1.
-            it_inner (int): The inner iteration to get debug information for. Defaults to 1.
-        Returns:
-            Any: The debug information for the specified variable, parameter, outer iteration and inner iteration.
-        Raises:
-            ValueError: If debug mode is not enabled.
-
-        """
-        if not self.debug:
-            raise ValueError(
-                "Debug mode is not enabled. Please set debug=True when initializing the OnlineGamlss estimator."
-            )
-
-        key = (param, it_outer, it_inner + 1)
-        return getattr(self, f"_debug_{variable}")[key]
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
@@ -1502,3 +1476,45 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             quantile_pred = self.distribution.ppf(quantile, theta).reshape(-1, 1)
 
         return quantile_pred
+
+    def get_debug_information(
+        self,
+        variable: str = "coef",
+        param: int = 0,
+        it_outer: int = 1,
+        it_inner: int = 1,
+    ):
+        """Get debug information for a specific variable, parameter, outer iteration and inner iteration.
+
+        We currently support the following variables:
+
+        * "X_dict": The design matrix for the distribution parameter.
+        * "X_scaled": The scaled design matrix.
+        * "weights": The sample weights for the distribution parameter.
+        * "working_vectors": The working vectors for the distribution parameter.
+        * "dl1dlp1": The first derivative of the log-likelihood with respect to the distribution parameter.
+        * "dl2dlp2": The second derivative of the log-likelihood with respect to the distribution parameter.
+        * "eta": The linear predictor for the distribution parameter.
+        * "fv": The fitted values for the distribution parameter.
+        * "dv": The deviance for the distribution parameter.
+        * "coef": The coefficients for the distribution parameter.
+        * "coef_path": The coefficients path for the distribution parameter.
+
+        Args:
+            variable (str): The variable to get debug information for. Defaults to "coef".
+            param (int): The distribution parameter to get debug information for. Defaults to 0.
+            it_outer (int): The outer iteration to get debug information for. Defaults to 1.
+            it_inner (int): The inner iteration to get debug information for. Defaults to 1.
+        Returns:
+            Any: The debug information for the specified variable, parameter, outer iteration and inner iteration.
+        Raises:
+            ValueError: If debug mode is not enabled.
+
+        """
+        if not self.debug:
+            raise ValueError(
+                "Debug mode is not enabled. Please set debug=True when initializing the OnlineGamlss estimator."
+            )
+
+        key = (param, it_outer, it_inner + 1)
+        return getattr(self, f"_debug_{variable}")[key]

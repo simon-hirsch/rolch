@@ -44,18 +44,21 @@ theme:
 
 
 plugins:
+- search
 - mkdocstrings:
     handlers:
       python:
         paths: [src]
-        # docstring_style: "numpy"
         options:
           heading_level: 3
+          line_length: 60
           show_source: false
           show_root_heading: true
+          show_signature: true
           separate_signature: true
           show_signature_annotations: true
-- search
+          members_order: source
+          docstring_section_style: list
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
@@ -81,5 +84,6 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - admonition
+
 
 
