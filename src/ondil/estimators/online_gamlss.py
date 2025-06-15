@@ -13,7 +13,7 @@ from sklearn.utils.validation import (
     validate_data,
 )
 
-from .. import HAS_PANDAS, HAS_POLARS, distributions
+from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, OndilEstimatorMixin
 from ..distributions import DistributionNormal
 from ..error import OutOfSupportError
@@ -29,9 +29,6 @@ if HAS_POLARS:
     import polars as pl  # noqa
 
 
-DIST_TYPES = [type(getattr(distributions, name)()) for name in distributions.__all__]
-
-
 class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
     """The online/incremental GAMLSS class."""
 
@@ -42,7 +39,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         "regularize_intercept": [bool],
         "method": [EstimationMethod, str],
         "ic": [StrOptions({"aic", "bic", "hqc", "max"})],
-        "distribution": [type(DistributionNormal())],
+        "distribution": [callable],
         "equation": [dict, type(None)],
         "model_selection": [StrOptions({"local_rss", "global_ll"})],
         "prefit_initial": [Interval(numbers.Integral, 0, None, closed="left")],
