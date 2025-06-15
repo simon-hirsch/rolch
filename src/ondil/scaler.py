@@ -60,7 +60,7 @@ class OnlineScaler(OndilEstimatorMixin, TransformerMixin, BaseEstimator):
     @property
     def std_(self) -> float | np.ndarray:
         """Standard deviation of the scaled variables."""
-        check_is_fitted(self, ["_mean", "_var", "_selection"])
+        check_is_fitted(self, ["mean_", "var_"])
         if self._do_scale:
             return np.sqrt(self.var_)
         else:
