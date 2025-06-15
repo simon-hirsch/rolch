@@ -191,11 +191,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         self.prefit_initial = prefit_initial
         self.prefit_update = prefit_update
 
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.target_tags.single_output = False
-        return tags
-
     @property
     def betas(self):
         warnings.warn(
