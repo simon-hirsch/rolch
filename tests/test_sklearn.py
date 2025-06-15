@@ -24,3 +24,11 @@ def test_sklearn_compliance_linear_model(scale_inputs, fit_intercept, method, ic
             "check_sample_weight_equivalence_on_dense_data": "To few data points to test this check in the original sklaern implementation.",
         },
     )
+
+
+def test_sklearn_compliance_scaler():
+    estimator = ondil.OnlineScaler()
+    check_estimator(
+        estimator,
+        on_fail="raise",
+    )
