@@ -84,4 +84,3 @@ class DistributionReverseGumbel(ScipyMixin, Distribution):
         mu_init = np.mean(y) + gamma_const * sigma_init
         initial_params = [mu_init, sigma_init]
         return np.tile(initial_params, (y.shape[0], 1))
-
