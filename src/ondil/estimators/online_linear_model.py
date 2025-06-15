@@ -61,6 +61,16 @@ class OnlineLinearModel(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         self.regularize_intercept = regularize_intercept
         self.ic = ic
 
+    @property
+    def beta(self):
+        check_is_fitted(self)
+        return self.coef_
+
+    @property
+    def beta_path(self):
+        check_is_fitted(self)
+        return self.coef_path_
+
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         return tags
@@ -123,7 +133,7 @@ class OnlineLinearModel(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             self.forget, self.n_observations_
         )
 
-        self._scaler.fit(X)
+        self._scaler.fit(X, sample_weight=sample_weight)
         X_scaled = self._scaler.transform(X)
         X_scaled = self.get_design_matrix(X=X_scaled)
 
@@ -189,7 +199,7 @@ class OnlineLinearModel(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             self.forget, self.n_observations_
         )
 
-        self._scaler.partial_fit(X)
+        self._scaler.update(X, sample_weight=sample_weight)
         X_scaled = self._scaler.transform(X)
         X_scaled = self.get_design_matrix(X=X_scaled)
 

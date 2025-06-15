@@ -13,18 +13,8 @@ class OndilEstimatorMixin(ABC):
 
     @property
     def n_samples_(self) -> int:
-        check_is_fitted(self)
+        check_is_fitted(self, "n_observations_")
         return self.n_observations_
-
-    @property
-    def beta(self):
-        check_is_fitted(self)
-        return self.coef_
-
-    @property
-    def beta_path(self):
-        check_is_fitted(self)
-        return self.coef_path_
 
     def partial_fit(
         self, X: np.ndarray, y: np.ndarray, sample_weight: np.ndarray | None = None
