@@ -675,9 +675,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                 is_regularized[0] = False
             self._is_regularized[p] = is_regularized
 
-        # Betas might be different across distribution parameters
-        # So this is a dict of dicts
-        # TODO: This should go to the _debug section
         self.coef_ = {
             p: np.zeros(self.n_features_[p]) for p in range(self.distribution.n_params)
         }
