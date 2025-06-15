@@ -18,7 +18,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ## List of Distributions
 
-| Distribution                                                              | Description                            | `scipy` Equivalent      |
+| Distribution                                                              | Description                            | `scipy` Base            |
 | ------------------------------------------------------------------------- | -------------------------------------- | ----------------------- |
 | [`DistributionNormal`](#ondil.DistributionNormal)                         | Gaussian (mean and standard deviation) | `scipy.stats.norm`      |
 | [`DistributionNormalMeanVariance`](#ondil.DistributionNormalMeanVariance) | Gaussian (mean and variance)           | `scipy.stats.norm`      |

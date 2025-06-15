@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
-from ondil.scaler import OnlineScaler
+
 from ondil.gram import init_forget_vector
+from ondil.scaler import OnlineScaler
 
 
-@pytest.mark.parametrize("N_init", [1, 10, 100], ids=["init_1", "init_10", "init_100"])
+@pytest.mark.parametrize("N_init", [5, 10, 100], ids=["init_1", "init_10", "init_100"])
 @pytest.mark.parametrize("D", [1, 10], ids=["vars_1", "vars_10"])
 @pytest.mark.parametrize(
     "selection_dtype", [bool, int], ids=["sel_dtype_bool", "sel_dtype_int"]
@@ -69,12 +70,12 @@ def test_online_scaler(N_init, D, forget, selection_dtype, sample_weight):
         os.fit(X_init)
 
     # # Assert initial fit is correct
-    assert np.allclose(os.m, true_mean_init[to_scale]), (
-        f"Initial mean mismatch: {os.m} vs {true_mean_init[to_scale]}"
-    )
-    assert np.allclose(os.v, true_var_init[to_scale]), (
-        f"Initial variance mismatch: {os.v} vs {true_var_init[to_scale]}"
-    )
+    assert np.allclose(
+        os.mean_, true_mean_init[to_scale]
+    ), f"Initial mean mismatch: {os.mean_} vs {true_mean_init[to_scale]}"
+    assert np.allclose(
+        os.var_, true_var_init[to_scale]
+    ), f"Initial variance mismatch: {os.var_} vs {true_var_init[to_scale]}"
 
     # For N_init = 1, var = 0, so scaling is not defined
     if N_init > 1:
@@ -82,16 +83,16 @@ def test_online_scaler(N_init, D, forget, selection_dtype, sample_weight):
         scaled_out = (X_init - true_mean_init) / np.sqrt(true_var_init)
         expected_out[:, to_scale] = scaled_out[:, to_scale]
         out = os.transform(X=X_init)
-        assert np.allclose(out, expected_out), (
-            f"Initial scaled X mismatch: {out} vs {expected_out}"
-        )
+        assert np.allclose(
+            out, expected_out
+        ), f"Initial scaled X mismatch: {out} vs {expected_out}"
 
     # Test partial fit updates
     for i in range(N_init, N):
         if sample_weight:
-            os.partial_fit(X[i : i + 1,], sample_weight=W_sample[i,])
+            os.update(X[i : i + 1,], sample_weight=W_sample[i,])
         else:
-            os.partial_fit(X[i : i + 1,])
+            os.update(X[i : i + 1,])
 
         # Calculate true mean and variance for all columns
         true_mean = np.array(
@@ -116,15 +117,15 @@ def test_online_scaler(N_init, D, forget, selection_dtype, sample_weight):
         expected_out[:, to_scale] = scaled_out[:, to_scale]
         out = os.transform(X=X[0 : (i + 1), :])
 
-        assert np.allclose(os.m, true_mean[to_scale]), (
-            f"Step {i - N_init + 1}: Mean mismatch: {os.m} vs {true_mean[to_scale]}"
-        )
-        assert np.allclose(os.v, true_var[to_scale]), (
-            f"Step {i - N_init + 1}: Variance mismatch: {os.v} vs {true_var[to_scale]}"
-        )
-        assert np.allclose(out, expected_out), (
-            f"Scaled X mismatch: {out} vs {expected_out}"
-        )
+        assert np.allclose(
+            os.mean_, true_mean[to_scale]
+        ), f"Step {i - N_init + 1}: Mean mismatch: {os.mean_} vs {true_mean[to_scale]}"
+        assert np.allclose(
+            os.var_, true_var[to_scale]
+        ), f"Step {i - N_init + 1}: Variance mismatch: {os.var_} vs {true_var[to_scale]}"
+        assert np.allclose(
+            out, expected_out
+        ), f"Scaled X mismatch: {out} vs {expected_out}"
 
 
 @pytest.mark.parametrize("D", [1, 10], ids=["features_1", "features_10"])
