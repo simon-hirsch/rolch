@@ -393,20 +393,55 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
 
         return out
 
-    def fit_select_model(
+    def _fit_select_model(
         self,
-        X,
-        y,
-        wv,
-        wt,  # do we need this?!
-        w,
-        beta_path,
-        param,
-    ) -> np.ndarray:
-        # TODO Here:
-        # - We should save the information in a named tuple
-        # - We should keep only the information we need
-        # - Consider the interation with the local RSS criterion?!
+        X: np.ndarray,
+        y: np.ndarray,
+        wv: np.ndarray,
+        wt: np.ndarray,
+        w: np.ndarray,
+        beta_path: np.ndarray,
+        param: int,
+    ) -> tuple[np.ndarray, np.ndarray, int]:
+        """
+        Fit and select a model for a specific distribution parameter.
+
+        Selects the best model along a regularization path by evaluating an information criterion
+        (e.g., AIC, BIC) based on either local residual sum of squares (RSS) or global log-likelihood (LL).
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The design matrix of shape (n_samples, n_features).
+        y : np.ndarray
+            The target variable of shape (n_samples,).
+        wv : np.ndarray
+            Working response vector of shape (n_samples,).
+        wt : np.ndarray
+            Working weights vector of shape (n_samples,).
+        w : np.ndarray
+            Sample weights of shape (n_samples,).
+        beta_path : np.ndarray
+            Array of shape (n_alphas, n_features) containing the coefficient paths for each regularization parameter.
+        param : int
+            The parameter index for which the model is being selected.
+
+        Returns
+        -------
+        beta : np.ndarray
+            The selected coefficient vector of shape (n_features,) corresponding to the best model.
+        model_selection_data : np.ndarray
+            The array of RSS or log-likelihood values used for model selection.
+        best_ic : int
+            The index of the best model according to the information criterion.
+
+        Notes
+        -----
+        The selection is performed according to the `model_selection` attribute:
+        - If "local_rss", the model is selected based on the weighted residual sum of squares.
+        - If "global_ll", the model is selected based on the global log-likelihood.
+        The function uses an information criterion (e.g., AIC, BIC) to select the best model.
+        """
         f = init_forget_vector(self._forget[param], y.shape[0])
         n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
         n_nonzero_coef_other = self._count_nonzero_coef(exclude=param)
@@ -446,7 +481,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
 
         return beta, model_selection_data, best_ic
 
-    def update_select_model(
+    def _update_select_model(
         self,
         X: np.ndarray,
         y: np.ndarray,  # observations / response
@@ -457,6 +492,36 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         model_selection_data: Any,
         param: int,
     ):
+        """Update and select a model for a specific distribution parameter.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Feature matrix of shape (n_samples, n_features).
+        y : np.ndarray
+            Observed response values of shape (n_samples,).
+        wv : np.ndarray
+            Working vector, typically the adjusted response for IRLS or similar algorithms.
+        wt : np.ndarray
+            Working weights, used for weighted updates.
+        w : np.ndarray
+            Sample weights for each observation.
+        beta_path : np.ndarray
+            Array of candidate coefficient vectors along the regularization path, shape (n_candidates, n_features).
+        model_selection_data : Any
+            Data carried over from previous model selection steps (e.g., previous RSS or log-likelihood values).
+        param : int
+            Index of the distribution parameter being updated.
+        Returns
+        -------
+        beta : np.ndarray
+            Selected coefficient vector for the best model.
+        model_selection_data_new : Any
+            Updated model selection data (e.g., RSS or log-likelihood values for the selected model).
+        best_ic : int
+            Index of the best model according to the information criterion.
+
+        """
         f = init_forget_vector(self._forget[param], y.shape[0])
         n_nonzero_coef = np.count_nonzero(beta_path, axis=1)
         prediction_path = X @ beta_path.T
@@ -593,13 +658,19 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
     ):
         """Fit the online GAMLSS model.
 
-        !!! note
-            The user is only required to provide the design matrix $X$ for the first distribution parameters. If for some distribution parameter no design matrix is provided, `ondil` will model the parameter using an intercept.
+        This method initializes the model with the given covariate data matrix $X$ and response variable $Y$.
 
         Args:
-            X (np.ndarray): Data Matrix. Currently supporting only numpy, will support pandas and polars in the future.
+            X (np.ndarray): Covariate data matrix $X$.
             y (np.ndarray): Response variable $Y$.
             sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+
+        Returns:
+            OnlineGamlss: The fitted OnlineGamlss instance.
+
+        Raises:
+            ValueError: If the equation is not specified correctly.
+            OutOfSupportError: If the values of $y$ are below or above the distribution's support.
         """
 
         self._prepare_estimator()
@@ -721,16 +792,10 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
     ):
         """Update the fit for the online GAMLSS Model.
 
-        !!! warning
-            Currently, the algorithm only takes single-step updates. Batch updates are planned for the first stable version.
-
-        !!! note
-            The `beta_bounds` from the initial fit are still valid for the update.
-
         Args:
-            X (np.ndarray): Data Matrix. Currently supporting only numpy, will support and pandas in the future.
+            X (np.ndarray): Covariate data matrix $X$.
             y (np.ndarray): Response variable $Y$.
-            sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
+            sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None (all observations have the same weight).
         """
         X, y = validate_data(
             self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
@@ -1027,7 +1092,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                 else:
                     print("This should not happen")
 
-                beta_it, model_selection_data_it, best_ic_it = self.fit_select_model(
+                beta_it, model_selection_data_it, best_ic_it = self._fit_select_model(
                     X=X[param],
                     y=y,
                     w=w,
@@ -1215,15 +1280,17 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
                     is_regularized=self._is_regularized[param],
                 )
 
-                beta_it, model_selection_data_it, best_ic_it = self.update_select_model(
-                    X=X[param],
-                    y=y,
-                    w=w,
-                    wv=wv,
-                    wt=wt,
-                    beta_path=beta_path_it,
-                    model_selection_data=self._model_selection_data_old[param],
-                    param=param,
+                beta_it, model_selection_data_it, best_ic_it = (
+                    self._update_select_model(
+                        X=X[param],
+                        y=y,
+                        w=w,
+                        wv=wv,
+                        wt=wt,
+                        beta_path=beta_path_it,
+                        model_selection_data=self._model_selection_data_old[param],
+                        param=param,
+                    )
                 )
                 self._best_ic[param] = best_ic_it
                 self._best_ic_iterations[param, it_outer - 1, it_inner] = best_ic_it
