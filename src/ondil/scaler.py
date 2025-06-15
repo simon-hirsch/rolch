@@ -53,8 +53,8 @@ class OnlineScaler(OndilEstimatorMixin, TransformerMixin, BaseEstimator):
 
         # Variables
         self.mean_ = 0
-        self._M = 0
         self.var_ = 0
+        self._M = 0
         self._cumulative_w = 0  # Track cumulative weights for exponential forgetting
 
     @property
