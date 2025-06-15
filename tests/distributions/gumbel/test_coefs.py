@@ -36,7 +36,6 @@ def test_gumbel_distribution():
         method="ols",
         scale_inputs=False,
         fit_intercept=True,
-        rss_tol_inner=10,
     )
     estimator.fit(X=X, y=y)
     assert np.allclose(estimator.beta[0], coef_R_mu, atol=0.01)
