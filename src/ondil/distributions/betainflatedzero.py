@@ -62,7 +62,7 @@ class DistributionBetaInflatedZero(Distribution):
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
-        mu, sigma, nu, tau = self.theta_to_params(theta)
+        mu, sigma, nu = self.theta_to_params(theta)
         if param == 0:
             # MU
             alpha = mu * (1 - sigma**2) / sigma**2
@@ -94,7 +94,7 @@ class DistributionBetaInflatedZero(Distribution):
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
     ) -> np.ndarray:
         self._validate_dl2_dpp_inputs(y, theta, params)
-        mu, sigma, nu, tau = self.theta_to_params(theta)
+        mu, sigma, nu = self.theta_to_params(theta)
 
         if sorted(params) == [0, 1]:
             alpha = mu * (1 - sigma**2) / sigma**2
@@ -152,23 +152,23 @@ class DistributionBetaInflatedZero(Distribution):
         return result
 
     def ppf(self, q, theta):
-        mu, sigma, nu, tau = self.theta_to_params(theta)
+        mu, sigma, nu = self.theta_to_params(theta)
 
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-        denom = 1 + nu + tau
+        denom = 1 + nu  
         lower = nu / denom
-        upper = (1 + nu) / denom
 
         q = np.asarray(q, dtype=np.float64)
-        adjusted_q = (q - lower) * denom  # equivalent to (q - lower) / (1/denom)
+        adjusted_q = (q - lower) * denom  # same as (q - lower) / (1/denom)
 
         finite_result = st.beta.ppf(adjusted_q, a=alpha, b=beta)
 
-        one_result = np.where(np.logical_or(q == 1, q >= upper), 1.0, finite_result)
-        zero_result = np.where(np.logical_or(q == 0, q <= lower), 0.0, one_result)
-        result = np.where(np.logical_or(q < 0, q > 1), np.nan, zero_result)
+        finite_result = np.where(q <= lower, 0.0, finite_result)
+        finite_result = np.where(q == 0, 0.0, finite_result)
+        finite_result = np.where(q == 1, np.inf, finite_result)
+        result = np.where((q < 0) | (q > 1), np.nan, finite_result)
 
         return result
 
@@ -180,48 +180,40 @@ class DistributionBetaInflatedZero(Distribution):
         return self.ppf(q=sim_unif, theta=theta)
 
     def logpdf(self, y, theta):
-        mu, sigma, nu, tau = self.theta_to_params(theta)
+        mu, sigma, nu = self.theta_to_params(theta)
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-        logpdf_beta = st.beta(alpha, beta, loc=0, scale=1).logpdf(y)
+        logpdf_beta = st.beta(alpha, beta).logpdf(y)
 
-        result = np.where(
-            (y < 0) | (y > 1),
-            0,
-            np.where(
-                y == 0,
-                np.log(nu) - np.log(1 + nu + tau),
-                np.where(
-                    y == 1,
-                    np.log(tau) - np.log(1 + nu + tau),
-                    logpdf_beta - np.log(1 + nu + tau),
-                ),
-            ),
-        )
+        logfy = np.zeros_like(y, dtype=np.float64)
+        logfy = np.where(y > 0, logpdf_beta, logfy)
+        logfy = np.where(y == 0, np.log(nu), logfy)
+        result = logfy - np.log(1 + nu)
+
         return result
 
     def logcdf(self, y, theta):
-        mu, sigma, nu, tau = self.theta_to_params(theta)
+        mu, sigma, nu = self.theta_to_params(theta)
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
         y = np.asarray(y, dtype=np.float64)
-        denom = 1 + nu + tau
+        denom = 1 + nu
 
         cdf_beta = st.beta(alpha, beta).cdf(y)
 
         raw_cdf = np.where(
-            (y > 0) & (y < 1),
+            (y > 0) & (y <= 1),
             nu + cdf_beta,
-            np.where(y == 0, nu, np.where(y == 1, denom, 0)),
-        )
+            np.where(y == 0, nu, 0))
+        
 
         with np.errstate(divide='ignore'):
             log_result = np.log(raw_cdf / denom)
 
         log_result = np.where(y < 0, -np.inf, log_result)
-        log_result = np.where(y > 1, 0.0, log_result)  
+        log_result = np.where(y >= 1, 0.0, log_result)  
 
         return log_result
 

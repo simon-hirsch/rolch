@@ -12,6 +12,7 @@ from .normal import DistributionNormal, DistributionNormalMeanVariance
 from .studentt import DistributionT
 from .reversegumbel import DistributionReverseGumbel
 from .inversegamma import DistributionInverseGamma
+from .betainflatedzero import DistributionBetaInflatedZero
 
 __all__ = [
     "DistributionNormal",
@@ -29,4 +30,5 @@ __all__ = [
     "DistributionInverseGaussian",
     "DistributionReverseGumbel",
     "DistributionInverseGamma",
+    "DistributionBetaInflatedZero",
 ]
