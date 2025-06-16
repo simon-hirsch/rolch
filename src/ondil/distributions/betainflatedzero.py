@@ -56,9 +56,7 @@ class DistributionBetaInflatedZero(Distribution):
             return np.where(y == 0, 0, result)
 
         if param == 2:
-            return np.where(
-                y == 0, (1 / nu), - ( 1 / (1 + nu) )
-            )
+            return np.where(y == 0, (1 / nu), 0) - (1 / (1 + nu))
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
