@@ -126,7 +126,7 @@ class OnlineGamlss(Estimator):
         self._method = {p: get_estimation_method(m) for p, m in self.method.items()}
         self.model_selection = model_selection
 
-        self.scaler = OnlineScaler(to_scale=scale_inputs)
+        self.scaler = OnlineScaler(to_scale=scale_inputs, forget=self.forget[0])
         self.do_scale = scale_inputs
 
         # These are global for all distribution parameters
@@ -536,7 +536,7 @@ class OnlineGamlss(Estimator):
         self.J = self.get_J_from_equation(X=X)
 
         # Fit scaler and transform
-        self.scaler.fit(X)
+        self.scaler.fit(X, sample_weight=w)
         X_scaled = self.scaler.transform(X)
         X_dict = {
             p: self.make_model_array(X_scaled, param=p)
@@ -665,7 +665,7 @@ class OnlineGamlss(Estimator):
 
         self.fv = self.predict(X, what="response")
 
-        self.scaler.partial_fit(X)
+        self.scaler.partial_fit(X, sample_weight=w)
         X_scaled = self.scaler.transform(X)
         X_dict = {
             p: self.make_model_array(X_scaled, param=p)
