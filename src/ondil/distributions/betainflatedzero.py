@@ -19,7 +19,7 @@ class DistributionBetaInflatedZero(Distribution):
         1: (np.nextafter(0, 1), np.nextafter(1, 0)),
         2: (np.nextafter(0, 1), np.inf),  
     }
-    distribution_support = (0, 1)
+    distribution_support = (0, np.nextafter(1, 0))
 
     def __init__(
         self,
@@ -113,7 +113,7 @@ class DistributionBetaInflatedZero(Distribution):
             return np.zeros_like(y)  ###
 
     def initial_values(self, y: np.ndarray) -> np.ndarray:
-        return np.tile([np.mean(y), 0.5, 5], (y.shape[0], 1))
+        return np.tile([np.mean(y), 0.5, np.mean(y)], (y.shape[0], 1))
 
     def cdf(self, y, theta):
         mu, sigma, nu = self.theta_to_params(theta)
@@ -122,8 +122,12 @@ class DistributionBetaInflatedZero(Distribution):
 
         cdf_beta = st.beta(alpha, beta).cdf(y)
 
-        raw_cdf = np.where(y > 0, nu + cdf_beta, 0)
-        raw_cdf = np.where(y == 0, nu, raw_cdf)
+        raw_cdf = np.where(
+            y == 0,
+            nu,
+            nu + cdf_beta
+        )
+
         result = raw_cdf / (1 + nu)
 
         result = np.where(y < 0, 0, result)
