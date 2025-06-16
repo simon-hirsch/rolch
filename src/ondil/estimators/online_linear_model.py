@@ -85,7 +85,7 @@ class OnlineLinearModel(Estimator):
             self.forget, self.n_observations
         )
 
-        self.scaler.fit(X)
+        self.scaler.fit(X, sample_weight=sample_weight)
         X_scaled = self.scaler.transform(X)
         X_scaled = self.get_design_matrix(X=X_scaled)
 
@@ -140,12 +140,12 @@ class OnlineLinearModel(Estimator):
             self.forget, self.n_observations
         )
 
-        self.scaler.partial_fit(X)
-        X_scaled = self.scaler.transform(X)
-        X_scaled = self.get_design_matrix(X=X_scaled)
-
         if sample_weight is None:
             sample_weight = np.ones(y.shape[0])
+
+        self.scaler.partial_fit(X, sample_weight=sample_weight)
+        X_scaled = self.scaler.transform(X)
+        X_scaled = self.get_design_matrix(X=X_scaled)
 
         self.x_gram = self._method.update_x_gram(
             self.x_gram, X_scaled, forget=self.forget, weights=sample_weight
