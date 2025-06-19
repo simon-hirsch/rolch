@@ -40,7 +40,6 @@ def test_inversegaussian_distribution():
         method="ols",
         scale_inputs=False,
         fit_intercept=True,
-        rss_tol_inner=10,
     )
 
     estimator.fit(X=X, y=y)
