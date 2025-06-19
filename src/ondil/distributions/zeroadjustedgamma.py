@@ -24,9 +24,9 @@ class DistributionZeroAdjustedGamma(Distribution):
         self,
         loc_link: LinkFunction = LogLink(),
         scale_link: LinkFunction = LogLink(),
-        skew_link: LinkFunction = LogitLink(),
+        inflation_link: LinkFunction = LogitLink(),
     ) -> None:
-        super().__init__(links={0: loc_link, 1: scale_link, 2: skew_link})
+        super().__init__(links={0: loc_link, 1: scale_link, 2: inflation_link})
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
