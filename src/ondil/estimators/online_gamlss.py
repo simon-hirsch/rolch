@@ -915,7 +915,6 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             it_outer += 1
 
             for param in self._param_order:
-
                 global_dev = self._inner_update(
                     X=X,
                     y=y,
