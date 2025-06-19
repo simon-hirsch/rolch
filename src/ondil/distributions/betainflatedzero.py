@@ -4,7 +4,7 @@ import numpy as np
 import scipy.special as spc
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction, ScipyMixin
+from ..base import Distribution, LinkFunction
 from ..link import LogitLink, LogLink
 
 
@@ -25,9 +25,9 @@ class DistributionBetaInflatedZero(Distribution):
         self,
         loc_link: LinkFunction = LogitLink(),
         scale_link: LinkFunction = LogitLink(),
-        skew_link: LinkFunction = LogLink(),  
+        inflation_link: LinkFunction = LogLink(),  
     ) -> None:
-        super().__init__(links={0: loc_link, 1: scale_link, 2: skew_link})
+        super().__init__(links={0: loc_link, 1: scale_link, 2: inflation_link})
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
@@ -169,7 +169,7 @@ class DistributionBetaInflatedZero(Distribution):
 
         finite_result = np.where(q <= lower, 0.0, finite_result)
         finite_result = np.where(q == 0, 0.0, finite_result)
-        finite_result = np.where(q == 1, np.inf, finite_result)
+        finite_result = np.where(q == 1, np.nextafter(1, 0), finite_result)
         result = np.where((q < 0) | (q > 1), np.nan, finite_result)
 
         return result
