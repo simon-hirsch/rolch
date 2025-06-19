@@ -800,7 +800,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
 
         self._fv = self.predict_distribution_parameters(X, what="response")
 
-        self._scaler.update(X)
+        self._scaler.update(X, sample_weight=sample_weight)
         X_scaled = self._scaler.transform(X)
         X_dict = {
             p: self.make_model_array(X_scaled, param=p)
