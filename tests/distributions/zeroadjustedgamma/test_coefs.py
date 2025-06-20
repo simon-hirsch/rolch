@@ -47,7 +47,7 @@ def test_beta_distribution():
 
     estimator = OnlineGamlss(
         distribution=dist,
-        equation={0: "all", 1: "all", 2: "all", 3: "all"},
+        equation={0: "all", 1: "all", 2: "all"},
         method="ols",
         scale_inputs=False,
         fit_intercept=True,
@@ -66,8 +66,4 @@ def test_beta_distribution():
     print("Difference in estimates: ", estimator.beta[2] - R_list.rx2("coef_R_nu"))
     assert np.allclose(estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-3), (
         "Skew coefficients don't match"
-    )
-    print("Difference in estimates: ", estimator.beta[3] - R_list.rx2("coef_R_tau"))
-    assert np.allclose(estimator.beta[3], R_list.rx2("coef_R_tau"), atol=1e-3), (
-        "Kurtosis coefficients don't match"
     )
