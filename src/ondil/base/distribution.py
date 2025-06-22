@@ -114,21 +114,45 @@ class Distribution(ABC):
         if params[0] == params[1]:
             raise ValueError("Cross derivatives must use different parameters.")
 
-    def link_function(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+    def link_function(
+        self,
+        y: np.ndarray,
+        param: int = 0,
+    ) -> np.ndarray:
         """Apply the link function for param on y."""
         return self.links[param].link(y)
 
-    def link_inverse(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+    def link_inverse(
+        self,
+        y: np.ndarray,
+        param: int = 0,
+    ) -> np.ndarray:
         """Apply the inverse of the link function for param on y."""
         return self.links[param].inverse(y)
 
-    def link_function_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+    def link_function_derivative(
+        self,
+        y: np.ndarray,
+        param: int = 0,
+    ) -> np.ndarray:
         """Apply the derivative of the link function for param on y."""
         return self.links[param].link_derivative(y)
 
-    def link_inverse_derivative(self, y: np.ndarray, param: int = 0) -> np.ndarray:
+    def link_inverse_derivative(
+        self,
+        y: np.ndarray,
+        param: int = 0,
+    ) -> np.ndarray:
         """Apply the derivative of the inverse link function for param on y."""
         return self.links[param].inverse_derivative(y)
+
+    def link_function_second_derivative(
+        self,
+        y: np.ndarray,
+        param: int = 0,
+    ) -> np.ndarray:
+        """Apply the second derivative of the link function for param on y."""
+        return self.links[param].link_second_derivative(y)
 
     @abstractmethod
     def initial_values(

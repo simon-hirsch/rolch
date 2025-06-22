@@ -246,21 +246,6 @@ class MultivariateNormalInverseLowRank(MultivariateDistributionMixin, Distributi
     def dl2_dpp(self, y: np.ndarray, theta: Dict, param: int = 0):
         raise NotImplementedError("Not implemented.")
 
-    def link_function(self, y, param=0):
-        return self.links[param].link(y)
-
-    def link_inverse(self, y, param=0):
-        return self.links[param].inverse(y)
-
-    def link_function_derivative(self, y, param=0):
-        return self.links[param].link_derivative(y)
-
-    def link_function_second_derivative(self, y, param=0):
-        return self.links[param].link_second_derivative(y)
-
-    def link_inverse_derivative(self, y, param=0):
-        return self.links[param].inverse_derivative(y)
-
     def element_link_function(
         self, y: np.ndarray, param: int = 0, k: int = 0, d: int = 0
     ) -> np.ndarray:
