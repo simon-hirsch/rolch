@@ -9,7 +9,25 @@ from ..link import LogitLink, LogLink
 
 
 class DistributionZeroAdjustedGamma(Distribution):
-    """The Zero-adjusted Gamma Distribution for GAMLSS."""
+    """The Zero Adjusted Gamma Distribution for GAMLSS.
+    
+    The zero adjusted gamma distribution is a mixture of a discrete value 0 with
+    probability \\nu, and a gamma GA(\\mu; \\sigma) distribution on the positive real line (0, \\infty)
+    with probability (1 - \\nu).
+    
+    $$
+    f_Y(y \\mid \\mu, \\sigma, \\nu) = 
+    \\begin{cases}
+        \\nu & \\text{if } y = 0 \\
+        (1 - \\nu) f_W(y \mid \mu, \sigma) & \\text{if } y > 0
+    \end{cases} 
+    $$
+    
+    where $y$ is the observed data, $\\mu > 0$ is the location parameter,
+    $\\sigma > 0$ is the scale parameter,
+    and $\\nu \\in [0, \\infty) $  is the inflation parameter.
+
+    """
 
     corresponding_gamlss: str = "ZAGA"
     parameter_names = {0: "mu", 1: "sigma", 2: "nu"}
