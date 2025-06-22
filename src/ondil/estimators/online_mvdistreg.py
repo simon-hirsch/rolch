@@ -411,45 +411,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         """
         return update_y_gram(gram, X=x, y=y, w=w, forget=self.forget[param])
 
-    @staticmethod
-    def _make_intercept(n_observations: int) -> np.ndarray:
-        """Make the intercept series as N x 1 array.
-
-        Args:
-            y (np.ndarray): Response variable $Y$
-
-        Returns:
-            np.ndarray: Intercept array.
-        """
-        return np.ones((n_observations, 1))
-
-    @staticmethod
-    def _add_lags(
-        y: np.ndarray, x: np.ndarray, lags: Union[int, np.ndarray]
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Add lagged variables to the response and covariate matrices.
-
-        Args:
-            y (np.ndarray): Response variable.
-            x (np.ndarray): Covariate matrix.
-            lags (Union[int, np.ndarray]): Number of lags to add.
-
-        Returns:
-            Tuple[np.ndarray, np.ndarray]: Tuple containing the updated response and covariate matrices.
-        """
-        if lags == 0:
-            return y, x
-
-        if isinstance(lags, int):
-            lags = np.arange(1, lags + 1, dtype=int)
-
-        max_lag = np.max(lags)
-        lagged = np.stack([np.roll(y, i) for i in lags], axis=1)[max_lag:, :]
-        new_x = np.hstack((x, lagged))[max_lag:, :]
-        new_y = y[max_lag:]
-        return new_y, new_x
-
     def _make_matrix_or_intercept(
         self, n_observations: int, x: np.ndarray, add_intercept: bool, param: int
     ):
@@ -466,7 +427,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             np.ndarray: Matrix or intercept array.
         """
         if x is None:
-            return self._make_intercept(n_observations=n_observations)
+            return make_intercept(n_observations=n_observations)
         elif add_intercept[param]:
             return self._add_intercept(x=x, param=param)
         else:
