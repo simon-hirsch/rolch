@@ -1,17 +1,21 @@
 from .beta import DistributionBeta
-from .exponential import DistributionExponential
 from .betainflated import DistributionBetaInflated
+from .exponential import DistributionExponential
 from .gamma import DistributionGamma
 from .gumbel import DistributionGumbel
+from .inversegamma import DistributionInverseGamma
 from .inversegaussian import DistributionInverseGaussian
 from .johnsonsu import DistributionJSU
 from .logistic import DistributionLogistic
 from .lognormal import DistributionLogNormal
 from .lognormalmedian import DistributionLogNormalMedian
+from .mv_normal_chol import MultivariateNormalInverseCholesky
+from .mv_normal_low_rank import MultivariateNormalInverseLowRank
+from .mv_t_chol import MultivariateStudentTInverseCholesky
+from .mv_t_low_rank import MultivariateStudentTInverseLowRank
 from .normal import DistributionNormal, DistributionNormalMeanVariance
-from .studentt import DistributionT
 from .reversegumbel import DistributionReverseGumbel
-from .inversegamma import DistributionInverseGamma
+from .studentt import DistributionT
 
 __all__ = [
     "DistributionNormal",
@@ -29,4 +33,8 @@ __all__ = [
     "DistributionInverseGaussian",
     "DistributionReverseGumbel",
     "DistributionInverseGamma",
+    "MultivariateNormalInverseCholesky",
+    "MultivariateNormalInverseLowRank",
+    "MultivariateStudentTInverseCholesky",
+    "MultivariateStudentTInverseLowRank",
 ]
