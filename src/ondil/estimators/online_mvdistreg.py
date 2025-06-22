@@ -17,6 +17,7 @@ from sklearn.utils.validation import (
 from ..base import Distribution, OndilEstimatorMixin
 from ..base.distribution import ParameterShapes
 from ..coordinate_descent import online_coordinate_descent_path
+from ..design_matrix import make_intercept
 from ..gram import (
     init_forget_vector,
     init_gram,
@@ -91,18 +92,6 @@ def fast_vectorized_interpolate(x, xp, fp, ascending=True):
                 fp=fp[:, i][::-1],
             )[::-1]
     return out
-
-
-def make_intercept(n_observations: int) -> np.ndarray:
-    """Make the intercept series as N x 1 array.
-
-    Args:
-        y (np.ndarray): Response variable $Y$
-
-    Returns:
-        np.ndarray: Intercept array.
-    """
-    return np.ones((n_observations, 1))
 
 
 def make_model_array(X, eq, fit_intercept):
