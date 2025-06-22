@@ -135,9 +135,9 @@ class DistributionZeroAdjustedGamma(Distribution):
         shape = 1 / sigma**2
         scale = mu * sigma**2
 
-        result = st.gamma(a=shape, loc=0, scale=scale).pdf((q - nu) / (1 - nu))
+        result = st.gamma(a=shape, loc=0, scale=scale).ppf((q - nu) / (1 - nu))
 
-        return result
+        return np.where(q <= nu, 0, result)
 
     def pmf(self, y, theta):
         raise NotImplementedError("PMF is not implemented for mixed distributions.")
