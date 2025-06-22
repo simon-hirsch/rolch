@@ -9,7 +9,19 @@ from ..link import LogitLink, LogLink
 
 
 class DistributionBetaInflatedZero(Distribution):
-    """The Zero Inflated Beta Distribution for GAMLSS."""
+    """The Zero Inflated Beta Distribution for GAMLSS.
+    
+    f_Y(y \\mid \\mu, \\sigma, \\nu) = 
+    \\begin{cases}
+    p_0 & \text{if } y = 0 \\
+    (1 - p_0) f_W(y \mid \mu, \sigma) & \\text{if } 0 < y < 1
+    \\end{cases}
+        
+    where  $p_0 = \\nu (1 + \\nu)^{-1}$
+    
+    and $\\mu, \\sigma \\in (0,1)$ and $\\nu > 0 $
+    
+    """
 
     corresponding_gamlss: str = "BEINF0"
 

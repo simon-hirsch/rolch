@@ -9,7 +9,24 @@ from ..link import LogitLink, LogLink
 
 
 class DistributionBetaInflated(Distribution):
-    """The Beta inflated Distribution for GAMLSS."""
+    """The Beta Inflated Distribution for GAMLSS.
+    
+    The distribution function is defined as in GAMLSS as:
+    $$
+    f_Y(y \\mid \\mu, \\sigma, \\nu, \\tau) = 
+    \\begin{cases}
+    p_0 & \\text{if } y = 0 \\
+    (1 - p_0 - p_1) \\dfrac{1}{B(\\alpha, \\beta)} y^{\\alpha - 1}(1 - y)^{\\beta - 1} & \\text{if } 0 < y < 1 \\
+    p_1 & \\text{if } y = 1
+    \\end{cases}
+    $$
+       
+    where $\\alpha = \\mu (1 - \\sigma^2) / \\sigma^2$, \\beta = (1 - \\mu) (1 - \\sigma^2)/ \\sigma^2; 
+    p_0 = \\nu (1 + \\nu + \\tau)^{-1} and p_1 =  \\tau (1 + \\nu + \\tau)^{-1}$, 
+
+    and $\\mu, \\sigma \\in (0,1)$ and $\\nu, \\tau > 0 $
+
+    """
 
     corresponding_gamlss: str = "BEINF"
 
