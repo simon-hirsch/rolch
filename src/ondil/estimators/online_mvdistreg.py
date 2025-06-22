@@ -1,7 +1,7 @@
 import copy
 import time
 import warnings
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numba as nb
 import numpy as np
@@ -27,6 +27,7 @@ from ..gram import (
     update_inverted_gram,
     update_y_gram,
 )
+from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..utils import calculate_effective_training_length, handle_param_dict
 
@@ -313,6 +314,28 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             n_params=self.distribution.n_params,
         )
 
+    def _process_parameter(self, attribute: Any, default: Any, name: str) -> None:
+        if isinstance(attribute, dict):
+            for p in range(self.distribution.n_params):
+                if p not in attribute.keys():
+                    warnings.warn(
+                        f"[{self.__class__.__name__}] "
+                        f"No value given for parameter {name} for distribution "
+                        f"parameter {p}. Setting default value {default}.",
+                        RuntimeWarning,
+                        stacklevel=1,
+                    )
+                    if isinstance(default, dict):
+                        attribute[p] = default[p]
+                    else:
+                        attribute[p] = default
+        else:
+            # No warning since we expect that floats/strings/ints are either the defaults
+            # Or given on purpose for all params the ame
+            attribute = {p: attribute for p in range(self.distribution.n_params)}
+
+        return attribute
+
     def make_iteration_indices(self, param: int):
 
         if (
@@ -508,6 +531,21 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                     raise ValueError("Something unexpected happened")
         return J
 
+    def _prepare_estimation_method(self, y):
+        dim = y.shape[1]
+        method = {
+            p: {k: get_estimation_method(m) for k in range(K)}
+            for p, (m, K) in enumerate(
+                zip(
+                    self._process_parameter(
+                        self.method, default="ols", name="method"
+                    ).values(),
+                    self.distribution.fitted_elements(dim).values(),
+                )
+            )
+        }
+        return method
+
     def _get_next_adr_start_values(self, theta, p, a):
         mask = self.adr_distance[p] >= self.adr_mapping_index_to_max_distance[p][a - 1]
         prev_est = self.distribution.cube_to_flat(theta[a - 1][p], p)
@@ -581,6 +619,9 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             forget=self.learning_rate, n_obs=self.n_observations
         )
         self.D = y.shape[1]
+
+        # Prepare the estimation method
+        self._method = self._prepare_estimation_method(y=y)
 
         if self.distribution._regularization == "adr":
             self.A = self.D
@@ -1080,103 +1121,27 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                             np.linalg.matrix_rank(x),
                         )
 
-                    self.x_gram[p][k][a] = self.make_gram(
-                        x=x,
-                        w=wt ** self.weight_delta[p],
-                        param=p,
+                    self.x_gram[p][k][a] = self._method[p][k].init_x_gram(
+                        X=x,
+                        weights=wt ** self.weight_delta[p],
+                        forget=self.forget[p],
                     )
-                    self.y_gram[p][k][a] = self.make_y_gram(
-                        x=x,
-                        y=wv,
-                        w=wt ** self.weight_delta[p],
-                        param=p,
-                    ).squeeze()
-                    if self.method[p] == "lasso":
-
-                        if self.lambda_targeting and (
-                            (inner_iteration + outer_iteration) > 0
-                        ):
-                            u_divisor = (inner_iteration + outer_iteration) / (
-                                1 + (inner_iteration + outer_iteration)
-                            )
-                            l_divisor = 1 / (1 + (inner_iteration + outer_iteration))
-                            # divisor = 1/2
-
-                            lambda_max = (
-                                self.lambda_max_current[p][k][a]
-                                + self.lambda_opt_current[p][k][a]
-                            ) * u_divisor
-                            lambda_min = (
-                                self.lambda_min_current[p][k][a]
-                                + self.lambda_opt_current[p][k][a]
-                            ) * l_divisor
-
-                            if (
-                                self.lambda_min_current[p][k][a]
-                                == self.lambda_opt_current[p][k][a]
-                            ):
-                                lambda_min = lambda_max * self.lambda_eps
-                            if (
-                                self.lambda_max_current[p][k][a]
-                                == self.lambda_opt_current[p][k][a]
-                            ):
-                                lambda_max = get_max_lambda(
-                                    self.x_gram[p][k][a],
-                                    self.y_gram[p][k][a],
-                                    self.is_regularized[p][k],
-                                )
-                            lambda_path = np.geomspace(
-                                lambda_max, lambda_min, self.lambda_n
-                            )
-                            start_beta_path = fast_vectorized_interpolate(
-                                lambda_path,
-                                self.lambda_path_current[p][k][a],
-                                self.beta_path[p][k][max(a - 1, 0)],
-                                ascending=True,
-                            )
-
-                        else:
-                            lambda_max = get_max_lambda(
-                                self.x_gram[p][k][a],
-                                self.y_gram[p][k][a],
-                                self.is_regularized[p][k],
-                            )
-                            lambda_min = lambda_max * self.lambda_eps
-                            lambda_path = np.geomspace(
-                                lambda_max, lambda_min, self.lambda_n
-                            )
-
-                            start_beta_path = self.beta_path[p][k][max(a - 1, 0)]
-
-                        # For model selection
-                        self.lambda_max[p][k][
-                            outer_iteration, inner_iteration, a
-                        ] = lambda_max
-                        self.lambda_min[p][k][outer_iteration, inner_iteration, a] = (
-                            lambda_max * self.lambda_eps
+                    self.y_gram[p][k][a] = (
+                        self._method[p][k]
+                        .init_y_gram(
+                            X=x,
+                            y=wv,
+                            weights=wt ** self.weight_delta[p],
+                            forget=self.forget[p],
                         )
-                        self.lambda_grid[p][k][
-                            outer_iteration, inner_iteration, a
-                        ] = lambda_path
+                        .squeeze()
+                    )
 
-                        self.lambda_max_current[p][k][a] = lambda_max
-                        self.lambda_min_current[p][k][a] = lambda_min
-                        self.lambda_path_current[p][k][a] = lambda_path
-
-                        self.beta_path[p][k][a], _ = online_coordinate_descent_path(
+                    if self._method[p][k]._path_based_method:
+                        self.beta_path[p][k][a] = self._method[p][k].fit_beta_path(
                             x_gram=self.x_gram[p][k][a],
-                            y_gram=self.y_gram[p][k][a],
-                            beta_path=start_beta_path,
-                            lambda_path=lambda_path,
+                            y_gram=self.y_gram[p][k][a][:, None],
                             is_regularized=self.is_regularized[p][k],
-                            beta_lower_bound=np.repeat(-np.inf, self.J[p][k]),
-                            beta_upper_bound=np.repeat(np.inf, self.J[p][k]),
-                            which_start_value="average",
-                            selection="cyclic",
-                            tolerance=1e-4,
-                            max_iterations=1000,
-                            alpha=1,
-                            early_stop=0,
                         )
                         eta_elem = x @ self.beta_path[p][k][a].T
                         theta_elem = self.distribution.element_link_inverse(
@@ -1193,23 +1158,18 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                             k=k,
                             param=p,
                         )
-
-                        self.lambda_opt[p][k][outer_iteration, inner_iteration, a] = (
-                            lambda_path[opt_ic]
-                        )
-                        self.lambda_opt_current[p][k][a] = lambda_path[opt_ic]
-
                         # select optimal beta and theta
                         self.beta[p][k][a] = self.beta_path[p][k][a][opt_ic, :]
                         theta[a] = self.distribution.set_theta_element(
                             theta[a], theta_elem[:, opt_ic], param=p, k=k
                         )
-                    elif self.method[p] == "ols":
-                        self.beta[p][k][a] = (
-                            self.x_gram[p][k][a] @ self.y_gram[p][k][a]
-                        )  # ).squeeze()
                     else:
-                        raise ValueError("Method not recognized")
+                        self.beta_path[p][k][a] = None
+                        self.beta[p][k][a] = self._method[p][k].fit_beta(
+                            x_gram=self.x_gram[p][k][a],
+                            y_gram=self.y_gram[p][k][a][:, None],
+                            is_regularized=self.is_regularized[p][k],
+                        )
 
                     eta[:, k] = self.get_dampened_prediction(
                         prediction=np.squeeze(x @ self.beta[p][k][a]),
