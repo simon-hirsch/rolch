@@ -5,7 +5,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction
-from ..base.distribution import ParameterShapes
+from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
 from ..link import IdentityLink, LogLink
 from ..link.matrixlinks import MatrixDiagLink
 
@@ -100,7 +100,7 @@ def partial2_V_element(y, mat_mu, mat_d, mat_v, i, j):
     return term1 + term2
 
 
-class MultivariateNormalInverseLowRank(Distribution):
+class MultivariateNormalInverseLowRank(MultivariateDistributionMixin, Distribution):
 
     corresponding_gamlss: str = None
     parameter_names = {0: "mu", 1: "diag_matrix", 2: "low_rank_matrix"}

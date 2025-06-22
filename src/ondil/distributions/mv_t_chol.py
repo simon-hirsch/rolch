@@ -7,12 +7,12 @@ import scipy.special as sp
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction
-from ..base.distribution import ParameterShapes
+from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
 from ..link import IdentityLink, LogLink, LogShiftTwoLink
 from ..link.matrixlinks import MatrixDiagTrilLink
 
 
-class MultivariateStudentTInverseCholesky(Distribution):
+class MultivariateStudentTInverseCholesky(MultivariateDistributionMixin, Distribution):
 
     # Covariance Matrix SIGMA
     # Precision Matrix OMEGA

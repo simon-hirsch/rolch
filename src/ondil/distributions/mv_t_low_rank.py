@@ -6,7 +6,7 @@ import scipy.special as sp
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction
-from ..base.distribution import ParameterShapes
+from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
 from ..link import IdentityLink, LogLink, LogShiftTwoLink
 from ..link.matrixlinks import MatrixDiagLink
 
@@ -162,7 +162,7 @@ def mv_t_lr_partial_2_dof(y, mat_mu, mat_d, mat_v, dof):
     return part1 + part2
 
 
-class MultivariateStudentTInverseLowRank(Distribution):
+class MultivariateStudentTInverseLowRank(MultivariateDistributionMixin, Distribution):
     """The multivariate $t$-distribution using a low-rank approximation (LRA)
     of the precision (inverse scale) matrix.
     """

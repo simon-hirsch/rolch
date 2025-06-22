@@ -7,12 +7,12 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction
-from ..base.distribution import ParameterShapes
+from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
 from ..link import IdentityLink, LogLink
 from ..link.matrixlinks import MatrixDiagTriuLink
 
 
-class MultivariateNormalInverseCholesky(Distribution):
+class MultivariateNormalInverseCholesky(MultivariateDistributionMixin, Distribution):
 
     # The cholesky decomposition of
     # COV = L @ L.T
@@ -199,21 +199,6 @@ class MultivariateNormalInverseCholesky(Distribution):
 
     def dl2_dpp(self, y: np.ndarray, theta: Dict, param: int = 0):
         raise NotImplementedError("Not implemented.")
-
-    def link_function(self, y, param=0):
-        return self.links[param].link(y)
-
-    def link_inverse(self, y, param=0):
-        return self.links[param].inverse(y)
-
-    def link_function_derivative(self, y, param=0):
-        return self.links[param].link_derivative(y)
-
-    def link_function_second_derivative(self, y, param=0):
-        return self.links[param].link_second_derivative(y)
-
-    def link_inverse_derivative(self, y, param=0):
-        return self.links[param].inverse_derivative(y)
 
     def element_link_function(
         self, y: np.ndarray, param: int = 0, k: int = 0, d: int = 0

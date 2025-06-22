@@ -250,6 +250,30 @@ class Distribution(ABC):
         """
 
 
+class MultivariateDistributionMixin(ABC):
+
+    # TODO: The element link functions should be defined here as well.
+
+    @staticmethod
+    @abstractmethod
+    def fitted_elements(dim: int) -> Dict[int, int]:
+        return NotImplementedError(
+            "This method should return a list of fitted elements for the multivariate distribution."
+        )
+
+    @abstractmethod
+    def element_dl1_dp1(
+        self, y: np.ndarray, theta: Dict, param: int = 0, k: int = 0, clip=False
+    ):
+        raise NotImplementedError("Not implemented in ABC")
+
+    @abstractmethod
+    def element_dl2_dp2(
+        self, y: np.ndarray, theta: Dict, param: int = 0, k: int = 0, clip=False
+    ):
+        raise NotImplementedError("Not implemented in ABC")
+
+
 class ScipyMixin(ABC):
     @property
     @abstractmethod
