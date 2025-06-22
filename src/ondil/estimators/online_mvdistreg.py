@@ -15,6 +15,7 @@ from sklearn.utils.validation import (
 )
 
 from ..base import Distribution, OndilEstimatorMixin
+from ..base.distribution import ParameterShapes
 from ..coordinate_descent import online_coordinate_descent_path
 from ..gram import (
     init_forget_vector,
@@ -324,7 +325,12 @@ class MultivariateOnlineDistributionalRegressionADRPath(
     def make_iteration_indices(self, param: int):
 
         if (
-            self.distribution._param_structure == "square_matrix"
+            self.distribution.parameter_shape
+            in [
+                ParameterShapes.SQUARE_MATRIX,
+                ParameterShapes.LOWER_TRIANGULAR_MATRIX,
+                ParameterShapes.UPPER_TRIANGULAR_MATRIX,
+            ]
         ) & self.iteration_along_diagonal:
             index = np.arange(indices_along_diagonal(self.D[param]))
         else:
@@ -523,7 +529,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             for p in range(self.distribution.n_params)
             if self.distribution._regularization_allowed[p]
         }
-        for p, structure in self.distribution._param_structure.items():
+        for p in range(self.distribution.n_params):
             if self.distribution._regularization_allowed[p]:
                 if self.distribution._regularization == "adr":
                     self.adr_distance[p] = get_adr_regularization_distance(
