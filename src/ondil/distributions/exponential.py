@@ -31,17 +31,17 @@ class DistributionExponential(ScipyMixin, Distribution):
         super().__init__(links={0: mu_link})
 
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
-        (mu,) = self.theta_to_params(theta)
+        mu, = self.theta_to_params(theta)
         return {"scale": mu}
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
-        (mu,) = self.theta_to_params(theta)
+        mu,  = self.theta_to_params(theta)
         return (y - mu) / mu**2
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
-        (mu,) = self.theta_to_params(theta)
+        mu, = self.theta_to_params(theta)
         return -1 / mu**2
 
     def dl2_dpp(
