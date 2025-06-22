@@ -149,12 +149,10 @@ class DistributionZeroAdjustedGamma(Distribution):
     def logpdf(self, y, theta):
         mu, sigma, nu = self.theta_to_params(theta)
 
-        result = (
-            np.log(1 - nu)
-            + (1 / sigma**2) * np.log(y / (mu * sigma**2))
-            - y / (mu * sigma**2)
-        )
-        -np.log(y) - spc.gammaln(1 / sigma**2)
+        result = np.log(1 - nu) + (
+            1 / sigma**2) * np.log(
+            y / (mu * sigma**2)) - y / (mu * sigma**2) -np.log(y) - spc.gammaln(
+            1 / sigma**2)
 
         return np.where(y == 0, np.log(nu), result)
 
