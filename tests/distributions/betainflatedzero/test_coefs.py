@@ -65,9 +65,6 @@ def test_beta_inflated_zero_distribution():
     )
     print("Difference in estimates: ", estimator.beta[2] - R_list.rx2("coef_R_nu"))
     assert np.allclose(estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-3), (
-        "Skew coefficients don't match"
+        "Inflation coefficients don't match"
     )
-    print("Difference in estimates: ", estimator.beta[3] - R_list.rx2("coef_R_tau"))
-    assert np.allclose(estimator.beta[3], R_list.rx2("coef_R_tau"), atol=1e-3), (
-        "Kurtosis coefficients don't match"
-    )
+    
