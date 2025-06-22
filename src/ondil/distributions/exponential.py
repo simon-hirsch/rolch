@@ -36,7 +36,7 @@ class DistributionExponential(ScipyMixin, Distribution):
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
-        mu, = self.theta_to_params(theta)
+        mu,  = self.theta_to_params(theta)
         return (y - mu) / mu**2
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
