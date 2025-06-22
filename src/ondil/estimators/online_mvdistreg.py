@@ -185,8 +185,9 @@ def get_max_lambda(x_gram: np.ndarray, y_gram: np.ndarray, is_regularized: np.nd
     return max_lambda
 
 
-def get_adr_regularization_distance(d: int, lower_diag: bool = True):
-    if lower_diag:
+# TODO: This should use the distribution.parameter_shape
+def get_adr_regularization_distance(d: int, parameter_shape: str):
+    if parameter_shape == ParameterShapes.LOWER_TRIANGULAR_MATRIX:
         j, i = np.triu_indices(d, k=0)
     else:
         i, j = np.triu_indices(d, k=0)
@@ -194,6 +195,7 @@ def get_adr_regularization_distance(d: int, lower_diag: bool = True):
     return distance
 
 
+# TODO: This should use the
 def get_low_rank_regularization_distance(d, r):
     return np.concatenate([np.repeat(i + 1, d) for i in range(r)])
 
@@ -460,18 +462,12 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         if not self.distribution._regularization_allowed[p]:
             return False
         else:
-            if self.distribution._regularization == "adr":
-                return (
-                    self.adr_distance[p][k]
-                    >= self.adr_mapping_index_to_max_distance[p][a]
-                )
-            if self.distribution._regularization == "low_rank":
-                return (
-                    self.adr_distance[p][k]
-                    >= self.adr_mapping_index_to_max_distance[p][a]
-                )
+            return (
+                self.adr_distance[p][k] >= self.adr_mapping_index_to_max_distance[p][a]
+            )
 
     # Only MV
+    # This should be using the distribution
     def prepare_adr_regularization(self) -> None:
         self.adr_distance = {}
         self.adr_mapping_index_to_max_distance = {
@@ -481,11 +477,14 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         }
         for p in range(self.distribution.n_params):
             if self.distribution._regularization_allowed[p]:
-                if self.distribution._regularization == "adr":
+                if self.distribution.parameter_shape[p] in [
+                    ParameterShapes.LOWER_TRIANGULAR_MATRIX,
+                    ParameterShapes.UPPER_TRIANGULAR_MATRIX,
+                ]:
                     self.adr_distance[p] = get_adr_regularization_distance(
-                        d=self.D, lower_diag=self.distribution._adr_lower_diag
+                        d=self.D, parameter_shape=self.distribution.parameter_shape[p]
                     )
-                if self.distribution._regularization == "low_rank":
+                if self.distribution.parameter_shape[p] in [ParameterShapes.MATRIX]:
                     self.adr_distance[p] = get_low_rank_regularization_distance(
                         d=self.D, r=self.distribution.rank
                     )
