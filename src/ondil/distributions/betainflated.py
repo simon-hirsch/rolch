@@ -26,6 +26,13 @@ class DistributionBetaInflated(Distribution):
 
     and $\\mu, \\sigma \\in (0,1)$ and $\\nu, \\tau > 0 $
 
+    The parameter tuple $\\theta$ in Python is defined as:
+
+    $\\theta = (\\theta_0, \\theta_1, \\theta_2, \\theta_3) = (\\mu, \\sigma, \\nu, \\tau)$ 
+    where $\\mu = \\theta_0$ is the location parameter, $\\sigma = \\theta_1$ is the scale parameter 
+    and $\\nu, \\tau = \\theta_2, \\theta_3$ are shape parameters which together define the inflation at 0 and 1
+
+    This distribution corresponds to the BEINF() distribution in GAMLSS.
     """
 
     corresponding_gamlss: str = "BEINF"
