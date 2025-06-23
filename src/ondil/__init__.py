@@ -33,6 +33,7 @@ from .distributions import (
     DistributionT,
     DistributionReverseGumbel,
     DistributionInverseGamma,
+    DistributionBetaInflatedZero, 
 )
 from .error import OutOfSupportError
 from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
@@ -113,6 +114,7 @@ __all__ = [
     "DistributionInverseGaussian",
     "DistributionInverseGamma",
     "DistributionReverseGumbel",
+    "DistributionBetaInflatedZero",
     "init_forget_vector",
     "init_gram",
     "update_gram",
