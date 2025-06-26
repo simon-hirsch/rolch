@@ -230,7 +230,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
         dampen_estimation: bool | int = False,
-        generic_scoring: bool = True,
         debug: bool = False,
         overshoot_correction: Dict | None = None,
     ):
@@ -286,8 +285,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         self.abs_tol_inner = 1e-3
         self.rel_tol_outer = 1e-3
         self.abs_tol_outer = 1e-3
-
-        self.generic_scoring = generic_scoring
 
         # For pretty printing.
         # TODO: This can be moved to top classes
