@@ -23,6 +23,7 @@ from .distributions import (
     DistributionExponential,
     DistributionGamma,
     DistributionGumbel,
+    DistributionInverseGamma,
     DistributionInverseGaussian,
     DistributionJSU,
     DistributionLogistic,
@@ -30,12 +31,16 @@ from .distributions import (
     DistributionLogNormalMedian,
     DistributionNormal,
     DistributionNormalMeanVariance,
-    DistributionT,
     DistributionReverseGumbel,
-    DistributionInverseGamma,
+    DistributionT,
 )
 from .error import OutOfSupportError
-from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
+from .estimators import (
+    MultivariateOnlineDistributionalRegressionPath,
+    OnlineGamlss,
+    OnlineLasso,
+    OnlineLinearModel,
+)
 from .gram import (
     init_forget_vector,
     init_gram,

@@ -167,7 +167,7 @@ def get_low_rank_regularization_distance(d, r):
     return np.concatenate([np.repeat(i + 1, d) for i in range(r)])
 
 
-class MultivariateOnlineDistributionalRegressionADRPath(
+class MultivariateOnlineDistributionalRegressionPath(
     OndilEstimatorMixin, RegressorMixin, BaseEstimator
 ):
 
