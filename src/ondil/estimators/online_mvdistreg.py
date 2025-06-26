@@ -18,6 +18,7 @@ from ..base import Distribution, OndilEstimatorMixin
 from ..base.distribution import ParameterShapes
 from ..design_matrix import make_intercept
 from ..gram import init_forget_vector
+from ..information_criteria import InformationCriterion
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..utils import calculate_effective_training_length, handle_param_dict
@@ -135,32 +136,6 @@ def get_J_from_equation(self, X: np.ndarray):
         else:
             raise ValueError("Something unexpected happened")
     return J
-
-
-def information_criteria_likelihood(
-    log_likelihood: Union[float, np.ndarray],
-    n_observations: Union[float, np.ndarray],
-    n_parameters: Union[float, np.ndarray],
-    ic: Literal["aic", "aicc", "bic", "hqc"],
-) -> np.ndarray:
-    if ic == "aic":
-        value = 2 * n_parameters - 2 * log_likelihood
-    elif ic == "aicc":
-        value = (
-            2 * n_parameters
-            - 2 * log_likelihood
-            + (
-                (2 * n_parameters**2 + 2 * n_parameters)
-                / (n_observations - n_parameters - 1)
-            )
-        )
-    elif ic == "bic":
-        value = n_parameters * np.log(n_observations) - 2 * log_likelihood
-    elif ic == "hqc":
-        value = n_parameters * np.log(np.log(n_observations)) - 2 * log_likelihood
-    else:
-        raise ValueError("Did not recognize ic.")
-    return value
 
 
 @nb.njit()
@@ -782,12 +757,11 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                 self.early_stopping_n_params = np.array(
                     [self.count_nonzero_coef(self.beta, a) for a in range(self.A)]
                 )
-                self.early_stopping_ic = information_criteria_likelihood(
-                    log_likelihood=self.current_likelihood,
+                self.early_stopping_ic = InformationCriterion(
                     n_observations=self.n_effective_training,
                     n_parameters=self.early_stopping_n_params,
-                    ic=self.early_stopping_criteria,
-                )
+                    criterion=self.early_stopping_criteria,
+                ).from_ll(self.current_likelihood)
 
                 self.improvement_abs = -np.diff(self.early_stopping_ic)
                 self.improvement_abs_scaled = self.improvement_abs
@@ -1170,10 +1144,11 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             nonzero = nonzero + self.count_coef_to_be_fitted(
                 outer_iteration, inner_iteration, adr=a, param=param, k=k
             )
-
-            ic = information_criteria_likelihood(
-                approx_ll, self.n_observations, nonzero, self.ic
-            )
+            ic = InformationCriterion(
+                n_observations=self.n_observations,
+                n_parameters=nonzero,
+                criterion=self.ic,
+            ).from_ll(log_likelihood=approx_ll)
             self.model_selection[param][a][k] = {
                 "ll": approx_ll,
                 "non_zero": nonzero,
@@ -1254,12 +1229,12 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             nonzero = nonzero + self.count_coef_to_be_fitted(
                 outer_iteration, inner_iteration, adr=a, param=param, k=k
             )
-
-            ic = information_criteria_likelihood(
-                approx_ll, self.n_observations, nonzero, self.ic
-            )
+            ic = InformationCriterion(
+                n_observations=self.n_observations,
+                n_parameters=nonzero,
+                criterion=self.ic,
+            ).from_ll(log_likelihood=approx_ll)
             opt_ic = np.argmin(ic)
-
             self.model_selection[param][a][k] = {
                 "ll": approx_ll,
                 "non_zero": nonzero,
@@ -1617,12 +1592,11 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                 self.early_stopping_n_params = np.array(
                     [self.count_nonzero_coef(self.beta, a) for a in range(self.A)]
                 )
-                self.early_stopping_ic = information_criteria_likelihood(
-                    log_likelihood=self.current_likelihood,
+                self.early_stopping_ic = InformationCriterion(
                     n_observations=self.n_effective_training,
                     n_parameters=self.early_stopping_n_params,
-                    ic=self.early_stopping_criteria,
-                )
+                    criterion=self.early_stopping_criteria,
+                ).from_ll(self.current_likelihood)
 
                 self.improvement_abs = -np.diff(self.early_stopping_ic)
                 self.improvement_abs_scaled = self.improvement_abs
