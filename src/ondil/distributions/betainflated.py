@@ -6,6 +6,7 @@ import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import LogitLink, LogLink
+from ..types import ParameterShapes
 
 
 class DistributionBetaInflated(Distribution):
@@ -21,6 +22,12 @@ class DistributionBetaInflated(Distribution):
         3: (np.nextafter(0, 1), np.inf),  ##
     }
     distribution_support = (0, 1)
+    parameter_shape = {
+        0: ParameterShapes.SCALAR,
+        1: ParameterShapes.SCALAR,
+        2: ParameterShapes.SCALAR,
+        3: ParameterShapes.SCALAR,
+    }
 
     def __init__(
         self,
@@ -238,11 +245,11 @@ class DistributionBetaInflated(Distribution):
             np.where(y == 0, nu, np.where(y == 1, denom, 0)),
         )
 
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             log_result = np.log(raw_cdf / denom)
 
         log_result = np.where(y < 0, -np.inf, log_result)
-        log_result = np.where(y > 1, 0.0, log_result)  
+        log_result = np.where(y > 1, 0.0, log_result)
 
         return log_result
 

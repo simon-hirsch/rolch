@@ -1,4 +1,5 @@
 import numpy as np
+
 from ondil import DistributionLogNormal, OnlineGamlss
 
 file = "tests/data/mtcars.csv"
@@ -33,7 +34,6 @@ def test_lognormal_distribution():
         method="ols",
         scale_inputs=False,
         fit_intercept=True,
-        rss_tol_inner=10,
     )
 
     estimator.fit(X=X, y=y)

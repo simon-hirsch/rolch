@@ -1,9 +1,11 @@
 from typing import Optional, Tuple
+
 import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
 from ..link import IdentityLink, LogLink
+from ..types import ParameterShapes
 
 
 class DistributionReverseGumbel(ScipyMixin, Distribution):
@@ -24,7 +26,14 @@ class DistributionReverseGumbel(ScipyMixin, Distribution):
 
     corresponding_gamlss: str = "RG"
     parameter_names = {0: "mu", 1: "sigma"}
-    parameter_support = {0: (-np.inf, np.inf), 1: (np.nextafter(0, 1), np.inf)}
+    parameter_support = {
+        0: (-np.inf, np.inf),
+        1: (np.nextafter(0, 1), np.inf),
+    }
+    parameter_shape = {
+        0: ParameterShapes.SCALAR,
+        1: ParameterShapes.SCALAR,
+    }
     distribution_support = (-np.inf, np.inf)
     scipy_dist = st.gumbel_r
     scipy_names = {"mu": "loc", "sigma": "scale"}
@@ -84,4 +93,3 @@ class DistributionReverseGumbel(ScipyMixin, Distribution):
         mu_init = np.mean(y) + gamma_const * sigma_init
         initial_params = [mu_init, sigma_init]
         return np.tile(initial_params, (y.shape[0], 1))
-
