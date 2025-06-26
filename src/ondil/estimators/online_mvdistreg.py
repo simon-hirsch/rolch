@@ -258,10 +258,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         self.early_stopping_abs_tol = early_stopping_abs_tol
         self.early_stopping_rel_tol = early_stopping_rel_tol
 
-        # TODO: This has currently no effect.
-        # TODO: Allow for regularized intercepts.
-        self.regularize_intercept = {0: False, 1: True}
-
         # Scaler
         self.scale_inputs = scale_inputs
         self.scaler = OnlineScaler(
@@ -348,79 +344,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             index = np.arange(self.K[param])
 
         return index
-
-    ## TODO: This needs to be handled by the estimation method!
-    def make_gram(self, x: np.ndarray, w: np.ndarray, param: int) -> np.ndarray:
-        """
-        Make the Gram matrix.
-
-        Args:
-            x (np.ndarray): Covariate matrix.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Gram matrix.
-        """
-        if self.method[param] == "ols":
-            return init_inverted_gram(X=x, w=w, forget=self.forget[param])
-        elif self.method[param] == "lasso":
-            return init_gram(X=x, w=w, forget=self.forget[param])
-
-    def make_y_gram(
-        self, x: np.ndarray, y: np.ndarray, w: np.ndarray, param: int
-    ) -> np.ndarray:
-        """
-        Make the Gram matrix for the response variable.
-
-        Args:
-            x (np.ndarray): Covariate matrix.
-            y (np.ndarray): Response variable.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Gram matrix for the response variable.
-        """
-        return init_y_gram(X=x, y=y, w=w, forget=self.forget[param])
-
-    def update_gram(
-        self, gram: np.ndarray, x: np.ndarray, w: np.ndarray, param: int
-    ) -> np.ndarray:
-        """
-        Update the Gram matrix.
-
-        Args:
-            gram (np.ndarray): Current Gram matrix.
-            x (np.ndarray): Covariate matrix.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Updated Gram matrix.
-        """
-        if self.method[param] == "ols":
-            return update_inverted_gram(gram, X=x, w=w, forget=self.forget[param])
-        if self.method[param] == "lasso":
-            return update_gram(gram, X=x, w=w, forget=self.forget[param])
-
-    def update_y_gram(
-        self, gram: np.ndarray, x: np.ndarray, y: np.ndarray, w: np.ndarray, param: int
-    ) -> np.ndarray:
-        """
-        Update the Gram matrix for the response variable.
-
-        Args:
-            gram (np.ndarray): Current Gram matrix for the response variable.
-            x (np.ndarray): Covariate matrix.
-            y (np.ndarray): Response variable.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Updated Gram matrix for the response variable.
-        """
-        return update_y_gram(gram, X=x, y=y, w=w, forget=self.forget[param])
 
     def _make_matrix_or_intercept(
         self, n_observations: int, x: np.ndarray, add_intercept: bool, param: int
