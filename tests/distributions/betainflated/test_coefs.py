@@ -1,5 +1,6 @@
 import numpy as np
 import rpy2.robjects as robjects
+
 from ondil import DistributionBetaInflated, OnlineGamlss
 
 
@@ -53,23 +54,22 @@ def test_beta_distribution():
         method="ols",
         scale_inputs=False,
         fit_intercept=True,
-        rss_tol_inner=10,
     )
 
     estimator.fit(X=X, y=y)
     print("Difference in estimates: ", estimator.beta[0] - R_list.rx2("coef_R_mu"))
-    assert np.allclose(estimator.beta[0], R_list.rx2("coef_R_mu")), (
-        "Location coefficients don't match"
-    )
+    assert np.allclose(
+        estimator.beta[0], R_list.rx2("coef_R_mu")
+    ), "Location coefficients don't match"
     print("Difference in estimates: ", estimator.beta[1] - R_list.rx2("coef_R_sg"))
-    assert np.allclose(estimator.beta[1], R_list.rx2("coef_R_sg")), (
-        "Scale coefficients don't match"
-    )
+    assert np.allclose(
+        estimator.beta[1], R_list.rx2("coef_R_sg")
+    ), "Scale coefficients don't match"
     print("Difference in estimates: ", estimator.beta[2] - R_list.rx2("coef_R_nu"))
-    assert np.allclose(estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-3), (
-        "Skew coefficients don't match"
-    )
+    assert np.allclose(
+        estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-3
+    ), "Skew coefficients don't match"
     print("Difference in estimates: ", estimator.beta[3] - R_list.rx2("coef_R_tau"))
-    assert np.allclose(estimator.beta[3], R_list.rx2("coef_R_tau"), atol=1e-3), (
-        "Kurtosis coefficients don't match"
-    )
+    assert np.allclose(
+        estimator.beta[3], R_list.rx2("coef_R_tau"), atol=1e-3
+    ), "Kurtosis coefficients don't match"

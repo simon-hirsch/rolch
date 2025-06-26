@@ -1,7 +1,8 @@
 # %%
 import numpy as np
 import rpy2.robjects as robjects
-from ondil import OnlineGamlss, DistributionExponential
+
+from ondil import DistributionExponential, OnlineGamlss
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
@@ -39,11 +40,10 @@ def test_exponential_distribution():
         method="ols",
         scale_inputs=False,
         fit_intercept=True,
-        rss_tol_inner=10,
     )
 
     estimator.fit(X=X, y=y)
 
-    assert np.allclose(estimator.beta[0], coef_R_mu, atol=0.0001), (
-        "Location coefficients don't match"
-    )
+    assert np.allclose(
+        estimator.beta[0], coef_R_mu, atol=0.0001
+    ), "Location coefficients don't match"
