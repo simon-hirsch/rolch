@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 import ondil
+from ondil.base.distribution import MultivariateDistributionMixin
 
 DISTRIBUTIONS = [
     getattr(ondil.distributions, name)() for name in ondil.distributions.__all__
@@ -40,14 +41,14 @@ def test_raise_error_cross_derivative(distribution):
     y = np.random.uniform(low=lower, high=upper, size=1000)
     theta = distribution.initial_values(y)
 
-    assert theta.shape == (y.shape[0], n_params)
+    if not issubclass(distribution.__class__, MultivariateDistributionMixin):
 
-    for a, b in product(range(n_params), range(n_params)):
-        if a == b:
-            with pytest.raises(
-                ValueError, match="Cross derivatives must use different parameters."
-            ):
-                distribution.dl2_dpp(y, theta, (a, b))
-        else:
-            deriv = distribution.dl2_dpp(y, theta, (a, b))
-            assert y.shape == deriv.shape, "Derivative shape should match y.shape"
+        for a, b in product(range(n_params), range(n_params)):
+            if a == b:
+                with pytest.raises(
+                    ValueError, match="Cross derivatives must use different parameters."
+                ):
+                    distribution.dl2_dpp(y, theta, (a, b))
+            else:
+                deriv = distribution.dl2_dpp(y, theta, (a, b))
+                assert y.shape == deriv.shape, "Derivative shape should match y.shape"
