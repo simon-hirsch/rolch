@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 import ondil
-from ondil.base.distribution import MultivariateDistributionMixin
+
+from ..utils import get_univariate_distributions
 
 DISTRIBUTIONS = [
     getattr(ondil.distributions, name)() for name in ondil.distributions.__all__
@@ -12,7 +13,9 @@ DISTRIBUTIONS = [
 
 
 @pytest.mark.parametrize(
-    "distribution", DISTRIBUTIONS, ids=lambda dist: dist.__class__.__name__
+    "distribution",
+    get_univariate_distributions(),
+    ids=lambda dist: dist.__class__.__name__,
 )
 def test_initial_values(distribution):
     n_params = distribution.n_params
@@ -30,7 +33,9 @@ def test_initial_values(distribution):
 
 
 @pytest.mark.parametrize(
-    "distribution", DISTRIBUTIONS, ids=lambda dist: dist.__class__.__name__
+    "distribution",
+    get_univariate_distributions(),
+    ids=lambda dist: dist.__class__.__name__,
 )
 def test_raise_error_cross_derivative(distribution):
     n_params = distribution.n_params
@@ -41,14 +46,12 @@ def test_raise_error_cross_derivative(distribution):
     y = np.random.uniform(low=lower, high=upper, size=1000)
     theta = distribution.initial_values(y)
 
-    if not issubclass(distribution.__class__, MultivariateDistributionMixin):
-
-        for a, b in product(range(n_params), range(n_params)):
-            if a == b:
-                with pytest.raises(
-                    ValueError, match="Cross derivatives must use different parameters."
-                ):
-                    distribution.dl2_dpp(y, theta, (a, b))
-            else:
-                deriv = distribution.dl2_dpp(y, theta, (a, b))
-                assert y.shape == deriv.shape, "Derivative shape should match y.shape"
+    for a, b in product(range(n_params), range(n_params)):
+        if a == b:
+            with pytest.raises(
+                ValueError, match="Cross derivatives must use different parameters."
+            ):
+                distribution.dl2_dpp(y, theta, (a, b))
+        else:
+            deriv = distribution.dl2_dpp(y, theta, (a, b))
+            assert y.shape == deriv.shape, "Derivative shape should match y.shape"
