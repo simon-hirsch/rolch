@@ -87,6 +87,7 @@ __all__ = [
     "OnlineGamlss",
     "OnlineLinearModel",
     "OnlineLasso",
+    "MultivariateOnlineDistributionalRegressionPath",
     "LassoPathMethod",
     "RidgeMethod",
     "ElasticNetPathMethod",
