@@ -6,10 +6,10 @@ import numba as nb
 import numpy as np
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction
-from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
+from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
 from ..link import IdentityLink, LogLink
 from ..link.matrixlinks import MatrixDiagTriuLink
+from ..types import ParameterShapes
 
 
 class MultivariateNormalInverseCholesky(MultivariateDistributionMixin, Distribution):

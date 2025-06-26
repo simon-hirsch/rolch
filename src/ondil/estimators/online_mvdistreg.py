@@ -15,12 +15,12 @@ from sklearn.utils.validation import (
 )
 
 from ..base import Distribution, OndilEstimatorMixin
-from ..base.distribution import ParameterShapes
 from ..design_matrix import make_intercept
 from ..gram import init_forget_vector
 from ..information_criteria import InformationCriterion
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
+from ..types import ParameterShapes
 from ..utils import calculate_effective_training_length, handle_param_dict
 
 try:

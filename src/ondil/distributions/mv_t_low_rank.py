@@ -5,10 +5,10 @@ import numpy as np
 import scipy.special as sp
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction
-from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
+from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
 from ..link import IdentityLink, LogLink, LogShiftTwoLink
 from ..link.matrixlinks import MatrixDiagLink
+from ..types import ParameterShapes
 
 
 def batched_log_lilkelihood_t_precision_low_rank_fast(y, mu, mat_d, mat_v, dof):

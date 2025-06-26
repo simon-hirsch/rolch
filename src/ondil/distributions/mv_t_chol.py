@@ -6,10 +6,10 @@ import numpy as np
 import scipy.special as sp
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction
-from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
+from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
 from ..link import IdentityLink, LogLink, LogShiftTwoLink
 from ..link.matrixlinks import MatrixDiagTrilLink
+from ..types import ParameterShapes
 
 
 class MultivariateStudentTInverseCholesky(MultivariateDistributionMixin, Distribution):

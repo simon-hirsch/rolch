@@ -1,6 +1,5 @@
 import warnings
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import Dict, Optional, Tuple
 
 import numpy as np
@@ -9,16 +8,6 @@ import scipy.stats as st
 
 from ..warnings import OutOfSupportWarning
 from .link import LinkFunction
-
-
-class ParameterShapes(Enum):
-    SCALAR = "A scalar parameter N x 1"
-    VECTOR = "A vector parameter N x D"
-    MATRIX = "A matrix parameter N x D x M"
-    SQUARE_MATRIX = "A matrix parameter N x D x D"
-    DIAGONAL_MATRIX = "A diagonal matrix N x D x D."
-    LOWER_TRIANGULAR_MATRIX = "A lower triangular matrix N x D x D."
-    UPPER_TRIANGULAR_MATRIX = "A upper triangular matrix N x D x D."
 
 
 class Distribution(ABC):
@@ -32,11 +21,17 @@ class Distribution(ABC):
     @property
     def corresponding_gamlss(self) -> str | None:
         """The name of the corresponding implementation in 'gamlss.dist' R package."""
-        pass
+        return None
 
     @property
     @abstractmethod
     def parameter_names(self) -> dict:
+        """Parameter name for each column of theta."""
+        pass
+
+    @property
+    @abstractmethod
+    def parameter_shape(self) -> dict:
         """Parameter name for each column of theta."""
         pass
 
@@ -89,12 +84,12 @@ class Distribution(ABC):
                 )
 
             # TODO: Add valid shapes to all link functions.
-            # if self.parameter_shape[param] not in self.links[param].valid_shapes:
-            #     raise ValueError(
-            #         f"Link function does not match parameter structure for parameter {param}. \n"
-            #         f"Parameter structure is {self.parameter_shape[param]}. \n"
-            #         f"Link function supports {self.links[param].valid_shapes}"
-            #     )
+            if self.parameter_shape[param] not in self.links[param].valid_shapes:
+                raise ValueError(
+                    f"Link function does not match parameter structure for parameter {param}. \n"
+                    f"Parameter structure is {self.parameter_shape[param]}. \n"
+                    f"Link function supports {self.links[param].valid_shapes}"
+                )
 
     def _validate_dln_dpn_inputs(
         self, y: np.ndarray, theta: np.ndarray, param: int

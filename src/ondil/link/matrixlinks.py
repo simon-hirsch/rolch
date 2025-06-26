@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 
 from ..base import LinkFunction
+from ..types import ParameterShapes
 
 
 class MatrixDiagLink(LinkFunction):
@@ -10,10 +11,11 @@ class MatrixDiagLink(LinkFunction):
     Wraps a link functions to be applied only on the diagonal of a square matrix.
     """
 
+    valid_shapes = [ParameterShapes.DIAGONAL_MATRIX]
+
     def __init__(self, diag_link: LinkFunction, other_val=0):
         self.diag_link = diag_link
         self.other_val = other_val
-        self._valid_structures = ["square_matrix"]
 
     @property
     def link_support(self) -> Tuple[float, float]:
@@ -92,12 +94,11 @@ class MatrixDiagTriuLink(LinkFunction):
     Wraps two link functions to be applied on the diagonal and the upper diagonal of a square matrix.
     """
 
+    valid_shapes = [ParameterShapes.UPPER_TRIANGULAR_MATRIX]
+
     def __init__(self, diag_link: LinkFunction, triu_link: LinkFunction):
         self.diag_link = diag_link
         self.triu_link = triu_link
-
-        # For checking
-        self._valid_structures = ["square_matrix"]
 
     @property
     def link_support(self) -> Tuple[float, float]:
@@ -182,12 +183,11 @@ class MatrixDiagTriuLink(LinkFunction):
 
 class MatrixDiagTrilLink(LinkFunction):
 
+    valid_shapes = [ParameterShapes.LOWER_TRIANGULAR_MATRIX]
+
     def __init__(self, diag_link: LinkFunction, tril_link: LinkFunction):
         self.diag_link = diag_link
         self.tril_link = tril_link
-
-        # For checking
-        self._valid_structures = ["square_matrix"]
 
     @property
     def link_support(self) -> Tuple[float, float]:

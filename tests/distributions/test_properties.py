@@ -5,7 +5,7 @@ import pytest
 
 import ondil
 
-from ..utils import get_univariate_distributions
+from .utils import get_univariate_distributions
 
 DISTRIBUTIONS = [
     getattr(ondil.distributions, name)() for name in ondil.distributions.__all__

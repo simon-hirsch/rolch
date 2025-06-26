@@ -4,10 +4,10 @@ from typing import Dict
 import numpy as np
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction
-from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
+from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
 from ..link import IdentityLink, LogLink
 from ..link.matrixlinks import MatrixDiagLink
+from ..types import ParameterShapes
 
 
 def batched_log_lilkelihood_normal_precision_low_rank(y, mu, mat_d, mat_v):
