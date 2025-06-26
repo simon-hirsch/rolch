@@ -16,17 +16,8 @@ from sklearn.utils.validation import (
 
 from ..base import Distribution, OndilEstimatorMixin
 from ..base.distribution import ParameterShapes
-from ..coordinate_descent import online_coordinate_descent_path
 from ..design_matrix import make_intercept
-from ..gram import (
-    init_forget_vector,
-    init_gram,
-    init_inverted_gram,
-    init_y_gram,
-    update_gram,
-    update_inverted_gram,
-    update_y_gram,
-)
+from ..gram import init_forget_vector
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..utils import calculate_effective_training_length, handle_param_dict
