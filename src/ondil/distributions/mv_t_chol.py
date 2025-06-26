@@ -248,15 +248,11 @@ class MultivariateStudentTInverseCholesky(MultivariateDistributionMixin, Distrib
             out[:, i[1], i[0]] = x
             return out
 
-    def log_likelihood(self, y: np.ndarray, theta: Dict[int, np.ndarray]):
-        loc, chol, dof = self.theta_to_params(theta)
-        return batched_log_likelihood(y, loc, chol, dof)
-
     def cdf(self, y, theta):
         raise NotImplementedError("Not implemented")
 
     def pdf(self, y, theta):
-        raise NotImplementedError("Not implemented")
+        return np.exp(self.logpdf(y, theta))
 
     def ppf(self, q, theta):
         raise NotImplementedError("Not implemented")
@@ -268,7 +264,8 @@ class MultivariateStudentTInverseCholesky(MultivariateDistributionMixin, Distrib
         raise NotImplementedError("Not implemented")
 
     def logpdf(self, y, theta):
-        raise NotImplementedError("Not implemented")
+        loc, chol, dof = self.theta_to_params(theta)
+        return batched_log_likelihood(y, loc, chol, dof)
 
     def logpmf(self, y, theta):
         raise NotImplementedError("Not implemented")

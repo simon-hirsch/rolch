@@ -544,7 +544,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         # Current information
         self.current_likelihood = np.array(
             [
-                np.sum(self.distribution.log_likelihood(y=y, theta=theta[a]))
+                np.sum(self.distribution.logpdf(y=y, theta=theta[a]))
                 for a in range(self.A)
             ]
         )
@@ -1037,7 +1037,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                         )
 
                 self.current_likelihood[a] = (
-                    self.distribution.log_likelihood(y, theta=theta[a]) * weights_forget
+                    self.distribution.logpdf(y, theta=theta[a]) * weights_forget
                 ).sum()
 
             ## Check the most important convergence measures here now
@@ -1111,9 +1111,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             theta_ms = self.distribution.set_theta_element(
                 theta_ll, theta_fit[:, 0], param=param, k=k
             )
-            approx_ll = np.sum(
-                self.distribution.log_likelihood(y, theta_ll) * weights_forget
-            )
+            approx_ll = np.sum(self.distribution.logpdf(y, theta_ll) * weights_forget)
             approx_ll = np.repeat(approx_ll, 100)
             for l_idx in range(1, self.lambda_n):
                 theta_ms = self.distribution.set_theta_element(
@@ -1127,7 +1125,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                     )
                 else:
                     approx_ll[l_idx] = np.sum(
-                        self.distribution.log_likelihood(
+                        self.distribution.logpdf(
                             y,
                             theta=theta_ms,
                         )
@@ -1189,9 +1187,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             theta_ms = self.distribution.set_theta_element(
                 theta_ll, theta_fit[:, 0], param=param, k=k
             )
-            approx_ll = np.sum(
-                self.distribution.log_likelihood(y, theta_ll) * weights_forget
-            )
+            approx_ll = np.sum(self.distribution.logpdf(y, theta_ll) * weights_forget)
             approx_ll = np.repeat(approx_ll, 100)
             for l_idx in range(1, self.lambda_n):
                 theta_ms = self.distribution.set_theta_element(
@@ -1209,7 +1205,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                     )
                 else:
                     approx_ll[l_idx] = np.sum(
-                        self.distribution.log_likelihood(
+                        self.distribution.logpdf(
                             y,
                             theta=theta_ms,
                         )
@@ -1325,7 +1321,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         self.current_likelihood = self.old_likelihood_discounted + np.array(
             [
                 np.sum(
-                    self.distribution.log_likelihood(y=y, theta=theta[a])
+                    self.distribution.logpdf(y=y, theta=theta[a])
                     * init_forget_vector(self.learning_rate, y.shape[0])
                 )
                 for a in range(self.A)
@@ -1457,10 +1453,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                     )
 
                 self.current_likelihood[a] = (
-                    np.sum(
-                        self.distribution.log_likelihood(y, theta=theta[a])
-                        * weights_forget
-                    )
+                    np.sum(self.distribution.logpdf(y, theta=theta[a]) * weights_forget)
                     + self.old_likelihood_discounted[a]
                 )
 
