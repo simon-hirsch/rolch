@@ -15,20 +15,12 @@ from sklearn.utils.validation import (
 )
 
 from ..base import Distribution, OndilEstimatorMixin
-from ..base.distribution import ParameterShapes
-from ..coordinate_descent import online_coordinate_descent_path
 from ..design_matrix import make_intercept
-from ..gram import (
-    init_forget_vector,
-    init_gram,
-    init_inverted_gram,
-    init_y_gram,
-    update_gram,
-    update_inverted_gram,
-    update_y_gram,
-)
+from ..gram import init_forget_vector
+from ..information_criteria import InformationCriterion
 from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
+from ..types import ParameterShapes
 from ..utils import calculate_effective_training_length, handle_param_dict
 
 try:
@@ -147,32 +139,6 @@ def get_J_from_equation(self, X: np.ndarray):
     return J
 
 
-def information_criteria_likelihood(
-    log_likelihood: Union[float, np.ndarray],
-    n_observations: Union[float, np.ndarray],
-    n_parameters: Union[float, np.ndarray],
-    ic: Literal["aic", "aicc", "bic", "hqc"],
-) -> np.ndarray:
-    if ic == "aic":
-        value = 2 * n_parameters - 2 * log_likelihood
-    elif ic == "aicc":
-        value = (
-            2 * n_parameters
-            - 2 * log_likelihood
-            + (
-                (2 * n_parameters**2 + 2 * n_parameters)
-                / (n_observations - n_parameters - 1)
-            )
-        )
-    elif ic == "bic":
-        value = n_parameters * np.log(n_observations) - 2 * log_likelihood
-    elif ic == "hqc":
-        value = n_parameters * np.log(np.log(n_observations)) - 2 * log_likelihood
-    else:
-        raise ValueError("Did not recognize ic.")
-    return value
-
-
 @nb.njit()
 def get_max_lambda(x_gram: np.ndarray, y_gram: np.ndarray, is_regularized: np.ndarray):
     if np.all(is_regularized):
@@ -202,7 +168,7 @@ def get_low_rank_regularization_distance(d, r):
     return np.concatenate([np.repeat(i + 1, d) for i in range(r)])
 
 
-class MultivariateOnlineDistributionalRegressionADRPath(
+class MultivariateOnlineDistributionalRegressionPath(
     OndilEstimatorMixin, RegressorMixin, BaseEstimator
 ):
 
@@ -231,7 +197,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         lambda_n: int = 100,
         lambda_eps: float = 1e-4,
         dampen_estimation: bool | int = False,
-        generic_scoring: bool = True,
         debug: bool = False,
         overshoot_correction: Dict | None = None,
     ):
@@ -260,10 +225,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         self.early_stopping_abs_tol = early_stopping_abs_tol
         self.early_stopping_rel_tol = early_stopping_rel_tol
 
-        # TODO: This has currently no effect.
-        # TODO: Allow for regularized intercepts.
-        self.regularize_intercept = {0: False, 1: True}
-
         # Scaler
         self.scale_inputs = scale_inputs
         self.scaler = OnlineScaler(
@@ -287,8 +248,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         self.abs_tol_inner = 1e-3
         self.rel_tol_outer = 1e-3
         self.abs_tol_outer = 1e-3
-
-        self.generic_scoring = generic_scoring
 
         # For pretty printing.
         # TODO: This can be moved to top classes
@@ -352,79 +311,6 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             index = np.arange(self.K[param])
 
         return index
-
-    ## TODO: This needs to be handled by the estimation method!
-    def make_gram(self, x: np.ndarray, w: np.ndarray, param: int) -> np.ndarray:
-        """
-        Make the Gram matrix.
-
-        Args:
-            x (np.ndarray): Covariate matrix.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Gram matrix.
-        """
-        if self.method[param] == "ols":
-            return init_inverted_gram(X=x, w=w, forget=self.forget[param])
-        elif self.method[param] == "lasso":
-            return init_gram(X=x, w=w, forget=self.forget[param])
-
-    def make_y_gram(
-        self, x: np.ndarray, y: np.ndarray, w: np.ndarray, param: int
-    ) -> np.ndarray:
-        """
-        Make the Gram matrix for the response variable.
-
-        Args:
-            x (np.ndarray): Covariate matrix.
-            y (np.ndarray): Response variable.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Gram matrix for the response variable.
-        """
-        return init_y_gram(X=x, y=y, w=w, forget=self.forget[param])
-
-    def update_gram(
-        self, gram: np.ndarray, x: np.ndarray, w: np.ndarray, param: int
-    ) -> np.ndarray:
-        """
-        Update the Gram matrix.
-
-        Args:
-            gram (np.ndarray): Current Gram matrix.
-            x (np.ndarray): Covariate matrix.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Updated Gram matrix.
-        """
-        if self.method[param] == "ols":
-            return update_inverted_gram(gram, X=x, w=w, forget=self.forget[param])
-        if self.method[param] == "lasso":
-            return update_gram(gram, X=x, w=w, forget=self.forget[param])
-
-    def update_y_gram(
-        self, gram: np.ndarray, x: np.ndarray, y: np.ndarray, w: np.ndarray, param: int
-    ) -> np.ndarray:
-        """
-        Update the Gram matrix for the response variable.
-
-        Args:
-            gram (np.ndarray): Current Gram matrix for the response variable.
-            x (np.ndarray): Covariate matrix.
-            y (np.ndarray): Response variable.
-            w (np.ndarray): Weight matrix.
-            param (int): Parameter index.
-
-        Returns:
-            np.ndarray: Updated Gram matrix for the response variable.
-        """
-        return update_y_gram(gram, X=x, y=y, w=w, forget=self.forget[param])
 
     def _make_matrix_or_intercept(
         self, n_observations: int, x: np.ndarray, add_intercept: bool, param: int
@@ -659,7 +545,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         # Current information
         self.current_likelihood = np.array(
             [
-                np.sum(self.distribution.log_likelihood(y=y, theta=theta[a]))
+                np.sum(self.distribution.logpdf(y=y, theta=theta[a]))
                 for a in range(self.A)
             ]
         )
@@ -872,12 +758,11 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                 self.early_stopping_n_params = np.array(
                     [self.count_nonzero_coef(self.beta, a) for a in range(self.A)]
                 )
-                self.early_stopping_ic = information_criteria_likelihood(
-                    log_likelihood=self.current_likelihood,
+                self.early_stopping_ic = InformationCriterion(
                     n_observations=self.n_effective_training,
                     n_parameters=self.early_stopping_n_params,
-                    ic=self.early_stopping_criteria,
-                )
+                    criterion=self.early_stopping_criteria,
+                ).from_ll(self.current_likelihood)
 
                 self.improvement_abs = -np.diff(self.early_stopping_ic)
                 self.improvement_abs_scaled = self.improvement_abs
@@ -1033,79 +918,39 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                     self.beta[p][k][a] = np.zeros(self.J[p][k])
                     self.beta_path[p][k][a] = np.zeros((self.lambda_n, self.J[p][k]))
                 else:
-                    if self.generic_scoring:
-                        if (inner_iteration == 0) and (outer_iteration == 0):
-                            theta[a] = self.distribution.set_initial_guess(theta[a], p)
+                    if (inner_iteration == 0) and (outer_iteration == 0):
+                        theta[a] = self.distribution.set_initial_guess(theta[a], p)
 
-                        eta = self.distribution.link_function(theta[a][p], p)
-                        eta = self.distribution.cube_to_flat(eta, param=p)
+                    eta = self.distribution.link_function(theta[a][p], p)
+                    eta = self.distribution.cube_to_flat(eta, param=p)
 
-                        # Derivatives wrt to the parameter
-                        dl1dp1 = self.distribution.element_dl1_dp1(
-                            y, theta=theta[a], param=p, k=k
-                        )
-                        dl2dp2 = self.distribution.element_dl2_dp2(
-                            y, theta=theta[a], param=p, k=k, clip=False
-                        )
+                    # Derivatives wrt to the parameter
+                    dl1dp1 = self.distribution.element_dl1_dp1(
+                        y, theta=theta[a], param=p, k=k
+                    )
+                    dl2dp2 = self.distribution.element_dl2_dp2(
+                        y, theta=theta[a], param=p, k=k, clip=False
+                    )
 
-                        dl1_link = self.distribution.link_function_derivative(
-                            theta[a][p], p
-                        )
-                        dl2_link = self.distribution.link_function_second_derivative(
-                            theta[a][p],
-                            p,
-                        )
-                        dl1_link = self.distribution.cube_to_flat(dl1_link, param=p)
-                        dl1_link = dl1_link[:, k]
-                        dl2_link = self.distribution.cube_to_flat(dl2_link, param=p)
-                        dl2_link = dl2_link[:, k]
+                    dl1_link = self.distribution.link_function_derivative(
+                        theta[a][p], p
+                    )
+                    dl2_link = self.distribution.link_function_second_derivative(
+                        theta[a][p],
+                        p,
+                    )
+                    dl1_link = self.distribution.cube_to_flat(dl1_link, param=p)
+                    dl1_link = dl1_link[:, k]
+                    dl2_link = self.distribution.cube_to_flat(dl2_link, param=p)
+                    dl2_link = dl2_link[:, k]
 
-                        dl1_deta1 = dl1dp1 * (1 / dl1_link)
-                        dl2_deta2 = (
-                            dl2dp2 * dl1_link - dl1dp1 * dl2_link
-                        ) / dl1_link**3
+                    dl1_deta1 = dl1dp1 * (1 / dl1_link)
+                    dl2_deta2 = (dl2dp2 * dl1_link - dl1dp1 * dl2_link) / dl1_link**3
 
-                        wt = np.fmax(-dl2_deta2, 1e-10)
-                        wv = eta[:, k] + dl1_deta1 / wt
+                    wt = np.fmax(-dl2_deta2, 1e-10)
+                    wv = eta[:, k] + dl1_deta1 / wt
 
-                    else:
-                        # TODO: This should be optimized at some future point.
-                        # Still need to think about a good setup for the link
-                        # and the flat-cube problem
-                        eta = self.distribution.link_function(theta[a][p], p)
-                        dr = 1 / self.distribution.cube_to_flat(
-                            self.distribution.link_inverse_derivative(eta, param=p),
-                            param=p,
-                        )
-                        eta = self.distribution.cube_to_flat(eta, param=p)
-                        dr = dr[:, k]
-
-                        dl1dp1 = self.distribution.element_score(
-                            y, theta=theta[a], param=p, k=k
-                        )
-                        dl2dp2 = self.distribution.element_hessian(
-                            y, theta=theta[a], param=p, k=k
-                        )
-
-                        if self.distribution._scoring == "fisher":
-                            # For Fisher scoring,
-                            # score == deriviative wrt parameter
-                            # hessian = (expected) 2nd derivative wrt parameter
-                            # "Pseudo Fisher Scoring"
-                            wt = -(dl2dp2 / (dr * dr))
-                            wv = eta[:, k] + dl1dp1 / (dr * wt)
-                        elif self.distribution._scoring == "newton_rapson":
-                            # For Newton-Rapson,
-                            # score == derivative wrt predictor
-                            # hessian == 2nd derivative wrt parameter
-                            wt = -dl2dp2
-                            wv = eta[:, k] + dl1dp1 / wt
-                        else:
-                            raise ValueError("Unknown scoring method.")
-
-                    # Base Estimator abstracts the method away
-                    # This will create inverted grams for OLS and
-                    # non-inverted grams for LASSO
+                    # Create the more arrays
                     x = make_model_array(
                         X=X,
                         eq=self.equation[p][k],
@@ -1193,7 +1038,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                         )
 
                 self.current_likelihood[a] = (
-                    self.distribution.log_likelihood(y, theta=theta[a]) * weights_forget
+                    self.distribution.logpdf(y, theta=theta[a]) * weights_forget
                 ).sum()
 
             ## Check the most important convergence measures here now
@@ -1267,9 +1112,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             theta_ms = self.distribution.set_theta_element(
                 theta_ll, theta_fit[:, 0], param=param, k=k
             )
-            approx_ll = np.sum(
-                self.distribution.log_likelihood(y, theta_ll) * weights_forget
-            )
+            approx_ll = np.sum(self.distribution.logpdf(y, theta_ll) * weights_forget)
             approx_ll = np.repeat(approx_ll, 100)
             for l_idx in range(1, self.lambda_n):
                 theta_ms = self.distribution.set_theta_element(
@@ -1283,7 +1126,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                     )
                 else:
                     approx_ll[l_idx] = np.sum(
-                        self.distribution.log_likelihood(
+                        self.distribution.logpdf(
                             y,
                             theta=theta_ms,
                         )
@@ -1300,10 +1143,11 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             nonzero = nonzero + self.count_coef_to_be_fitted(
                 outer_iteration, inner_iteration, adr=a, param=param, k=k
             )
-
-            ic = information_criteria_likelihood(
-                approx_ll, self.n_observations, nonzero, self.ic
-            )
+            ic = InformationCriterion(
+                n_observations=self.n_observations,
+                n_parameters=nonzero,
+                criterion=self.ic,
+            ).from_ll(log_likelihood=approx_ll)
             self.model_selection[param][a][k] = {
                 "ll": approx_ll,
                 "non_zero": nonzero,
@@ -1344,9 +1188,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             theta_ms = self.distribution.set_theta_element(
                 theta_ll, theta_fit[:, 0], param=param, k=k
             )
-            approx_ll = np.sum(
-                self.distribution.log_likelihood(y, theta_ll) * weights_forget
-            )
+            approx_ll = np.sum(self.distribution.logpdf(y, theta_ll) * weights_forget)
             approx_ll = np.repeat(approx_ll, 100)
             for l_idx in range(1, self.lambda_n):
                 theta_ms = self.distribution.set_theta_element(
@@ -1364,7 +1206,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                     )
                 else:
                     approx_ll[l_idx] = np.sum(
-                        self.distribution.log_likelihood(
+                        self.distribution.logpdf(
                             y,
                             theta=theta_ms,
                         )
@@ -1384,12 +1226,12 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             nonzero = nonzero + self.count_coef_to_be_fitted(
                 outer_iteration, inner_iteration, adr=a, param=param, k=k
             )
-
-            ic = information_criteria_likelihood(
-                approx_ll, self.n_observations, nonzero, self.ic
-            )
+            ic = InformationCriterion(
+                n_observations=self.n_observations,
+                n_parameters=nonzero,
+                criterion=self.ic,
+            ).from_ll(log_likelihood=approx_ll)
             opt_ic = np.argmin(ic)
-
             self.model_selection[param][a][k] = {
                 "ll": approx_ll,
                 "non_zero": nonzero,
@@ -1467,7 +1309,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
             forget=self.learning_rate, n_obs=self.n_observations
         )
         theta = self.predict_all_adr(X)
-        self.scaler.partial_fit(X=X)
+        self.scaler.update(X=X)
         X_scaled = self.scaler.transform(X=X)
 
         self.x_gram_old = copy.deepcopy(self.x_gram)
@@ -1480,7 +1322,7 @@ class MultivariateOnlineDistributionalRegressionADRPath(
         self.current_likelihood = self.old_likelihood_discounted + np.array(
             [
                 np.sum(
-                    self.distribution.log_likelihood(y=y, theta=theta[a])
+                    self.distribution.logpdf(y=y, theta=theta[a])
                     * init_forget_vector(self.learning_rate, y.shape[0])
                 )
                 for a in range(self.A)
@@ -1517,171 +1359,63 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                     self.beta_path[p][k][a] = np.zeros((self.lambda_n, self.J[p][k]))
 
                 else:
-                    if self.generic_scoring:
-                        eta = self.distribution.link_function(theta[a][p], p)
-                        eta = self.distribution.cube_to_flat(eta, param=p)
+                    eta = self.distribution.link_function(theta[a][p], p)
+                    eta = self.distribution.cube_to_flat(eta, param=p)
 
-                        # Derivatives wrt to the parameter
-                        dl1dp1 = self.distribution.element_dl1_dp1(
-                            y, theta=theta[a], param=p, k=k
-                        )
-                        dl2dp2 = self.distribution.element_dl2_dp2(
-                            y, theta=theta[a], param=p, k=k
-                        )
+                    # Derivatives wrt to the parameter
+                    dl1dp1 = self.distribution.element_dl1_dp1(
+                        y, theta=theta[a], param=p, k=k
+                    )
+                    dl2dp2 = self.distribution.element_dl2_dp2(
+                        y, theta=theta[a], param=p, k=k
+                    )
 
-                        dl1_link = self.distribution.link_function_derivative(
-                            theta[a][p], p
-                        )
-                        dl2_link = self.distribution.link_function_second_derivative(
-                            theta[a][p], p
-                        )
-                        dl1_link = self.distribution.cube_to_flat(dl1_link, param=p)
-                        dl1_link = dl1_link[:, k]
-                        dl2_link = self.distribution.cube_to_flat(dl2_link, param=p)
-                        dl2_link = dl2_link[:, k]
+                    dl1_link = self.distribution.link_function_derivative(
+                        theta[a][p], p
+                    )
+                    dl2_link = self.distribution.link_function_second_derivative(
+                        theta[a][p], p
+                    )
+                    dl1_link = self.distribution.cube_to_flat(dl1_link, param=p)
+                    dl1_link = dl1_link[:, k]
+                    dl2_link = self.distribution.cube_to_flat(dl2_link, param=p)
+                    dl2_link = dl2_link[:, k]
 
-                        dl1_deta1 = dl1dp1 * (1 / dl1_link)
-                        dl2_deta2 = (
-                            dl2dp2 * dl1_link - dl1dp1 * dl2_link
-                        ) / dl1_link**3
+                    dl1_deta1 = dl1dp1 * (1 / dl1_link)
+                    dl2_deta2 = (dl2dp2 * dl1_link - dl1dp1 * dl2_link) / dl1_link**3
 
-                        wt = np.fmax(-dl2_deta2, 1e-10)
-                        wv = eta[:, k] + dl1_deta1 / wt
+                    wt = np.fmax(-dl2_deta2, 1e-10)
+                    wv = eta[:, k] + dl1_deta1 / wt
 
-                    else:
-                        # TODO: This should be optimized at some future point.
-                        # Still need to think about a good setup for the link
-                        # and the flat-cube problem
-                        eta = self.distribution.link_function(theta[a][p], p)
-                        dr = 1 / self.distribution.cube_to_flat(
-                            self.distribution.link_inverse_derivative(eta, param=p),
-                            param=p,
-                        )
-                        eta = self.distribution.cube_to_flat(eta, param=p)
-                        dr = dr[:, k]
-
-                        dl1dp1 = self.distribution.element_score(
-                            y, theta=theta[a], param=p, k=k
-                        )
-                        dl2dp2 = self.distribution.element_hessian(
-                            y, theta=theta[a], param=p, k=k
-                        )
-                        if self.distribution._scoring == "fisher":
-                            wt = -(dl2dp2 / (dr * dr))
-                            wv = eta[:, k] + dl1dp1 / (dr * wt)
-                        elif self.distribution._scoring == "newton_rapson":
-                            wt = -dl2dp2
-                            wv = eta[:, k] + dl1dp1 / wt
-                        else:
-                            raise ValueError("Unknown scoring method.")
-
-                    # Base Estimator abstracts the method away
-                    # This will create inverted grams for OLS and
-                    # non-inverted grams for LASSO
+                    # Make model arrays
                     x = make_model_array(
                         X=X,
                         eq=self.equation[p][k],
                         fit_intercept=self.fit_intercept[p],
                     )
-                    self.x_gram[p][k][a] = self.update_gram(
+                    self.x_gram[p][k][a] = self._method[p][k].update_x_gram(
                         gram=self.x_gram_old[p][k][a],
-                        x=x,
-                        w=wt ** self.weight_delta[p],
-                        param=p,
+                        X=x,
+                        weights=wt ** self.weight_delta[p],
+                        forget=self.forget[p],
                     )
-                    self.y_gram[p][k][a] = self.update_y_gram(
-                        gram=np.expand_dims(self.y_gram_old[p][k][a], -1),
-                        x=x,
-                        y=wv,
-                        w=wt ** self.weight_delta[p],
-                        param=p,
-                    ).squeeze()
-                    if self.method[p] == "lasso":
-
-                        if self.lambda_targeting and (
-                            (inner_iteration + outer_iteration) > 0
-                        ):
-                            u_divisor = (inner_iteration + outer_iteration) / (
-                                1 + (inner_iteration + outer_iteration)
-                            )
-                            l_divisor = 1 / (1 + (inner_iteration + outer_iteration))
-                            # divisor = 1/2
-
-                            lambda_max = (
-                                self.lambda_max_current[p][k][a]
-                                + self.lambda_opt_current[p][k][a]
-                            ) * u_divisor
-                            lambda_min = (
-                                self.lambda_min_current[p][k][a]
-                                + self.lambda_opt_current[p][k][a]
-                            ) * l_divisor
-
-                            if (
-                                self.lambda_min_current[p][k][a]
-                                == self.lambda_opt_current[p][k][a]
-                            ):
-                                lambda_min = lambda_max * self.lambda_eps
-                            if (
-                                self.lambda_max_current[p][k][a]
-                                == self.lambda_opt_current[p][k][a]
-                            ):
-                                lambda_max = get_max_lambda(
-                                    self.x_gram[p][k][a],
-                                    self.y_gram[p][k][a],
-                                    self.is_regularized[p][k],
-                                )
-                            lambda_path = np.geomspace(
-                                lambda_max, lambda_min, self.lambda_n
-                            )
-                            start_beta_path = fast_vectorized_interpolate(
-                                lambda_path,
-                                self.lambda_path_current[p][k][a],
-                                self.beta_path[p][k][max(a - 1, 0)],
-                                ascending=True,
-                            )
-
-                        else:
-                            lambda_max = get_max_lambda(
-                                self.x_gram[p][k][a],
-                                self.y_gram[p][k][a],
-                                self.is_regularized[p][k],
-                            )
-                            lambda_min = lambda_max * self.lambda_eps
-                            lambda_path = np.geomspace(
-                                lambda_max, lambda_min, self.lambda_n
-                            )
-
-                            start_beta_path = self.beta_path[p][k][max(a - 1, 0)]
-
-                        # For model selection
-                        self.lambda_max[p][k][
-                            outer_iteration, inner_iteration, a
-                        ] = lambda_max
-                        self.lambda_min[p][k][outer_iteration, inner_iteration, a] = (
-                            lambda_max * self.lambda_eps
+                    self.y_gram[p][k][a] = (
+                        self._method[p][k]
+                        .update_y_gram(
+                            gram=np.expand_dims(self.y_gram_old[p][k][a], -1),
+                            X=x,
+                            y=wv,
+                            weights=wt ** self.weight_delta[p],
+                            forget=self.forget[p],
                         )
-                        self.lambda_grid[p][k][
-                            outer_iteration, inner_iteration, a
-                        ] = lambda_path
-
-                        self.lambda_max_current[p][k][a] = lambda_max
-                        self.lambda_min_current[p][k][a] = lambda_min
-                        self.lambda_path_current[p][k][a] = lambda_path
-
-                        self.beta_path[p][k][a], _ = online_coordinate_descent_path(
+                        .squeeze()
+                    )
+                    if self._method[p][k]._path_based_method:
+                        self.beta_path[p][k][a] = self._method[p][k].update_beta_path(
                             x_gram=self.x_gram[p][k][a],
-                            y_gram=self.y_gram[p][k][a],
-                            beta_path=start_beta_path,
-                            lambda_path=lambda_path,
+                            y_gram=self.y_gram[p][k][a][:, None],
+                            beta_path=self.beta_path[p][k][a],
                             is_regularized=self.is_regularized[p][k],
-                            beta_lower_bound=np.repeat(-np.inf, self.J[p][k]),
-                            beta_upper_bound=np.repeat(np.inf, self.J[p][k]),
-                            which_start_value="average",
-                            selection="cyclic",
-                            tolerance=1e-4,
-                            max_iterations=1000,
-                            alpha=1,
-                            early_stop=0,
                         )
                         eta_elem = x @ self.beta_path[p][k][a].T
                         theta_elem = self.distribution.element_link_inverse(
@@ -1703,21 +1437,24 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                         theta[a] = self.distribution.set_theta_element(
                             theta[a], theta_elem[:, opt_ic], param=p, k=k
                         )
-                    elif self.method[p] == "ols":
-                        self.beta[p][k][a] = self.x_gram[p][k][a] @ self.y_gram[p][k][a]
                     else:
-                        raise ValueError("Method not recognized")
+                        self.beta_path[p][k][a] = None
+                        self.beta[p][k][a] = self._method[p][k].update_beta(
+                            x_gram=self.x_gram[p][k][a],
+                            y_gram=self.y_gram[p][k][a][:, None],
+                            beta=self.beta[p][k][a],
+                            is_regularized=self.is_regularized[p][k],
+                        )
+                        self.beta[p][k][a] = self.x_gram[p][k][a] @ self.y_gram[p][k][a]
 
+                    # Calculate the other stuff
                     eta[:, k] = np.squeeze(x @ self.beta[p][k][a])
                     theta[a][p] = self.distribution.link_inverse(
                         self.distribution.flat_to_cube(eta, param=p), param=p
                     )
 
                 self.current_likelihood[a] = (
-                    np.sum(
-                        self.distribution.log_likelihood(y, theta=theta[a])
-                        * weights_forget
-                    )
+                    np.sum(self.distribution.logpdf(y, theta=theta[a]) * weights_forget)
                     + self.old_likelihood_discounted[a]
                 )
 
@@ -1849,12 +1586,11 @@ class MultivariateOnlineDistributionalRegressionADRPath(
                 self.early_stopping_n_params = np.array(
                     [self.count_nonzero_coef(self.beta, a) for a in range(self.A)]
                 )
-                self.early_stopping_ic = information_criteria_likelihood(
-                    log_likelihood=self.current_likelihood,
+                self.early_stopping_ic = InformationCriterion(
                     n_observations=self.n_effective_training,
                     n_parameters=self.early_stopping_n_params,
-                    ic=self.early_stopping_criteria,
-                )
+                    criterion=self.early_stopping_criteria,
+                ).from_ll(self.current_likelihood)
 
                 self.improvement_abs = -np.diff(self.early_stopping_ic)
                 self.improvement_abs_scaled = self.improvement_abs

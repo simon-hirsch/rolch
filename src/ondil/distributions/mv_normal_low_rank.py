@@ -4,10 +4,10 @@ from typing import Dict
 import numpy as np
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction
-from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
+from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
 from ..link import IdentityLink, LogLink
 from ..link.matrixlinks import MatrixDiagLink
+from ..types import ParameterShapes
 
 
 def batched_log_lilkelihood_normal_precision_low_rank(y, mu, mat_d, mat_v):
@@ -330,17 +330,11 @@ class MultivariateNormalInverseLowRank(MultivariateDistributionMixin, Distributi
             d = int(x.shape[1] // self.rank)
             return x.reshape((x.shape[0], self.rank, d)).transpose(0, 2, 1)
 
-    def log_likelihood(self, y: np.ndarray, theta: Dict[int, np.ndarray]):
-        loc, mat_d, mat_v = self.theta_to_params(theta)
-        return batched_log_lilkelihood_normal_precision_low_rank(
-            y, loc, mat_d=mat_d, mat_v=mat_v
-        )
-
     def cdf(self, y, theta):
         raise NotImplementedError("Not implemented")
 
     def pdf(self, y, theta):
-        raise NotImplementedError("Not implemented")
+        return np.exp(self.logpdf(y, theta))
 
     def ppf(self, q, theta):
         raise NotImplementedError("Not implemented")
@@ -352,7 +346,10 @@ class MultivariateNormalInverseLowRank(MultivariateDistributionMixin, Distributi
         raise NotImplementedError("Not implemented")
 
     def logpdf(self, y, theta):
-        raise NotImplementedError("Not implemented")
+        loc, mat_d, mat_v = self.theta_to_params(theta)
+        return batched_log_lilkelihood_normal_precision_low_rank(
+            y, loc, mat_d=mat_d, mat_v=mat_v
+        )
 
     def logpmf(self, y, theta):
         raise NotImplementedError("Not implemented")

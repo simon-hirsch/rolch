@@ -6,10 +6,10 @@ import numba as nb
 import numpy as np
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction
-from ..base.distribution import MultivariateDistributionMixin, ParameterShapes
+from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
 from ..link import IdentityLink, LogLink
 from ..link.matrixlinks import MatrixDiagTriuLink
+from ..types import ParameterShapes
 
 
 class MultivariateNormalInverseCholesky(MultivariateDistributionMixin, Distribution):
@@ -307,15 +307,11 @@ class MultivariateNormalInverseCholesky(MultivariateDistributionMixin, Distribut
         }
         return out
 
-    @staticmethod
-    def log_likelihood(y: np.ndarray, theta: Dict[np.ndarray, np.ndarray]):
-        return _log_likelihood(y, theta[0], theta[1])
-
     def cdf(self, y, theta):
         raise NotImplementedError("Not implemented")
 
     def pdf(self, y, theta):
-        raise NotImplementedError("Not implemented")
+        return np.exp(self.logpdf(y, theta))
 
     def ppf(self, q, theta):
         raise NotImplementedError("Not implemented")
@@ -327,7 +323,7 @@ class MultivariateNormalInverseCholesky(MultivariateDistributionMixin, Distribut
         raise NotImplementedError("Not implemented")
 
     def logpdf(self, y, theta):
-        raise NotImplementedError("Not implemented")
+        return _log_likelihood(y, theta[0], theta[1])
 
     def logpmf(self, y, theta):
         raise NotImplementedError("Not implemented")
