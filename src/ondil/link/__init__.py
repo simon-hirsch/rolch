@@ -8,6 +8,7 @@ from .softpluslinks import (
     InverseSoftPlusShiftValueLink,
 )
 from .sqrtlinks import SqrtLink, SqrtShiftTwoLink, SqrtShiftValueLink
+from .copulalinks import FisherZLink, TauToPar
 
 __all__ = [
     "IdentityLink",
@@ -25,4 +26,6 @@ __all__ = [
     "MatrixDiagLink",
     "MatrixDiagTrilLink",
     "MatrixDiagTriuLink",
+    "FisherZLink",
+    "TauToPar", 
 ]

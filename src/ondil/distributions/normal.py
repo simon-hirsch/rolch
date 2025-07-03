@@ -44,6 +44,7 @@ class DistributionNormal(ScipyMixin, Distribution):
         self,
         loc_link: LinkFunction = IdentityLink(),
         scale_link: LinkFunction = LogLink(),
+        param_links: LinkFunction = {},
     ) -> None:
         """Initialize the DistributionNormal.
 
@@ -55,7 +56,8 @@ class DistributionNormal(ScipyMixin, Distribution):
             links={
                 0: loc_link,
                 1: scale_link,
-            }
+            },
+            param_links = {},
         )
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
