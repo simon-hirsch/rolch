@@ -14,7 +14,7 @@ from sklearn.utils.validation import (
     validate_data,
 )
 
-from ..base import Distribution, OndilEstimatorMixin
+from ..base import Distribution, OndilEstimatorMixin, CopulaMixin, MarginalCopulaMixin
 from ..design_matrix import make_intercept
 from ..gram import init_forget_vector
 from ..information_criteria import InformationCriterion
@@ -198,10 +198,8 @@ class MultivariateOnlineDistributionalRegressionPath(
         dampen_estimation: bool | int = False,
         debug: bool = False,
         overshoot_correction: Dict | None = None,
-        copula: bool = False,
     ):
         self.distribution = distribution
-        self.copula = copula
 
         # For simplicity
         self.handle_default(forget, 0.0, "forget")
@@ -687,7 +685,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             for p in range(self.distribution.n_params)
         }
         # Call the fit
-        self._outer_fit(X=X, y=y, theta=theta)
+        self._outer_fit(X=X_scaled, y=y, theta=theta)
 
         if self.verbose > 0:  # Level 1 Message
             print(
@@ -955,14 +953,15 @@ class MultivariateOnlineDistributionalRegressionPath(
                     self.beta[p][k][a] = np.zeros(self.J[p][k])
                     self.beta_path[p][k][a] = np.zeros((self.lambda_n, self.J[p][k]))
                 else:
-                    if self.copula == True:
+
+                    if issubclass(self.distribution.__class__, CopulaMixin) or (
+                        issubclass(self.distribution.__class__, MarginalCopulaMixin)
+                        and p > 2):
 
                         if (inner_iteration == 0) and (outer_iteration == 0):
-                                theta[a] = self.distribution.set_initial_guess(theta[a], p)
-                                tau = self._make_initial_eta(theta)
-                                tau[a][p] = self.distribution.param_link_function(theta[a][p], p)
-
-                            #uniforms = np.column_stack([self.distribution[0].cdf(y), self.distribution[1].cdf(y)])
+                            theta[a] = self.distribution.set_initial_guess(theta[a], p)
+                            tau = self._make_initial_eta(theta)
+                            tau[a][p] = self.distribution.param_link_function(theta[a][p], p)
 
                         tau = self._make_initial_eta(theta)
                         eta = self._make_initial_eta(theta)
@@ -988,7 +987,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                             eta[a][p], p,
                         ).squeeze()
 
-                        dp = self.distribution.log_likelihood(y, theta = theta[a])
+                        dp = self.distribution.pdf(y=y, theta=theta[a])
                         dl1_link = self.distribution.cube_to_flat(dl1_link, param=p)
                         dl1_link = dl1_link
                         dl2_link = self.distribution.cube_to_flat(dl2_link, param=p)
@@ -1010,18 +1009,13 @@ class MultivariateOnlineDistributionalRegressionPath(
                         else:
                             wt[~sel] = np.mean(wt[sel])
 
-                        # dl1_deta1 = dl1dp1 * (1.0 / dl1_link)
-
-                        # dl2_deta2 = (
-                        # dl2dp2 * dl1_link - dl1dp1 * dl2_link
-                        # ) / dl1_link**3
-
                         # Compute quantiles for clipping
                         ratio = u / wt
                         qq = np.quantile(ratio, [0.025, 0.975])
                         # Clip the ratio to the quantiles
                         clipped = np.clip(ratio, qq[0], qq[1])
                         wv = eta[a][p].squeeze() + clipped
+
                     else:    
                         if (inner_iteration == 0) and (outer_iteration == 0):
                             theta[a] = self.distribution.set_initial_guess(theta[a], p)
@@ -1122,7 +1116,9 @@ class MultivariateOnlineDistributionalRegressionPath(
                             is_regularized=self.is_regularized[p][k],
                         )
                     
-                    if self.copula == True:
+                    if issubclass(self.distribution.__class__, CopulaMixin) or (
+                        issubclass(self.distribution.__class__, MarginalCopulaMixin)
+                        and p > 2):
                         eta[a][p] = self.get_dampened_prediction(
                             prediction=np.squeeze(x @ self.beta[p][k][a]),
                             eta=eta[a][p],
