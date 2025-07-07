@@ -41,35 +41,35 @@ Some link functions implement _shifted_ versions. The shifted link function is i
 
 ## API Reference
 
-::: ondil.link.Identity
+::: ondil.links.Identity
 
 ### Log-Link Functions
 
-::: ondil.link.Log
+::: ondil.links.Log
 
-::: ondil.link.LogShiftValue
+::: ondil.links.LogShiftValue
 
-::: ondil.link.LogShiftTwo
+::: ondil.links.LogShiftTwo
 
-::: ondil.link.LogIdent
+::: ondil.links.LogIdent
 
 ### Logit Link Functions
 
-::: ondil.link.Logit
+::: ondil.links.Logit
 
 ### Square Root Link Functions
 
-::: ondil.link.Sqrt
+::: ondil.links.Sqrt
 
-::: ondil.link.SqrtShiftValue
+::: ondil.links.SqrtShiftValue
 
-::: ondil.link.SqrtShiftTwo
+::: ondil.links.SqrtShiftTwo
 
 
 ### Inverse SoftPlus Link Functions
 
-::: ondil.link.InverseSoftPlus
+::: ondil.links.InverseSoftPlus
 
-::: ondil.link.InverseSoftPlusShiftValue
+::: ondil.links.InverseSoftPlusShiftValue
 
-::: ondil.link.InverseSoftPlusShiftTwo
+::: ondil.links.InverseSoftPlusShiftTwo

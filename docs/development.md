@@ -16,7 +16,7 @@ The [`LinkFunction`][ondil.base.LinkFunction] abstract base class enforces, that
 - The second derivative of the link: `SomeNewLink().link_second_derivative()`.
 - The derivative of the inverse: `SomeNewLink().inverse_derivative()`.
 
-Additionally, each link defines the `SomeNewLink().link_support` as `tuple` of `float` values. This is used to ensure at the initialization of a distribution that the link functions support is inside the support of the distribution parameter. We allow the link to shorten the possible outcome space of the parameter, but we don't allow to return impossible values. As an example, you can constrain the degrees of freedom $\nu$ of the $t$-distribution by taking a [`LogShiftTwo()`][ondil.link.LogShiftTwo], which ensures that $\nu > 2$ (and therefore the variance exists), but you cannot choose the [`Identity()`][ondil.link.Identity], since the degrees of freedom must be positive.
+Additionally, each link defines the `SomeNewLink().link_support` as `tuple` of `float` values. This is used to ensure at the initialization of a distribution that the link functions support is inside the support of the distribution parameter. We allow the link to shorten the possible outcome space of the parameter, but we don't allow to return impossible values. As an example, you can constrain the degrees of freedom $\nu$ of the $t$-distribution by taking a [`LogShiftTwo()`][ondil.links.LogShiftTwo], which ensures that $\nu > 2$ (and therefore the variance exists), but you cannot choose the [`Identity()`][ondil.links.Identity], since the degrees of freedom must be positive.
 
 There are two ways to implement the support of the link function:
 
