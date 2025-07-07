@@ -8,6 +8,7 @@ Estimators are your bread and butter partner for modelling. They provide the met
 
 - `Estimator().fit(X, y)`
 - `Estimator().update(X, y)`
+- `Estimator().predict_distribution_parameters(X, y)`
 - `Estimator().predict(X)`
 
 which one commonly uses for modelling.

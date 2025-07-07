@@ -79,7 +79,7 @@ print("\nCoefficients after update call \n")
 print(online_gamlss_lasso.beta)
 
 # Prediction for the last 10 observations
-prediction = online_gamlss_lasso.predict(
+prediction = online_gamlss_lasso.predict_distribution_parameters(
     X=X[-10:, :]
 )
 
