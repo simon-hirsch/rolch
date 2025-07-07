@@ -7,7 +7,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Identity, Log
 
 
-class DistributionJSU(ScipyMixin, Distribution):
+class JSU(ScipyMixin, Distribution):
     """
     Corresponds to GAMLSS JSUo() and scipy.stats.johnsonsu()
 

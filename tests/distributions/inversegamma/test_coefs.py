@@ -2,7 +2,7 @@ import numpy as np
 import rpy2.robjects as robjects
 
 
-from ondil.distributions import DistributionInverseGamma
+from ondil.distributions import InverseGamma
 from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
@@ -13,7 +13,7 @@ X = mtcars[:, 1:]
 
 
 def test_inverse_gamma_distribution():
-    dist = DistributionInverseGamma()
+    dist = InverseGamma()
 
     code = f"""
     library("gamlss")

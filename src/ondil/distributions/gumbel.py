@@ -5,7 +5,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Identity, Log
 
 
-class DistributionGumbel(ScipyMixin, Distribution):
+class Gumbel(ScipyMixin, Distribution):
     """
     The Gumbel distribution.
 

@@ -2,7 +2,7 @@
 import numpy as np
 import rpy2.robjects as robjects
 
-from ondil.distributions import DistributionLogistic
+from ondil.distributions import Logistic
 from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
@@ -13,7 +13,7 @@ X = mtcars[:, 1:]
 
 
 def test_logistic_distribution():
-    dist = DistributionLogistic()
+    dist = Logistic()
 
     code = f"""
     library("gamlss")

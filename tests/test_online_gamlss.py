@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.datasets import make_regression
 
-from ondil.distributions import DistributionJSU
+from ondil.distributions import JSU
 from ondil.estimators import OnlineDistributionalRegression
 
 FIT_INTERCEPT = [True, False]
@@ -29,7 +29,7 @@ def test_get_J_from_equation(n_features, fit_intercept):
     }
 
     X, _ = make_regression(n_samples=100, n_features=n_features)
-    distribution = DistributionJSU()
+    distribution = JSU()
 
     estimator = OnlineDistributionalRegression(
         distribution=distribution,
@@ -54,7 +54,7 @@ def test_get_J_from_equation_warnings():
     }
 
     X, _ = make_regression(n_samples=100, n_features=n_features)
-    distribution = DistributionJSU()
+    distribution = JSU()
 
     estimator = OnlineDistributionalRegression(
         distribution=distribution,
@@ -74,7 +74,7 @@ def test_get_J_from_equation_warnings():
     }
 
     X, _ = make_regression(n_samples=100, n_features=10)
-    distribution = DistributionJSU()
+    distribution = JSU()
     estimator = OnlineDistributionalRegression(
         distribution=distribution,
         equation=equation_fail_3,

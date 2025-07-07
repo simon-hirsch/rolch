@@ -7,7 +7,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Identity, Log
 
 
-class DistributionLogistic(ScipyMixin, Distribution):
+class Logistic(ScipyMixin, Distribution):
     """
     The Logistic distribution with location and scale parameterization.
 

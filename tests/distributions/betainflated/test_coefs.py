@@ -1,12 +1,12 @@
 import numpy as np
 import rpy2.robjects as robjects
 
-from ondil.distributions import DistributionBetaInflated
+from ondil.distributions import BetaInflated
 from ondil.estimators import OnlineDistributionalRegression
 
 
 def test_beta_distribution():
-    dist = DistributionBetaInflated()
+    dist = BetaInflated()
 
     code = """
     library(gamlss)

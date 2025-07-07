@@ -8,7 +8,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Logit
 
 
-class DistributionBeta(ScipyMixin, Distribution):
+class Beta(ScipyMixin, Distribution):
     """The Beta Distribution for GAMLSS.
 
     The distribution function is defined as in GAMLSS as:
@@ -30,7 +30,7 @@ class DistributionBeta(ScipyMixin, Distribution):
 
         This parameterization is different to the `scipy.stats.beta(alpha, beta, loc, scale)` parameterization.
 
-        We can use `DistributionBeta().gamlss_to_scipy(mu, sigma)` to map the distribution parameters to scipy.
+        We can use `Beta().gamlss_to_scipy(mu, sigma)` to map the distribution parameters to scipy.
 
     The `scipy.stats.beta()` distribution is defined as:
     $$

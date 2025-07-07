@@ -8,7 +8,7 @@ from ..links import Identity, Log
 from ..links.robust_math import robust_exp
 
 
-class DistributionLogNormal(ScipyMixin, Distribution):
+class LogNormal(ScipyMixin, Distribution):
     """
     The Log-Normal distribution with mean and standard deviation parameterization in the log-space.
 

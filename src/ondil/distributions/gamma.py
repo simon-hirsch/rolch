@@ -8,7 +8,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Log
 
 
-class DistributionGamma(ScipyMixin, Distribution):
+class Gamma(ScipyMixin, Distribution):
     """The Gamma Distribution for GAMLSS.
 
     The distribution function is defined as in GAMLSS as:
@@ -23,7 +23,7 @@ class DistributionGamma(ScipyMixin, Distribution):
 
         This parameterization is different to the `scipy.stats.gamma(alpha, loc, scale)` parameterization.
 
-        We can use `DistributionGamma().theta_to_scipy_params(theta)` to map the distribution parameters to scipy.
+        We can use `Gamma().theta_to_scipy_params(theta)` to map the distribution parameters to scipy.
 
     The `scipy.stats.gamma()` distribution is defined as:
     $$

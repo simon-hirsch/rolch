@@ -6,7 +6,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Log
 
 
-class DistributionExponential(ScipyMixin, Distribution):
+class Exponential(ScipyMixin, Distribution):
     """
     The Exponential distribution parameterized by the mean (mu).
 

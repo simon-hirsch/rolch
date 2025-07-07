@@ -1,6 +1,6 @@
 import numpy as np
 
-from ondil.distributions import DistributionBeta
+from ondil.distributions import Beta
 from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
@@ -33,7 +33,7 @@ def test_beta_distribution():
     coef_R_sg = np.array([1.38959112, 0.10110228, -0.01992618])
 
     estimator = OnlineDistributionalRegression(
-        distribution=DistributionBeta(),
+        distribution=Beta(),
         equation={0: np.array([0, 2]), 1: np.array([0, 2])},
         method="ols",
         scale_inputs=False,

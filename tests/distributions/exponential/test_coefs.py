@@ -2,7 +2,7 @@
 import numpy as np
 import rpy2.robjects as robjects
 
-from ondil.distributions import DistributionExponential
+from ondil.distributions import Exponential
 from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
@@ -13,7 +13,7 @@ X = mtcars[:, 1:]
 
 
 def test_exponential_distribution():
-    dist = DistributionExponential()
+    dist = Exponential()
 
     code = f"""
     library("gamlss")

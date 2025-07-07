@@ -1,7 +1,7 @@
 import numpy as np
 import rpy2.robjects as robjects
 
-from ondil.distributions import DistributionInverseGaussian
+from ondil.distributions import InverseGaussian
 from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
@@ -12,7 +12,7 @@ X = mtcars[:, 1:]
 
 
 def test_inversegaussian_distribution():
-    dist = DistributionInverseGaussian()
+    dist = InverseGaussian()
 
     code = f"""
     library("gamlss")

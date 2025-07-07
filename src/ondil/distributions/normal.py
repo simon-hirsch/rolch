@@ -7,7 +7,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Identity, Log
 
 
-class DistributionNormal(ScipyMixin, Distribution):
+class Normal(ScipyMixin, Distribution):
     """
     The Normal distribution with mean and standard deviation parameterization.
 
@@ -38,7 +38,7 @@ class DistributionNormal(ScipyMixin, Distribution):
         loc_link: LinkFunction = Identity(),
         scale_link: LinkFunction = Log(),
     ) -> None:
-        """Initialize the DistributionNormal.
+        """Initialize the Normal.
 
         Args:
             loc_link (LinkFunction, optional): Location link. Defaults to Identity().
@@ -84,7 +84,7 @@ class DistributionNormal(ScipyMixin, Distribution):
         return np.tile(initial_params, (y.shape[0], 1))
 
 
-class DistributionNormalMeanVariance(ScipyMixin, Distribution):
+class NormalMeanVariance(ScipyMixin, Distribution):
     """
     The Normal distribution with mean and variance parameterization.
 
@@ -113,7 +113,7 @@ class DistributionNormalMeanVariance(ScipyMixin, Distribution):
         loc_link: LinkFunction = Identity(),
         scale_link: LinkFunction = Log(),
     ) -> None:
-        """Initialize the DistributionNormalMeanVariance.
+        """Initialize the NormalMeanVariance.
 
         Args:
             loc_link (LinkFunction, optional): Location link. Defaults to Identity().

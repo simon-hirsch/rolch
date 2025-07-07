@@ -5,7 +5,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Log
 
 
-class DistributionInverseGaussian(ScipyMixin, Distribution):
+class InverseGaussian(ScipyMixin, Distribution):
     """
     Inverse Gaussian (Wald) distribution for GAMLSS.
 

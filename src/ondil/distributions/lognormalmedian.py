@@ -7,7 +7,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Log
 
 
-class DistributionLogNormalMedian(ScipyMixin, Distribution):
+class LogNormalMedian(ScipyMixin, Distribution):
     """
     The Log-Normal distribution with median and standard deviation parameterization in the log-space.
 

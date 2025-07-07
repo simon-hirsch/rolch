@@ -6,7 +6,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Identity, Log
 
 
-class DistributionReverseGumbel(ScipyMixin, Distribution):
+class ReverseGumbel(ScipyMixin, Distribution):
     """
     The Reverse Gumbel (Type I minimum extreme value) distribution with location (mu) and scale (sigma) parameters.
 

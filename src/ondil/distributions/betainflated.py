@@ -8,7 +8,7 @@ from ..base import Distribution, LinkFunction
 from ..links import Logit, Log
 
 
-class DistributionBetaInflated(Distribution):
+class BetaInflated(Distribution):
     """The Beta inflated Distribution for GAMLSS."""
 
     corresponding_gamlss: str = "BEINF"

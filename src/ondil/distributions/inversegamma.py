@@ -8,7 +8,7 @@ from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Log
 
 
-class DistributionInverseGamma(ScipyMixin, Distribution):
+class InverseGamma(ScipyMixin, Distribution):
     """
     The Inverse Gamma distribution as parameterized in GAMLSS:
 

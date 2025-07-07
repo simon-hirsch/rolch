@@ -15,7 +15,7 @@ from sklearn.utils.validation import (
 
 from .. import HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, OndilEstimatorMixin
-from ..distributions import DistributionNormal
+from ..distributions import Normal
 from ..error import OutOfSupportError
 from ..gram import init_forget_vector
 from ..information_criteria import InformationCriterion
@@ -61,7 +61,7 @@ class OnlineDistributionalRegression(
 
     def __init__(
         self,
-        distribution: Distribution = DistributionNormal(),
+        distribution: Distribution = Normal(),
         equation: Dict[int, Union[str, np.ndarray, list]] = None,
         forget: float | Dict[int, float] = 0.0,
         method: Union[

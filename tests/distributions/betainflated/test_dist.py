@@ -1,10 +1,10 @@
 import numpy as np
 import rpy2.robjects as robjects
-from ondil.distributions import DistributionBetaInflated
+from ondil.distributions import BetaInflated
 
 
 def test_betainflated_distribution():
-    dist = DistributionBetaInflated()
+    dist = BetaInflated()
 
     code = f"""
     library(gamlss.dist)

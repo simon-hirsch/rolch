@@ -1,7 +1,7 @@
 import numpy as np
 import rpy2.robjects as robjects
 
-from ondil.distributions import DistributionReverseGumbel
+from ondil.distributions import ReverseGumbel
 from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
@@ -12,7 +12,7 @@ X = mtcars[:, 1:]
 
 
 def test_reversegumbel_distribution():
-    dist = DistributionReverseGumbel()
+    dist = ReverseGumbel()
 
     code = f"""
     library("gamlss")

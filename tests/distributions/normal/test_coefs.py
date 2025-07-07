@@ -1,6 +1,6 @@
 import numpy as np
 
-from ondil.distributions import DistributionNormal
+from ondil.distributions import Normal
 from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
@@ -30,7 +30,7 @@ def test_normal_distribution():
     coef_R_sg = np.array([1.8782995906, -0.1262290913, -0.0003943062])
 
     estimator = OnlineDistributionalRegression(
-        distribution=DistributionNormal(),
+        distribution=Normal(),
         equation={0: np.array([0, 2]), 1: np.array([0, 2])},
         method="ols",
         scale_inputs=False,
