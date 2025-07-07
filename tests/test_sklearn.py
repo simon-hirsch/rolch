@@ -1,3 +1,4 @@
+import ondil.estimators
 import pytest
 from sklearn.utils.estimator_checks import check_estimator
 
@@ -15,7 +16,7 @@ EXPECTED_FAILED_CHECKS = {
 @pytest.mark.parametrize("method", ["ols", "lasso", "elasticnet"])
 @pytest.mark.parametrize("ic", ["aic", "bic", "hqc", "max"])
 def test_sklearn_compliance_linear_model(scale_inputs, fit_intercept, method, ic):
-    estimator = ondil.OnlineLinearModel(
+    estimator = ondil.estimators.OnlineLinearModel(
         fit_intercept=fit_intercept,
         scale_inputs=scale_inputs,
         method=method,
@@ -30,7 +31,7 @@ def test_sklearn_compliance_linear_model(scale_inputs, fit_intercept, method, ic
 @pytest.mark.parametrize("method", ["ols", "lasso", "elasticnet"])
 @pytest.mark.parametrize("ic", ["aic", "bic", "hqc", "max"])
 def test_sklearn_compliance_online_gamlss(scale_inputs, method, ic):
-    estimator = ondil.OnlineGamlss(
+    estimator = ondil.estimators.OnlineGamlss(
         scale_inputs=scale_inputs,
         method=method,
         ic=ic,

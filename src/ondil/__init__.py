@@ -18,7 +18,6 @@ from .coordinate_descent import (
     soft_threshold,
 )
 from .error import OutOfSupportError
-from .estimators import OnlineGamlss, OnlineLasso, OnlineLinearModel
 from .gram import (
     init_forget_vector,
     init_gram,
@@ -62,9 +61,6 @@ __all__ = [
     "OutOfSupportWarning",
     "OutOfSupportError",
     "OnlineScaler",
-    "OnlineGamlss",
-    "OnlineLinearModel",
-    "OnlineLasso",
     "LassoPathMethod",
     "RidgeMethod",
     "ElasticNetPathMethod",
