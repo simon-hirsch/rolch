@@ -5,7 +5,7 @@ import scipy.special as spc
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..links import LogLink
+from ..links import Log
 
 
 class DistributionGamma(ScipyMixin, Distribution):
@@ -39,8 +39,8 @@ class DistributionGamma(ScipyMixin, Distribution):
     $$
 
     Args:
-        loc_link (LinkFunction, optional): The link function for $\mu$. Defaults to LogLink().
-        scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to LogLink().
+        loc_link (LinkFunction, optional): The link function for $\mu$. Defaults to Log().
+        scale_link (LinkFunction, optional): The link function for $\sigma$. Defaults to Log().
     """
 
     corresponding_gamlss: str = "GA"
@@ -59,8 +59,8 @@ class DistributionGamma(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Log(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link})
 

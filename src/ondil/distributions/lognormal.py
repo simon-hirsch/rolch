@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..links import IdentityLink, LogLink
+from ..links import Identity, Log
 from ..links.robust_math import robust_exp
 
 
@@ -43,8 +43,8 @@ class DistributionLogNormal(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         super().__init__(
             links={

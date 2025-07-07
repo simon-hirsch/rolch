@@ -5,26 +5,26 @@ import numpy as np
 import pytest
 
 from ondil.links import (
-    IdentityLink,
-    InverseSoftPlusLink,
-    InverseSoftPlusShiftValueLink,
-    LogIdentLink,
-    LogitLink,
-    LogLink,
-    LogShiftValueLink,
-    SqrtLink,
-    SqrtShiftValueLink,
+    Identity,
+    InverseSoftPlus,
+    InverseSoftPlusShiftValue,
+    LogIdent,
+    Logit,
+    Log,
+    LogShiftValue,
+    Sqrt,
+    SqrtShiftValue,
 )
 
 # We don't test
-# - LogShiftTwoLink
-# - SqrtShiftTwoLink
-# at the moment since they derive from the ShiftValueLink
+# - LogShiftTwo
+# - SqrtShiftTwo
+# at the moment since they derive from the ShiftValue
 
-REAL_LINE_LINKS = [IdentityLink]
-POSITIVE_LINE_LINKS = [LogLink, SqrtLink, LogIdentLink, InverseSoftPlusLink]
-POSITIVE_RESTRICTED_LINE_LINKS = [LogitLink]  ##domain (0,1)
-SHIFTED_LINKS = [LogShiftValueLink, SqrtShiftValueLink, InverseSoftPlusShiftValueLink]
+REAL_LINE_LINKS = [Identity]
+POSITIVE_LINE_LINKS = [Log, Sqrt, LogIdent, InverseSoftPlus]
+POSITIVE_RESTRICTED_LINE_LINKS = [Logit]  ##domain (0,1)
+SHIFTED_LINKS = [LogShiftValue, SqrtShiftValue, InverseSoftPlusShiftValue]
 VALUES = np.array([2, 5, 10, 25, 100])
 M = 10000
 
@@ -39,7 +39,7 @@ def test_link_real_line(linkfun):
     assert np.allclose(x, y), "Links don't match"
 
 
-@pytest.mark.parametrize("linkfun", [LogitLink])
+@pytest.mark.parametrize("linkfun", [Logit])
 def test_link_zero_one_domain(linkfun):
     """Test links that are defined on the (0, 1) domain"""
     instance = linkfun()

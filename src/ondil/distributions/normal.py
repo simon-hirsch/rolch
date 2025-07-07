@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..links import IdentityLink, LogLink
+from ..links import Identity, Log
 
 
 class DistributionNormal(ScipyMixin, Distribution):
@@ -35,14 +35,14 @@ class DistributionNormal(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         """Initialize the DistributionNormal.
 
         Args:
-            loc_link (LinkFunction, optional): Location link. Defaults to IdentityLink().
-            scale_link (LinkFunction, optional): Scale link. Defaults to LogLink().
+            loc_link (LinkFunction, optional): Location link. Defaults to Identity().
+            scale_link (LinkFunction, optional): Scale link. Defaults to Log().
         """
         super().__init__(
             links={
@@ -110,14 +110,14 @@ class DistributionNormalMeanVariance(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         """Initialize the DistributionNormalMeanVariance.
 
         Args:
-            loc_link (LinkFunction, optional): Location link. Defaults to IdentityLink().
-            scale_link (LinkFunction, optional): Scale link. Defaults to LogLink().
+            loc_link (LinkFunction, optional): Location link. Defaults to Identity().
+            scale_link (LinkFunction, optional): Scale link. Defaults to Log().
         """
         super().__init__(
             links={

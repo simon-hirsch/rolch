@@ -5,7 +5,7 @@ import scipy.special as spc
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..links import LogitLink
+from ..links import Logit
 
 
 class DistributionBeta(ScipyMixin, Distribution):
@@ -68,8 +68,8 @@ class DistributionBeta(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogitLink(),
-        scale_link: LinkFunction = LogitLink(),
+        loc_link: LinkFunction = Logit(),
+        scale_link: LinkFunction = Logit(),
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link})
 

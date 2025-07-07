@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..links import IdentityLink, LogLink
+from ..links import Identity, Log
 
 
 class DistributionJSU(ScipyMixin, Distribution):
@@ -35,10 +35,10 @@ class DistributionJSU(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
-        skew_link: LinkFunction = IdentityLink(),
-        tail_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = Log(),
+        skew_link: LinkFunction = Identity(),
+        tail_link: LinkFunction = Log(),
         use_gamlss_init_values: bool = False,
     ) -> None:
         super().__init__(

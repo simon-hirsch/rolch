@@ -1,9 +1,9 @@
-from typing import Optional, Tuple
+from typing import Tuple
 import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..links import LogLink, IdentityLink
+from ..links import Log
 
 
 class DistributionExponential(ScipyMixin, Distribution):
@@ -26,7 +26,7 @@ class DistributionExponential(ScipyMixin, Distribution):
     scipy_dist = st.expon
     scipy_names = {"mu": "scale"}
 
-    def __init__(self, mu_link: LinkFunction = LogLink()) -> None:
+    def __init__(self, mu_link: LinkFunction = Log()) -> None:
         assert isinstance(mu_link, LinkFunction), "mu_link must be a LinkFunction"
         super().__init__(links={0: mu_link})
 
