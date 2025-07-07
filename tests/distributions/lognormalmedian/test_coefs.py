@@ -1,6 +1,7 @@
 import numpy as np
 
-from ondil import DistributionLogNormalMedian, OnlineGamlss
+from ondil.distributions import DistributionLogNormalMedian
+from ondil.estimators import OnlineGamlss
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
@@ -38,9 +39,9 @@ def test_lognormalmedian_distribution():
 
     estimator.fit(X=X, y=y)
 
-    assert np.allclose(
-        estimator.beta[0], coef_R_mu, atol=0.01
-    ), "Location coefficients don't match"
-    assert np.allclose(
-        estimator.beta[1], coef_R_sg, atol=0.01
-    ), "Scale coefficients don't match"
+    assert np.allclose(estimator.beta[0], coef_R_mu, atol=0.01), (
+        "Location coefficients don't match"
+    )
+    assert np.allclose(estimator.beta[1], coef_R_sg, atol=0.01), (
+        "Scale coefficients don't match"
+    )

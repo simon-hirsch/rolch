@@ -1,7 +1,8 @@
 import numpy as np
 import rpy2.robjects as robjects
 
-from ondil import DistributionGumbel, OnlineGamlss
+from ondil.distributions import DistributionGumbel
+from ondil.estimators import OnlineGamlss
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
