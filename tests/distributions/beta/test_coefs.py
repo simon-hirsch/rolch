@@ -1,6 +1,7 @@
 import numpy as np
 
-from ondil import DistributionBeta, OnlineGamlss
+from ondil.distributions import Beta
+from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
@@ -31,8 +32,8 @@ def test_beta_distribution():
     coef_R_mu = np.array([3.0143212798, -0.4316644910, 0.0006211862])
     coef_R_sg = np.array([1.38959112, 0.10110228, -0.01992618])
 
-    estimator = OnlineGamlss(
-        distribution=DistributionBeta(),
+    estimator = OnlineDistributionalRegression(
+        distribution=Beta(),
         equation={0: np.array([0, 2]), 1: np.array([0, 2])},
         method="ols",
         scale_inputs=False,
@@ -41,9 +42,9 @@ def test_beta_distribution():
 
     estimator.fit(X=X, y=y)
 
-    assert np.allclose(
-        estimator.beta[0], coef_R_mu, atol=0.01
-    ), "Location coefficients don't match"
-    assert np.allclose(
-        estimator.beta[1], coef_R_sg, atol=0.01
-    ), "Scale coefficients don't match"
+    assert np.allclose(estimator.beta[0], coef_R_mu, atol=0.01), (
+        "Location coefficients don't match"
+    )
+    assert np.allclose(estimator.beta[1], coef_R_sg, atol=0.01), (
+        "Scale coefficients don't match"
+    )

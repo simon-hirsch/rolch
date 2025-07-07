@@ -5,10 +5,10 @@ import scipy.special as sp
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import IdentityLink, LogLink, LogShiftTwoLink
+from ..links import Identity, Log, LogShiftTwo
 
 
-class DistributionT(ScipyMixin, Distribution):
+class T(ScipyMixin, Distribution):
     """Corresponds to GAMLSS TF() and scipy.stats.t()"""
 
     corresponding_gamlss: str = "TF"
@@ -27,9 +27,9 @@ class DistributionT(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
-        tail_link: LinkFunction = LogShiftTwoLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = Log(),
+        tail_link: LinkFunction = LogShiftTwo(),
     ) -> None:
         super().__init__(
             links={

@@ -3,10 +3,10 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import IdentityLink, LogLink
+from ..links import Identity, Log
 
 
-class DistributionReverseGumbel(ScipyMixin, Distribution):
+class ReverseGumbel(ScipyMixin, Distribution):
     """
     The Reverse Gumbel (Type I minimum extreme value) distribution with location (mu) and scale (sigma) parameters.
 
@@ -31,8 +31,8 @@ class DistributionReverseGumbel(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         super().__init__(
             links={
@@ -84,4 +84,3 @@ class DistributionReverseGumbel(ScipyMixin, Distribution):
         mu_init = np.mean(y) + gamma_const * sigma_init
         initial_params = [mu_init, sigma_init]
         return np.tile(initial_params, (y.shape[0], 1))
-

@@ -18,55 +18,55 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ## List of Distributions
 
-| Distribution                                                              | Description                            | `scipy` Base            |
-| ------------------------------------------------------------------------- | -------------------------------------- | ----------------------- |
-| [`DistributionNormal`](#ondil.DistributionNormal)                         | Gaussian (mean and standard deviation) | `scipy.stats.norm`      |
-| [`DistributionNormalMeanVariance`](#ondil.DistributionNormalMeanVariance) | Gaussian (mean and variance)           | `scipy.stats.norm`      |
-| [`DistributionT`](#ondil.DistributionT)                                   | Student's $t$ distribution             | `scipy.stats.t`         |
-| [`DistributionJSU`](#ondil.DistributionJSU)                               | Johnson's SU distribution              | `scipy.stats.johnsonsu` |
-| [`DistributionGamma`](#ondil.DistributionGamma)                           | Gamma distribution                     | `scipy.stats.gamma`     |
-| [`DistributionLogNormal`](#ondil.DistributionLogNormal)                   | Log-normal distribution                | `scipy.stats.lognorm`   |
-| [`DistributionLogNormalMedian`](#ondil.DistributionLogNormalMedian)       | Log-normal distribution (median)       | -                       |
-| [`DistributionLogistic`](#ondil.DistributionLogistic)                     | Logistic distribution                  | `scipy.stats.logistic`  |
-| [`DistributionExponential`](#ondil.DistributionExponential)               | Exponential distribution               | `scipy.stats.expon`     |
-| [`DistributionBeta`](#ondil.DistributionBeta)                             | Beta distribution                      | `scipy.stats.beta`      |
-| [`DistributionGumbel`](#ondil.DistributionGumbel)                         | Gumbel distribution                    | `scipy.stats.gumbel_r`  |
-| [`DistributionInverseGaussian`](#ondil.DistributionInverseGaussian)       | Inverse Gaussian distribution          | `scipy.stats.invgauss`  |
-| [`DistributionBetaInflated`](#ondil.DistributionBetaInflated)             | Beta Inflated distribution             | -                       |
-| [`DistributionReverseGumbel`](#ondil.DistributionReverseGumbel)           | Reverse Gumbel distribution            | `scipy.stats.gumbel_r`  |
-| [`DistributionInverseGamma`](#ondil.DistributionInverseGamma)             | Inverse Gamma distribution             | `scipy.stats.invgamma`  |
+| Distribution                                      | Description                            | `scipy` Base            |
+| ------------------------------------------------- | -------------------------------------- | ----------------------- |
+| [`Normal`](#ondil.Normal)                         | Gaussian (mean and standard deviation) | `scipy.stats.norm`      |
+| [`NormalMeanVariance`](#ondil.NormalMeanVariance) | Gaussian (mean and variance)           | `scipy.stats.norm`      |
+| [`T`](#ondil.T)                                   | Student's $t$ distribution             | `scipy.stats.t`         |
+| [`JSU`](#ondil.JSU)                               | Johnson's SU distribution              | `scipy.stats.johnsonsu` |
+| [`Gamma`](#ondil.Gamma)                           | Gamma distribution                     | `scipy.stats.gamma`     |
+| [`LogNormal`](#ondil.LogNormal)                   | Log-normal distribution                | `scipy.stats.lognorm`   |
+| [`LogNormalMedian`](#ondil.LogNormalMedian)       | Log-normal distribution (median)       | -                       |
+| [`Logistic`](#ondil.Logistic)                     | Logistic distribution                  | `scipy.stats.logistic`  |
+| [`Exponential`](#ondil.Exponential)               | Exponential distribution               | `scipy.stats.expon`     |
+| [`Beta`](#ondil.Beta)                             | Beta distribution                      | `scipy.stats.beta`      |
+| [`Gumbel`](#ondil.Gumbel)                         | Gumbel distribution                    | `scipy.stats.gumbel_r`  |
+| [`InverseGaussian`](#ondil.InverseGaussian)       | Inverse Gaussian distribution          | `scipy.stats.invgauss`  |
+| [`BetaInflated`](#ondil.BetaInflated)             | Beta Inflated distribution             | -                       |
+| [`ReverseGumbel`](#ondil.ReverseGumbel)           | Reverse Gumbel distribution            | `scipy.stats.gumbel_r`  |
+| [`InverseGamma`](#ondil.InverseGamma)             | Inverse Gamma distribution             | `scipy.stats.invgamma`  |
 
 ## API Reference
 
-::: ondil.DistributionNormal
+::: ondil.Normal
 
-::: ondil.DistributionNormalMeanVariance
+::: ondil.NormalMeanVariance
 
-::: ondil.DistributionT
+::: ondil.T
 
-::: ondil.DistributionJSU
+::: ondil.JSU
 
-::: ondil.DistributionGamma
+::: ondil.Gamma
 
-::: ondil.DistributionLogNormal
+::: ondil.LogNormal
 
-::: ondil.DistributionLogNormalMedian
+::: ondil.LogNormalMedian
 
-::: ondil.DistributionLogistic
+::: ondil.Logistic
 
-::: ondil.DistributionExponential
+::: ondil.Exponential
 
-::: ondil.DistributionInverseGaussian
+::: ondil.InverseGaussian
 
-::: ondil.DistributionBeta
+::: ondil.Beta
 
-::: ondil.DistributionGumbel
+::: ondil.Gumbel
 
-::: ondil.DistributionBetaInflated
+::: ondil.BetaInflated
 
-::: ondil.DistributionReverseGumbel
+::: ondil.ReverseGumbel
 
-::: ondil.DistributionInverseGamma
+::: ondil.InverseGamma
 
 
 ## Base Class
