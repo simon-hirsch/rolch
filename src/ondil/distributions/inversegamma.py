@@ -5,7 +5,7 @@ import scipy.stats as st
 from scipy.special import digamma, polygamma
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogLink
+from ..links import LogLink
 
 
 class DistributionInverseGamma(ScipyMixin, Distribution):

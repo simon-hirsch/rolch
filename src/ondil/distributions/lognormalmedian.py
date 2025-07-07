@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogLink
+from ..links import LogLink
 
 
 class DistributionLogNormalMedian(ScipyMixin, Distribution):

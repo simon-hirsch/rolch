@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import IdentityLink, LogLink
+from ..links import IdentityLink, LogLink
 
 
 class DistributionLogistic(ScipyMixin, Distribution):

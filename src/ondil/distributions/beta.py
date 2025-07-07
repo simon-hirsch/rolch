@@ -5,7 +5,7 @@ import scipy.special as spc
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogitLink
+from ..links import LogitLink
 
 
 class DistributionBeta(ScipyMixin, Distribution):

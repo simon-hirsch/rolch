@@ -4,8 +4,8 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import IdentityLink, LogLink
-from ..link.robust_math import robust_exp
+from ..links import IdentityLink, LogLink
+from ..links.robust_math import robust_exp
 
 
 class DistributionLogNormal(ScipyMixin, Distribution):
