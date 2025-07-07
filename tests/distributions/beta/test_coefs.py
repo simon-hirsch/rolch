@@ -1,7 +1,7 @@
 import numpy as np
 
 from ondil.distributions import DistributionBeta
-from ondil.estimators import OnlineGamlss
+from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
@@ -32,7 +32,7 @@ def test_beta_distribution():
     coef_R_mu = np.array([3.0143212798, -0.4316644910, 0.0006211862])
     coef_R_sg = np.array([1.38959112, 0.10110228, -0.01992618])
 
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=DistributionBeta(),
         equation={0: np.array([0, 2]), 1: np.array([0, 2])},
         method="ols",

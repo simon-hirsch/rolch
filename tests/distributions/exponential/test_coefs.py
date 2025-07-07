@@ -3,7 +3,7 @@ import numpy as np
 import rpy2.robjects as robjects
 
 from ondil.distributions import DistributionExponential
-from ondil.estimators import OnlineGamlss
+from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
@@ -35,7 +35,7 @@ def test_exponential_distribution():
 
     coef_R_mu = R_list.rx2("mu")
 
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=dist,
         equation={0: np.array([0, 2])},  # Only mu
         method="ols",

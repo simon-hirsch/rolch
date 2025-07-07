@@ -3,7 +3,7 @@ import pytest
 from sklearn.datasets import make_regression
 
 from ondil.distributions import DistributionJSU
-from ondil.estimators import OnlineGamlss
+from ondil.estimators import OnlineDistributionalRegression
 
 FIT_INTERCEPT = [True, False]
 N_FEATURES = np.round(np.geomspace(11, 100, 5)).astype(int)
@@ -31,7 +31,7 @@ def test_get_J_from_equation(n_features, fit_intercept):
     X, _ = make_regression(n_samples=100, n_features=n_features)
     distribution = DistributionJSU()
 
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=distribution,
         equation=equation,
         fit_intercept=fit_intercept,
@@ -56,7 +56,7 @@ def test_get_J_from_equation_warnings():
     X, _ = make_regression(n_samples=100, n_features=n_features)
     distribution = DistributionJSU()
 
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=distribution,
         equation=equation_fail_2,
         fit_intercept=fit_intercept,
@@ -75,7 +75,7 @@ def test_get_J_from_equation_warnings():
 
     X, _ = make_regression(n_samples=100, n_features=10)
     distribution = DistributionJSU()
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=distribution,
         equation=equation_fail_3,
         fit_intercept=fit_intercept,

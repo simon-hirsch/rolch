@@ -1,7 +1,7 @@
 import numpy as np
 
 from ondil.distributions import DistributionLogNormal
-from ondil.estimators import OnlineGamlss
+from ondil.estimators import OnlineDistributionalRegression
 
 file = "tests/data/mtcars.csv"
 mtcars = np.genfromtxt(file, delimiter=",", skip_header=1)[:, 1:]
@@ -29,7 +29,7 @@ def test_lognormal_distribution():
     coef_R_mu = np.array([3.779333731, -0.089852349, -0.001845681])
     coef_R_sg = np.array([-2.01801755, -0.10430409, 0.00492528])
 
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=DistributionLogNormal(),
         equation={0: np.array([0, 2]), 1: np.array([0, 2])},
         method="ols",

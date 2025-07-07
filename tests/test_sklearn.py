@@ -31,7 +31,7 @@ def test_sklearn_compliance_linear_model(scale_inputs, fit_intercept, method, ic
 @pytest.mark.parametrize("method", ["ols", "lasso", "elasticnet"])
 @pytest.mark.parametrize("ic", ["aic", "bic", "hqc", "max"])
 def test_sklearn_compliance_online_gamlss(scale_inputs, method, ic):
-    estimator = ondil.estimators.OnlineGamlss(
+    estimator = ondil.estimators.OnlineDistributionalRegression(
         scale_inputs=scale_inputs,
         method=method,
         ic=ic,

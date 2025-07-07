@@ -29,7 +29,9 @@ if HAS_POLARS:
     import polars as pl  # noqa
 
 
-class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
+class OnlineDistributionalRegression(
+    OndilEstimatorMixin, RegressorMixin, BaseEstimator
+):
     """The online/incremental GAMLSS class."""
 
     _parameter_constraints = {
@@ -85,8 +87,8 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         rel_tol_outer: float = 1e-5,
         rel_tol_inner: float = 1e-5,
         min_it_outer: int = 1,
-    ) -> "OnlineGamlss":
-        """The `OnlineGamlss()` provides the fit, update and predict methods for linear parametric GAMLSS models.
+    ) -> "OnlineDistributionalRegression":
+        """The `OnlineDistributionalRegression()` provides the fit, update and predict methods for linear parametric GAMLSS models.
 
         For a response variable $Y$ which is distributed according to the distribution $\mathcal{F}(\\theta)$
         with the distribution parameters $\\theta$, we model:
@@ -174,7 +176,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             coef_path_ (np.ndarray): Coefficients path for the fitted model, shape (n_params, n_iterations, n_features). Only available if `method` is a path-based method like LASSO.
 
         Returns:
-            OnlineGamlss: The OnlineGamlss instance.
+            OnlineDistributionalRegression: The OnlineDistributionalRegression instance.
 
         """
         self.distribution = distribution
@@ -210,8 +212,8 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
     @property
     def betas(self):
         warnings.warn(
-            "OnlineGamlss.betas is depreciated in favour of OnlineGamlss.beta to be consistent with beta_path. "
-            "Alternatively, use OnlineGamlss.coef_ as in sklearn.",
+            "OnlineDistributionalRegression.betas is depreciated in favour of OnlineDistributionalRegression.beta to be consistent with beta_path. "
+            "Alternatively, use OnlineDistributionalRegression.coef_ as in sklearn.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -641,7 +643,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         X: np.ndarray,
         y: np.ndarray,
         sample_weight: Optional[np.ndarray] = None,
-    ) -> "OnlineGamlss":
+    ) -> "OnlineDistributionalRegression":
         """Fit the online GAMLSS model.
 
         This method initializes the model with the given covariate data matrix $X$ and response variable $Y$.
@@ -652,7 +654,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
             sample_weight (Optional[np.ndarray], optional): User-defined sample weights. Defaults to None.
 
         Returns:
-            OnlineGamlss: The fitted OnlineGamlss instance.
+            OnlineDistributionalRegression: The fitted OnlineDistributionalRegression instance.
 
         Raises:
             ValueError: If the equation is not specified correctly.
@@ -1512,7 +1514,7 @@ class OnlineGamlss(OndilEstimatorMixin, RegressorMixin, BaseEstimator):
         """
         if not self.debug:
             raise ValueError(
-                "Debug mode is not enabled. Please set debug=True when initializing the OnlineGamlss estimator."
+                "Debug mode is not enabled. Please set debug=True when initializing the OnlineDistributionalRegression estimator."
             )
 
         key = (param, it_outer, it_inner + 1)
