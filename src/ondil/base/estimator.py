@@ -1,6 +1,49 @@
 from abc import ABC
 
 import numpy as np
+from sklearn.utils.validation import check_is_fitted
+
+
+class OndilEstimatorMixin(ABC):
+
+    @property
+    def is_fitted(self) -> bool:
+        """Has the estimator been fitted."""
+        return hasattr(self, "n_observations_")
+
+    @property
+    def n_samples_(self) -> int:
+        check_is_fitted(self, "n_observations_")
+        return self.n_observations_
+
+    def partial_fit(
+        self, X: np.ndarray, y: np.ndarray, sample_weight: np.ndarray | None = None
+    ):
+        """
+        Align ondil with the scikit-learn API for partial fitting.
+
+        The first partial fit will call `fit`, and subsequent calls will call `update`.
+        Allows furthermore to use the sklearn testing framework.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The input data.
+        y : np.ndarray
+            The target values.
+        sample_weight : np.ndarray, optional
+            Sample weights for the observations, by default None.
+        Returns
+        -------
+        self : Estimator
+            The fitted estimator.
+
+        """
+        if self.is_fitted:
+            self.update(X=X, y=y, sample_weight=sample_weight)
+        else:
+            self.fit(X=X, y=y, sample_weight=sample_weight)
+        return self
 
 
 class Estimator(ABC):
