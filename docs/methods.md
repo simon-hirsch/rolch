@@ -39,10 +39,10 @@ More information on coordinate descent can also be found on this [page](coordina
     We don't document the classmethods of the `EstimationMethod` since these are only used internally.
 
 
-::: ondil.OrdinaryLeastSquares
+::: ondil.methods.OrdinaryLeastSquares
 
-::: ondil.LassoPath
+::: ondil.methods.LassoPath
 
-::: ondil.Ridge
+::: ondil.methods.Ridge
 
-::: ondil.ElasticNetPath
+::: ondil.methods.ElasticNetPath
