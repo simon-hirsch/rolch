@@ -54,7 +54,7 @@ equation = {
 }
 
 # Create the estimator
-online_gamlss_lasso = ondil.OnlineDistributionalRegression(
+online_gamlss_lasso = ondil.estimators.OnlineDistributionalRegression(
     distribution=ondil.T(),
     method="lasso",
     equation=equation,

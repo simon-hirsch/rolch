@@ -4,11 +4,11 @@ Estimator classes provide an `sklearn`-like API to fit, predict and update model
 
 ## Online GAMLSS
 
-::: ondil.OnlineDistributionalRegression
+::: ondil.estimators.OnlineDistributionalRegression
 
 ## Linear Models
 
-::: ondil.OnlineLinearModel
+::: ondil.estimators.OnlineLinearModel
 
-::: ondil.OnlineLasso
+::: ondil.estimators.OnlineLasso
 
