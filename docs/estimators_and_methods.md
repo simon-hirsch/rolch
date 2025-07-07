@@ -26,7 +26,7 @@ First, we start with OLS:
 ```python
 # Set up packages and
 from ondil.estimators.online_linear_model import OnlineLinearModel
-from ondil.methods import LassoPathMethod, OrdinaryLeastSquaresMethod
+from ondil.methods import LassoPath, OrdinaryLeastSquares
 from sklearn.datasets import load_diabetes
 
 import matplotlib.pyplot as plt
@@ -49,7 +49,7 @@ model.update(X[-10:, :], y[-10:])
 
 # This is equivalent
 model = OnlineLinearModel(
-    method=OrdinaryLeastSquaresMethod(), 
+    method=OrdinaryLeastSquares(), 
     fit_intercept=fit_intercept, 
     scale_inputs=scale_inputs,
 )
@@ -59,11 +59,11 @@ model.update(X[-10:, :], y[-10:])
 
 Since ordinary least squares is a pretty simple method, it does not have a lot of parameters. However, if we look at LASSO, things change, because now we can actually play with the parameters.
 
-### LASSO and the `LassoPathMethod()`
+### LASSO and the `LassoPath()`
 
-The `LassoPathMethod()` estimates the coefficients using coordinate descent along a path of decreasing regularization strength. In this example, we will change some of the parameters of the estimation.
+The `LassoPath()` estimates the coefficients using coordinate descent along a path of decreasing regularization strength. In this example, we will change some of the parameters of the estimation.
 
-The `LassoPathMethod()` has for example the following parameters
+The `LassoPath()` has for example the following parameters
 
 - `lambda_n` which defines the length of the regularization path.
 - `beta_lower_bounds` which provides the option to place a lower bound on the coefficients/weights.
@@ -85,7 +85,7 @@ print(model.beta)
 # Equivalent, we can do:
 
 model = OnlineLinearModel(
-    method=LassoPathMethod(),
+    method=LassoPath(),
     fit_intercept=fit_intercept,
     scale_inputs=scale_inputs,
 )
@@ -100,7 +100,7 @@ Now we want to change the parameters:
 
 ```python
 
-estimation_method = LassoPathMethod(
+estimation_method = LassoPath(
     lambda_n=10,  # Only fit ten lambdas
     beta_lower_bound=np.zeros(
         X.shape[1] + fit_intercept
