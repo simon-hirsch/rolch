@@ -28,20 +28,6 @@ from .gram import (
     update_y_gram,
 )
 from .information_criteria import InformationCriterion
-from .link import (
-    IdentityLink,
-    InverseSoftPlusLink,
-    InverseSoftPlusShiftTwoLink,
-    InverseSoftPlusShiftValueLink,
-    LogIdentLink,
-    LogitLink,
-    LogLink,
-    LogShiftTwoLink,
-    LogShiftValueLink,
-    SqrtLink,
-    SqrtShiftTwoLink,
-    SqrtShiftValueLink,
-)
 from .scaler import OnlineScaler
 from .utils import (
     calculate_asymptotic_training_length,
@@ -55,18 +41,6 @@ __all__ = [
     "OutOfSupportWarning",
     "OutOfSupportError",
     "OnlineScaler",
-    "IdentityLink",
-    "LogitLink",
-    "LogLink",
-    "LogIdentLink",
-    "LogShiftTwoLink",
-    "LogShiftValueLink",
-    "SqrtLink",
-    "SqrtShiftValueLink",
-    "SqrtShiftTwoLink",
-    "InverseSoftPlusLink",
-    "InverseSoftPlusShiftValueLink",
-    "InverseSoftPlusShiftTwoLink",
     "init_forget_vector",
     "init_gram",
     "update_gram",
