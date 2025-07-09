@@ -4,11 +4,11 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import IdentityLink, LogLink
-from ..link.robust_math import robust_exp
+from ..links import Identity, Log
+from ..links.robust_math import robust_exp
 
 
-class DistributionLogNormal(ScipyMixin, Distribution):
+class LogNormal(ScipyMixin, Distribution):
     """
     The Log-Normal distribution with mean and standard deviation parameterization in the log-space.
 
@@ -43,8 +43,8 @@ class DistributionLogNormal(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         super().__init__(
             links={

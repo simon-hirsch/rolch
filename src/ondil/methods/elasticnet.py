@@ -7,7 +7,7 @@ from ..coordinate_descent import online_coordinate_descent_path
 from ..gram import init_gram, init_y_gram, update_gram, update_y_gram
 
 
-class ElasticNetPathMethod(EstimationMethod):
+class ElasticNetPath(EstimationMethod):
     """
     Path-based elastic net estimation.
 

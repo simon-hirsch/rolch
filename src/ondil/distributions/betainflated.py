@@ -1,14 +1,13 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.special as spc
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogitLink, LogLink
+from ..base import Distribution, LinkFunction
+from ..links import Logit, Log
 
-
-class DistributionBetaInflated(Distribution):
+class BetaInflated(Distribution):
     """The Beta Inflated Distribution for GAMLSS.
     
     The distribution function is defined as in GAMLSS as:
@@ -48,10 +47,10 @@ class DistributionBetaInflated(Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogitLink(),
-        scale_link: LinkFunction = LogitLink(),
-        skew_link: LinkFunction = LogLink(),  ##
-        tail_link: LinkFunction = LogLink(),  ##
+        loc_link: LinkFunction = Logit(),
+        scale_link: LinkFunction = Logit(),
+        skew_link: LinkFunction = Log(),  ##
+        tail_link: LinkFunction = Log(),  ##
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link, 2: skew_link, 3: tail_link})
 
@@ -262,11 +261,11 @@ class DistributionBetaInflated(Distribution):
             np.where(y == 0, nu, np.where(y == 1, denom, 0)),
         )
 
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             log_result = np.log(raw_cdf / denom)
 
         log_result = np.where(y < 0, -np.inf, log_result)
-        log_result = np.where(y > 1, 0.0, log_result)  
+        log_result = np.where(y > 1, 0.0, log_result)
 
         return log_result
 

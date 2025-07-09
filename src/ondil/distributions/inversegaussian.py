@@ -2,10 +2,10 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogLink
+from ..links import Log
 
 
-class DistributionInverseGaussian(ScipyMixin, Distribution):
+class InverseGaussian(ScipyMixin, Distribution):
     """
     Inverse Gaussian (Wald) distribution for GAMLSS.
 
@@ -50,8 +50,8 @@ class DistributionInverseGaussian(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Log(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         super().__init__(
             links={

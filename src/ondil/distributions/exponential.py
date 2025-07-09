@@ -1,12 +1,12 @@
-from typing import Optional, Tuple
+from typing import Tuple
 import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogLink, IdentityLink
+from ..links import Log
 
 
-class DistributionExponential(ScipyMixin, Distribution):
+class Exponential(ScipyMixin, Distribution):
     """
     The Exponential distribution parameterized by the mean (mu).
 
@@ -26,22 +26,22 @@ class DistributionExponential(ScipyMixin, Distribution):
     scipy_dist = st.expon
     scipy_names = {"mu": "scale"}
 
-    def __init__(self, mu_link: LinkFunction = LogLink()) -> None:
+    def __init__(self, mu_link: LinkFunction = Log()) -> None:
         assert isinstance(mu_link, LinkFunction), "mu_link must be a LinkFunction"
         super().__init__(links={0: mu_link})
 
     def theta_to_scipy_params(self, theta: np.ndarray) -> dict:
-        mu, = self.theta_to_params(theta)
+        (mu,) = self.theta_to_params(theta)
         return {"scale": mu}
 
     def dl1_dp1(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
-        mu, = self.theta_to_params(theta)
+        (mu,) = self.theta_to_params(theta)
         return (y - mu) / mu**2
 
     def dl2_dp2(self, y: np.ndarray, theta: np.ndarray, param: int = 0) -> np.ndarray:
         self._validate_dln_dpn_inputs(y, theta, param)
-        mu, = self.theta_to_params(theta)
+        (mu,) = self.theta_to_params(theta)
         return -1 / mu**2
 
     def dl2_dpp(
