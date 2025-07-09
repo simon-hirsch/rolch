@@ -7,6 +7,7 @@ import scipy.stats as st
 from ..base import Distribution, LinkFunction
 from ..links import Logit, Log
 
+
 class BetaInflated(Distribution):
     """The Beta Inflated Distribution for GAMLSS.
     
