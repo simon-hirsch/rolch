@@ -1,10 +1,11 @@
 import numpy as np
 import rpy2.robjects as robjects
-from ondil import DistributionBetaInflatedZero, OnlineGamlss
+from ondil.estimators import OnlineDistributionalRegression
+from ondil.distributions import BetaInflatedZero
 
 
 def test_beta_inflated_zero_distribution():
-    dist = DistributionBetaInflatedZero()
+    dist = BetaInflatedZero()
 
     code = """
     library(gamlss)
@@ -45,7 +46,7 @@ def test_beta_inflated_zero_distribution():
     x2 = np.array(R_list.rx2("x2"))
     X = np.column_stack((x1, x2))
 
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=dist,
         equation={0: "all", 1: "all", 2: "all", 3: "all"},
         method="ols",

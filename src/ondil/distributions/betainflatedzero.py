@@ -1,14 +1,14 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.special as spc
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction
-from ..link import LogitLink, LogLink
+from ..links import Logit, Log
 
 
-class DistributionBetaInflatedZero(Distribution):
+class BetaInflatedZero(Distribution):
     """The Zero Inflated Beta Distribution for GAMLSS.
     
     f_Y(y \\mid \\mu, \\sigma, \\nu) = 
@@ -29,15 +29,15 @@ class DistributionBetaInflatedZero(Distribution):
     parameter_support = {
         0: (np.nextafter(0, 1), np.nextafter(1, 0)),
         1: (np.nextafter(0, 1), np.nextafter(1, 0)),
-        2: (np.nextafter(0, 1), np.inf),  
+        2: (np.nextafter(0, 1), np.inf),
     }
     distribution_support = (0, np.nextafter(1, 0))
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogitLink(),
-        scale_link: LinkFunction = LogitLink(),
-        inflation_link: LinkFunction = LogLink(),  
+        loc_link: LinkFunction = Logit(),
+        scale_link: LinkFunction = Logit(),
+        inflation_link: LinkFunction = Log(),
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link, 2: inflation_link})
 
@@ -98,7 +98,7 @@ class DistributionBetaInflatedZero(Distribution):
             return np.where(y == 0, 0, result)
 
         if param == 2:
-            return - 1 / (nu * ( (1+nu)**2 ))
+            return -1 / (nu * ((1 + nu) ** 2))
 
     def dl2_dpp(
         self, y: np.ndarray, theta: np.ndarray, params: Tuple[int, int] = (0, 1)
@@ -132,19 +132,14 @@ class DistributionBetaInflatedZero(Distribution):
 
         cdf_beta = st.beta(alpha, beta).cdf(y)
 
-        raw_cdf = np.where(
-            y == 0,
-            nu,
-            nu + cdf_beta
-        )
+        raw_cdf = np.where(y == 0, nu, nu + cdf_beta)
 
         result = raw_cdf / (1 + nu)
 
         result = np.where(y < 0, 0, result)
         result = np.where(y >= 1, 1, result)
 
-        return result 
-
+        return result
 
     def pdf(self, y, theta):
         mu, sigma, nu = self.theta_to_params(theta)
@@ -156,13 +151,9 @@ class DistributionBetaInflatedZero(Distribution):
         result = np.where(
             (y < 0) | (y >= 1),
             0,
-            np.where(
-                y == 0,
-                nu / (1 + nu),
-                pdf_beta/ (1 + nu)
-                ),
-            )
-        
+            np.where(y == 0, nu / (1 + nu), pdf_beta / (1 + nu)),
+        )
+
         return result
 
     def ppf(self, q, theta):
@@ -171,7 +162,7 @@ class DistributionBetaInflatedZero(Distribution):
         alpha = mu * (1 - sigma**2) / sigma**2
         beta = (1 - mu) * (1 - sigma**2) / sigma**2
 
-        denom = 1 + nu  
+        denom = 1 + nu
         lower = nu / denom
 
         q = np.asarray(q, dtype=np.float64)
@@ -217,17 +208,13 @@ class DistributionBetaInflatedZero(Distribution):
 
         cdf_beta = st.beta(alpha, beta).cdf(y)
 
-        raw_cdf = np.where(
-            (y > 0) & (y <= 1),
-            nu + cdf_beta,
-            np.where(y == 0, nu, 0))
-        
+        raw_cdf = np.where((y > 0) & (y <= 1), nu + cdf_beta, np.where(y == 0, nu, 0))
 
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             log_result = np.log(raw_cdf / denom)
 
         log_result = np.where(y < 0, -np.inf, log_result)
-        log_result = np.where(y >= 1, 0.0, log_result)  
+        log_result = np.where(y >= 1, 0.0, log_result)
 
         return log_result
 
