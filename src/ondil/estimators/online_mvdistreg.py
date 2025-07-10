@@ -559,16 +559,6 @@ class MultivariateOnlineDistributionalRegressionPath(
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X: np.ndarray, y: np.ndarray):
 
-        # Prepare the estimator
-        self._prepare_estimator()
-
-        # Set fixed values
-        self.dim_ = y.shape[1]
-        self.n_observations_ = y.shape[0]
-        self.n_training_ = calculate_effective_training_length(
-            forget=self.learning_rate, n_obs=self.n_observations_
-        )
-
         X, y = validate_data(
             self,
             X=X,
@@ -579,6 +569,16 @@ class MultivariateOnlineDistributionalRegressionPath(
             ensure_min_samples=2,
         )
         _ = type_of_target(y, raise_unknown=True)
+
+        # Prepare the estimator
+        self._prepare_estimator()
+
+        # Set fixed values
+        self.dim_ = y.shape[1]
+        self.n_observations_ = y.shape[0]
+        self.n_training_ = calculate_effective_training_length(
+            forget=self.learning_rate, n_obs=self.n_observations_
+        )
 
         self.n_dist_elements_ = self.distribution.fitted_elements(self.dim_)
         # Validate the equation and set the method
@@ -1395,7 +1395,7 @@ class MultivariateOnlineDistributionalRegressionPath(
 
     # Different UV - MV
     @_fit_context(prefer_skip_nested_validation=True)
-    def update(self, X: np.ndarray, y: np.ndarray) -> None:
+    def update(self, X: np.ndarray, y: np.ndarray):
 
         X, y = validate_data(
             self,
