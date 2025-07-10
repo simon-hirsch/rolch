@@ -5,6 +5,7 @@ import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
 from ..links import Log
+from ..types import ParameterShapes
 
 
 class Exponential(ScipyMixin, Distribution):
