@@ -7,8 +7,7 @@ import scipy.special as sp
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
-from ..link import IdentityLink, LogLink, LogShiftTwoLink
-from ..link.matrixlinks import MatrixDiagTrilLink
+from ..links import Identity, Log, LogShiftTwo, MatrixDiagTril
 from ..types import ParameterShapes
 
 
@@ -33,9 +32,9 @@ class MultivariateStudentTInverseCholesky(MultivariateDistributionMixin, Distrib
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = MatrixDiagTrilLink(LogLink(), IdentityLink()),
-        tail_link: LinkFunction = LogShiftTwoLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = MatrixDiagTril(Log(), Identity()),
+        tail_link: LinkFunction = LogShiftTwo(),
         dof_guesstimate: float = 10.0,
     ):
         super().__init__(

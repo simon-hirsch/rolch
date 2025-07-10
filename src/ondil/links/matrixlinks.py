@@ -6,7 +6,7 @@ from ..base import LinkFunction
 from ..types import ParameterShapes
 
 
-class MatrixDiagLink(LinkFunction):
+class MatrixDiag(LinkFunction):
     """
     Wraps a link functions to be applied only on the diagonal of a square matrix.
     """
@@ -89,7 +89,7 @@ class MatrixDiagLink(LinkFunction):
             raise ValueError("Element does not exist in the diagonal.")
 
 
-class MatrixDiagTriuLink(LinkFunction):
+class MatrixDiagTriu(LinkFunction):
     """
     Wraps two link functions to be applied on the diagonal and the upper diagonal of a square matrix.
     """
@@ -181,7 +181,7 @@ class MatrixDiagTriuLink(LinkFunction):
             return self.triu_link.inverse(x)
 
 
-class MatrixDiagTrilLink(LinkFunction):
+class MatrixDiagTril(LinkFunction):
 
     valid_shapes = [ParameterShapes.LOWER_TRIANGULAR_MATRIX]
 

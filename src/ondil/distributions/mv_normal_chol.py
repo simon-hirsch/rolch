@@ -7,8 +7,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
-from ..link import IdentityLink, LogLink
-from ..link.matrixlinks import MatrixDiagTriuLink
+from ..links import Identity, Log, MatrixDiagTriu
 from ..types import ParameterShapes
 
 
@@ -33,8 +32,8 @@ class MultivariateNormalInverseCholesky(MultivariateDistributionMixin, Distribut
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link: LinkFunction = MatrixDiagTriuLink(LogLink(), IdentityLink()),
+        loc_link: LinkFunction = Identity(),
+        scale_link: LinkFunction = MatrixDiagTriu(Log(), Identity()),
     ):
         super().__init__(
             links={

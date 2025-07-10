@@ -6,8 +6,7 @@ import scipy.special as sp
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
-from ..link import IdentityLink, LogLink, LogShiftTwoLink
-from ..link.matrixlinks import MatrixDiagLink
+from ..links import Identity, Log, LogShiftTwo, MatrixDiag
 from ..types import ParameterShapes
 
 
@@ -187,10 +186,10 @@ class MultivariateStudentTInverseLowRank(MultivariateDistributionMixin, Distribu
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link_1: LinkFunction = MatrixDiagLink(LogLink()),
-        scale_link_2: LinkFunction = IdentityLink(),
-        tail_link: LinkFunction = LogShiftTwoLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link_1: LinkFunction = MatrixDiag(Log()),
+        scale_link_2: LinkFunction = Identity(),
+        tail_link: LinkFunction = LogShiftTwo(),
         rank: int = 3,
         dof_guesstimate: float = 10.0,
     ):

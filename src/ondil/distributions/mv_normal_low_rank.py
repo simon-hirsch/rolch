@@ -5,8 +5,7 @@ import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, MultivariateDistributionMixin
-from ..link import IdentityLink, LogLink
-from ..link.matrixlinks import MatrixDiagLink
+from ..links import Identity, Log, MatrixDiag
 from ..types import ParameterShapes
 
 
@@ -116,9 +115,9 @@ class MultivariateNormalInverseLowRank(MultivariateDistributionMixin, Distributi
 
     def __init__(
         self,
-        loc_link: LinkFunction = IdentityLink(),
-        scale_link_1: LinkFunction = MatrixDiagLink(LogLink()),
-        scale_link_2: LinkFunction = IdentityLink(),
+        loc_link: LinkFunction = Identity(),
+        scale_link_1: LinkFunction = MatrixDiag(Log()),
+        scale_link_2: LinkFunction = Identity(),
         rank: int = 3,
     ):
         super().__init__(
