@@ -250,18 +250,8 @@ class MultivariateOnlineDistributionalRegressionPath(
 
         # For pretty printing.
         # TODO: This can be moved to top classes
-        self._verbose_prefix = f"[{self.__class__.__name__}]"
-        self._verbose_end = {1: "\n", 2: "\r", 3: "\r"}
         self.verbose = verbose
         self.debug = debug
-
-    def print_message(self, level, string):
-        if level <= self.verbose:
-            print(
-                self._verbose_prefix,
-                string,
-                end=self._verbose_end[min(self.verbose, level + 1)],
-            )
 
     # Same for Univariate and Multivariate
     def handle_default(self, value, default, name):
@@ -680,7 +670,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                         f"Outer Iteration: {outer_iteration}, "
                         f"fitting Distribution parameter {p}, AD-r step {a}"
                     )
-                    self.print_message(level=2, string=message)
+                    self._print_message(level=2, message=message)
                     theta = self._inner_fit(
                         X=X,
                         y=y,
@@ -723,7 +713,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                     f"Average outer iteration took {round(outer_it_avg, 1)} sec. "
                     f"Expected to be finished in max {round(outer_pred_time, 1)} sec. "
                 )
-                self.print_message(level=2, string=message)
+                self._print_message(level=2, message=message)
 
                 # End timing for the iteration
                 adr_it_end = time.time()
@@ -740,7 +730,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                 f"Last ADR iteration {a} took {round(adr_it_last, 1)} sec. "
                 f"Average ADR iteration took {round(adr_it_avg, 1)} sec. "
             )
-            self.print_message(level=1, string=message)
+            self._print_message(level=1, message=message)
 
             # Calculate the improvement
             if self.early_stopping_criteria == "ll":
@@ -1514,7 +1504,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                         f"Outer Iteration: {outer_iteration}, "
                         f"fitting Distribution parameter {p}, AD-r step {a}"
                     )
-                    self.print_message(level=2, string=message)
+                    self._print_message(level=2, message=message)
                     theta = self._inner_update(
                         X=X, y=y, theta=theta, outer_iteration=outer_iteration, p=p, a=a
                     )
@@ -1548,7 +1538,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                     f"Average outer iteration took {round(outer_it_avg, 1)} sec. "
                     f"Expected to be finished in max {round(outer_pred_time, 1)} sec. "
                 )
-                self.print_message(level=2, string=message)
+                self._print_message(level=2, message=message)
 
                 # End timing for the iteration
                 adr_it_end = time.time()
@@ -1611,12 +1601,12 @@ class MultivariateOnlineDistributionalRegressionPath(
                 if (
                     self.improvement_abs_scaled[a - 1] < self.early_stopping_abs_tol
                 ) or (self.improvement_rel[a - 1] < self.early_stopping_rel_tol):
-                    if self.verbose > 0:
-                        print(
-                            self._verbose_prefix,
-                            f"Early stopping due to AD-r-regression. "
-                            f"Last inrcease in r lead to relative improvement: {self.improvement_rel[a-1]}, scaled absolute improvement {self.improvement_abs_scaled[a-1]}",
-                        )
+                    message = (
+                        f"Early stopping due to AD-r-regression. "
+                        f"Last inrcease in r lead to relative improvement: {self.improvement_rel[a-1]}, scaled absolute improvement {self.improvement_abs_scaled[a-1]}",
+                    )
+
+                    self._print_message(level=1, message=message)
                     if self.improvement_rel[a - 1] > 0:
                         self.optimal_adr = a
                     elif self.improvement_rel[a - 1] < 0:
