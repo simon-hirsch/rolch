@@ -557,7 +557,7 @@ class MultivariateOnlineDistributionalRegressionPath(
 
     # Different UV - MV
     @_fit_context(prefer_skip_nested_validation=True)
-    def fit(self, X, y):
+    def fit(self, X: np.ndarray, y: np.ndarray):
 
         # Prepare the estimator
         self._prepare_estimator()
