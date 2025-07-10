@@ -1,11 +1,12 @@
 import numpy as np
 import rpy2.robjects as robjects
 
-from ondil import DistributionBetaInflated, OnlineGamlss
+from ondil.distributions import BetaInflated
+from ondil.estimators import OnlineDistributionalRegression
 
 
 def test_beta_distribution():
-    dist = DistributionBetaInflated()
+    dist = BetaInflated()
 
     code = """
     library(gamlss)
@@ -48,7 +49,7 @@ def test_beta_distribution():
     x2 = np.array(R_list.rx2("x2"))
     X = np.column_stack((x1, x2))
 
-    estimator = OnlineGamlss(
+    estimator = OnlineDistributionalRegression(
         distribution=dist,
         equation={0: "all", 1: "all", 2: "all", 3: "all"},
         method="ols",
@@ -58,18 +59,18 @@ def test_beta_distribution():
 
     estimator.fit(X=X, y=y)
     print("Difference in estimates: ", estimator.beta[0] - R_list.rx2("coef_R_mu"))
-    assert np.allclose(
-        estimator.beta[0], R_list.rx2("coef_R_mu")
-    ), "Location coefficients don't match"
+    assert np.allclose(estimator.beta[0], R_list.rx2("coef_R_mu")), (
+        "Location coefficients don't match"
+    )
     print("Difference in estimates: ", estimator.beta[1] - R_list.rx2("coef_R_sg"))
-    assert np.allclose(
-        estimator.beta[1], R_list.rx2("coef_R_sg")
-    ), "Scale coefficients don't match"
+    assert np.allclose(estimator.beta[1], R_list.rx2("coef_R_sg")), (
+        "Scale coefficients don't match"
+    )
     print("Difference in estimates: ", estimator.beta[2] - R_list.rx2("coef_R_nu"))
-    assert np.allclose(
-        estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-3
-    ), "Skew coefficients don't match"
+    assert np.allclose(estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-3), (
+        "Skew coefficients don't match"
+    )
     print("Difference in estimates: ", estimator.beta[3] - R_list.rx2("coef_R_tau"))
-    assert np.allclose(
-        estimator.beta[3], R_list.rx2("coef_R_tau"), atol=1e-3
-    ), "Kurtosis coefficients don't match"
+    assert np.allclose(estimator.beta[3], R_list.rx2("coef_R_tau"), atol=1e-3), (
+        "Kurtosis coefficients don't match"
+    )

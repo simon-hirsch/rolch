@@ -1,15 +1,15 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.special as spc
 import scipy.stats as st
 
-from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogitLink, LogLink
+from ..base import Distribution, LinkFunction
+from ..links import Log, Logit
 from ..types import ParameterShapes
 
 
-class DistributionBetaInflated(Distribution):
+class BetaInflated(Distribution):
     """The Beta inflated Distribution for GAMLSS."""
 
     corresponding_gamlss: str = "BEINF"
@@ -31,10 +31,10 @@ class DistributionBetaInflated(Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogitLink(),
-        scale_link: LinkFunction = LogitLink(),
-        skew_link: LinkFunction = LogLink(),  ##
-        tail_link: LinkFunction = LogLink(),  ##
+        loc_link: LinkFunction = Logit(),
+        scale_link: LinkFunction = Logit(),
+        skew_link: LinkFunction = Log(),  ##
+        tail_link: LinkFunction = Log(),  ##
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link, 2: skew_link, 3: tail_link})
 

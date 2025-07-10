@@ -25,6 +25,16 @@ where $g_k(\cdot)$ is a link function, which ensures that the predicted distribu
 
 This allows us to specify very flexible models that consider the conditional behaviour of the variable's volatility, skewness and tail behaviour. A simple example for electricity markets is wind forecasts, which are skewed depending on the production level - intuitively, there is a higher risk of having lower production if the production level is already high since it cannot go much higher than "full load" and if, the turbines might cut-off. Modelling these conditional probabilistic behaviours is the key strength of distributional regression models.
 
+## Features
+
+- 🚀 First native `Python` implementation of generalized additive models for location, shape and scale (GAMLSS).
+- 🚀 Online-first approach, which allows for incremental updates of the model using `model.update(X, y)`.
+- 🚀 Support for various distributions, including Gaussian, Student's $t$, Johnson's $S_U$, Gamma, Log-normal, Exponential, Beta, Gumbel, Inverse Gaussian and more. Implementing new distributions is straight-forward.
+- 🚀 Flexible link functions for each distribution, allowing for custom transformations of the parameters.
+- 🚀 Support for regularization methods like Lasso, Ridge and Elastic Net.
+- 🚀 Fast and efficient implementation using [`numba`](https://numba.pydata.org/) for just-in-time compilation.
+- 🚀 Full compatibility with [`scikit-learn`](https://scikit-learn.org/stable/) estimators and transformers.
+
 ## Example
 
 Basic estimation and updating procedure:
@@ -44,8 +54,8 @@ equation = {
 }
 
 # Create the estimator
-online_gamlss_lasso = ondil.OnlineGamlss(
-    distribution=ondil.DistributionT(),
+online_gamlss_lasso = ondil.estimators.OnlineDistributionalRegression(
+    distribution=ondil.T(),
     method="lasso",
     equation=equation,
     fit_intercept=True,
@@ -69,7 +79,7 @@ print("\nCoefficients after update call \n")
 print(online_gamlss_lasso.beta)
 
 # Prediction for the last 10 observations
-prediction = online_gamlss_lasso.predict(
+prediction = online_gamlss_lasso.predict_distribution_parameters(
     X=X[-10:, :]
 )
 

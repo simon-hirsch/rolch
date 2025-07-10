@@ -5,11 +5,11 @@ import scipy.stats as st
 from scipy.special import digamma, polygamma
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import LogLink
+from ..links import Log
 from ..types import ParameterShapes
 
 
-class DistributionInverseGamma(ScipyMixin, Distribution):
+class InverseGamma(ScipyMixin, Distribution):
     """
     The Inverse Gamma distribution as parameterized in GAMLSS:
 
@@ -40,8 +40,8 @@ class DistributionInverseGamma(ScipyMixin, Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogLink(),
-        scale_link: LinkFunction = LogLink(),
+        loc_link: LinkFunction = Log(),
+        scale_link: LinkFunction = Log(),
     ) -> None:
         super().__init__(
             links={

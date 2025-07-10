@@ -316,7 +316,7 @@ class ScipyMixin(ABC):
         """Maps $\\theta$ to the `scipy` parameters.
 
         Args:
-            theta (np.ndarray): $\\theta$ as estimated by `OnlineGamlss()` estimator
+            theta (np.ndarray): $\\theta$ as estimated by `OnlineDistributionalRegression()` estimator
 
         Raises:
             ValueError: If we don't define the `scipy_names` attribute.

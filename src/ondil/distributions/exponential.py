@@ -1,14 +1,13 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction, ScipyMixin
-from ..link import IdentityLink, LogLink
-from ..types import ParameterShapes
+from ..links import Log
 
 
-class DistributionExponential(ScipyMixin, Distribution):
+class Exponential(ScipyMixin, Distribution):
     """
     The Exponential distribution parameterized by the mean (mu).
 
@@ -32,7 +31,7 @@ class DistributionExponential(ScipyMixin, Distribution):
         1: ParameterShapes.SCALAR,
     }
 
-    def __init__(self, mu_link: LinkFunction = LogLink()) -> None:
+    def __init__(self, mu_link: LinkFunction = Log()) -> None:
         assert isinstance(mu_link, LinkFunction), "mu_link must be a LinkFunction"
         super().__init__(links={0: mu_link})
 

@@ -53,8 +53,8 @@ equation = {
 }
 
 # Create the estimator
-online_gamlss_lasso = ondil.OnlineGamlss(
-    distribution=ondil.DistributionT(),
+online_gamlss_lasso = ondil.estimators.OnlineDistributionalRegression(
+    distribution=ondil.T(),
     method="lasso",
     equation=equation,
     fit_intercept=True,
@@ -78,7 +78,7 @@ print("\nCoefficients after update call \n")
 print(online_gamlss_lasso.betas)
 
 # Prediction for the last 10 observations
-prediction = online_gamlss_lasso.predict(
+prediction = online_gamlss_lasso.predict_distribution_parameters(
     X=X[-10:, :]
 )
 
