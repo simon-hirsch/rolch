@@ -283,6 +283,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         tags.target_tags.single_output = False
         tags.target_tags.multi_output = True
         tags.input_tags.sparse = False
+        tags.regressor_tags.poor_score = True
         return tags
 
     def _process_parameter(self, attribute: Any, default: Any, name: str) -> None:
