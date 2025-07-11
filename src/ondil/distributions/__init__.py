@@ -1,17 +1,21 @@
 from .beta import Beta
-from .exponential import Exponential
 from .betainflated import BetaInflated
+from .exponential import Exponential
 from .gamma import Gamma
 from .gumbel import Gumbel
+from .inversegamma import InverseGamma
 from .inversegaussian import InverseGaussian
 from .johnsonsu import JSU
 from .logistic import Logistic
 from .lognormal import LogNormal
 from .lognormalmedian import LogNormalMedian
+from .mv_normal_chol import MultivariateNormalInverseCholesky
+from .mv_normal_low_rank import MultivariateNormalInverseLowRank
+from .mv_t_chol import MultivariateStudentTInverseCholesky
+from .mv_t_low_rank import MultivariateStudentTInverseLowRank
 from .normal import Normal, NormalMeanVariance
-from .studentt import T
 from .reversegumbel import ReverseGumbel
-from .inversegamma import InverseGamma
+from .studentt import T
 
 __all__ = [
     "Normal",
@@ -29,4 +33,8 @@ __all__ = [
     "InverseGaussian",
     "ReverseGumbel",
     "InverseGamma",
+    "MultivariateNormalInverseCholesky",
+    "MultivariateNormalInverseLowRank",
+    "MultivariateStudentTInverseCholesky",
+    "MultivariateStudentTInverseLowRank",
 ]
