@@ -280,7 +280,6 @@ class MultivariateOnlineDistributionalRegressionPath(
         tags = super().__sklearn_tags__()
         tags.target_tags.two_d_labels = True
         tags.target_tags.single_output = False
-        tags.target_tags.single_output = False
         tags.target_tags.multi_output = True
         tags.input_tags.sparse = False
         tags.regressor_tags.poor_score = True
