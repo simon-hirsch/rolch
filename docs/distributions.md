@@ -19,7 +19,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ## List of Distributions
 
 | Distribution                                                    | Description                            | `scipy` Base            |
-| --------------------------------------------------------------- | -------------------------------------- | ----------------------- |
+|-----------------------------------------------------------------|----------------------------------------|-------------------------|
 | [`Normal`](#ondil.distributions.Normal)                         | Gaussian (mean and standard deviation) | `scipy.stats.norm`      |
 | [`NormalMeanVariance`](#ondil.distributions.NormalMeanVariance) | Gaussian (mean and variance)           | `scipy.stats.norm`      |
 | [`T`](#ondil.distributions.T)                                   | Student's $t$ distribution             | `scipy.stats.t`         |
@@ -35,6 +35,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`BetaInflated`](#ondil.distributions.BetaInflated)             | Beta Inflated distribution             | -                       |
 | [`ReverseGumbel`](#ondil.distributions.ReverseGumbel)           | Reverse Gumbel distribution            | `scipy.stats.gumbel_r`  |
 | [`InverseGamma`](#ondil.distributions.InverseGamma)             | Inverse Gamma distribution             | `scipy.stats.invgamma`  |
+| [`SkewT1`](#ondil.distributions.InverseGamma)                   | SkewT Type 1 distribution              | -                       |
 
 ## API Reference
 
@@ -67,6 +68,8 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 ::: ondil.distributions.ReverseGumbel
 
 ::: ondil.distributions.InverseGamma
+
+::: ondil.distributions.SkewT1
 
 
 ## Base Class
