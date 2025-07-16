@@ -12,6 +12,7 @@ from .normal import Normal, NormalMeanVariance
 from .studentt import T
 from .reversegumbel import ReverseGumbel
 from .inversegamma import InverseGamma
+from .betainflatedzero import BetaInflatedZero
 
 __all__ = [
     "Normal",
@@ -29,4 +30,5 @@ __all__ = [
     "InverseGaussian",
     "ReverseGumbel",
     "InverseGamma",
+    "BetaInflatedZero",
 ]
