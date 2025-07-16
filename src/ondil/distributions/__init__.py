@@ -1,22 +1,22 @@
 from .beta import Beta
-from .exponential import Exponential
 from .betainflated import BetaInflated
+from .exponential import Exponential
 from .gamma import Gamma
 from .gumbel import Gumbel
+from .inversegamma import InverseGamma
 from .inversegaussian import InverseGaussian
 from .johnsonsu import JSU
 from .logistic import Logistic
 from .lognormal import LogNormal
 from .lognormalmedian import LogNormalMedian
 from .normal import Normal, NormalMeanVariance
-from .studentt import T
 from .reversegumbel import ReverseGumbel
-from .inversegamma import InverseGamma
+from .studentt import StudentT
 
 __all__ = [
     "Normal",
     "NormalMeanVariance",
-    "T",
+    "StudentT",
     "JSU",
     "BetaInflated",
     "Gamma",
