@@ -1,7 +1,7 @@
 import copy
 import numbers
 import warnings
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, _fit_context
@@ -231,8 +231,24 @@ class OnlineDistributionalRegression(
         check_is_fitted(self)
         return self.coef_path_
 
-    def plot_pit_histogram(self, X, y, figsize=(10, 5), **kwargs):
+    def plot_pit_histogram(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        figsize: Tuple[float, float] = (10, 5),
+        **kwargs,
+    ):
+        """Create a PIT histogram plot for model diagnostics.
 
+        Args:
+            X (np.ndarray): Covariate matrix $X$.
+            y (np.ndarray): Response variable $y$.
+            figsize (Tuple[float, float], optional): Figure size. Defaults to (10, 5).
+            **kwargs (dict): additional parameters that will be passed to `matplotlib.pyplot.hist()`.
+
+        Returns:
+            Figure (plt.ax): Returns the matplotlib axis plot.
+        """
         check_is_fitted(self)
         X, y = validate_data(
             self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
