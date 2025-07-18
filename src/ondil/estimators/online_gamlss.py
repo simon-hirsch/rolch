@@ -4,6 +4,7 @@ import warnings
 from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
+import scipy.stats as st
 from sklearn.base import BaseEstimator, RegressorMixin, _fit_context
 from sklearn.utils._param_validation import Interval, StrOptions
 from sklearn.utils.multiclass import type_of_target
@@ -236,6 +237,7 @@ class OnlineDistributionalRegression(
         X: np.ndarray,
         y: np.ndarray,
         figsize: Tuple[float, float] = (10, 5),
+        ax: Optional[Any] = None,
         **kwargs,
     ):
         """Create a PIT histogram plot for model diagnostics.
@@ -263,7 +265,8 @@ class OnlineDistributionalRegression(
         edgecolor = kwargs.pop("edgecolor", "black")
         lw = kwargs.pop("lw", 0.5)
 
-        fig, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
         ax.set_title("PIT Histogram")
         ax.hist(
             unif, bins=bins, density=density, color=color, edgecolor=edgecolor, lw=lw
@@ -274,6 +277,51 @@ class OnlineDistributionalRegression(
         ax.axhline(1, color="red")
         ax.grid()
 
+        return ax
+
+    def plot_qq(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        figsize: Tuple[float, float] = (10, 5),
+        ax: Optional[Any] = None,
+        **kwargs,
+    ):
+        """Create a QQ plot for model diagnostics.
+
+        This plot compares the empirical quantiles of the response variable and the predicted quantiles from the distribution.
+
+        Args:
+            X (np.ndarray): Covariate matrix $X$.
+            y (np.ndarray): Response variable $y$.
+            figsize (Tuple[float, float], optional): Figure size. Defaults to (10, 5).
+            ax (matplotlib axis, optional): Axis to plot on. Defaults to None.
+            **kwargs: Additional arguments passed to plt.scatter.
+
+        Returns:
+            matplotlib axis: The axis with the QQ plot.
+        """
+        check_is_fitted(self)
+        X, y = validate_data(
+            self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
+        )
+
+        pred = self.predict_distribution_parameters(X)
+        quantiles = self.distribution.cdf(y, pred)
+        quantiles = np.clip(quantiles, 1e-6, 1 - 1e-6)  # avoid infs
+
+        n = len(y)
+        theoretical = np.linspace(1 / (n + 1), n / (n + 1), n)
+        empirical = np.sort(quantiles)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(theoretical, empirical, **kwargs)
+        ax.plot([0, 1], [0, 1], color="red", lw=1)
+        ax.set_xlabel("Theoretical Quantiles")
+        ax.set_ylabel("Empirical Quantiles")
+        ax.set_title("QQ Plot")
+        ax.grid()
         return ax
 
     def _prepare_estimator(self):
