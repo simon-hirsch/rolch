@@ -324,6 +324,70 @@ class OnlineDistributionalRegression(
         ax.grid()
         return ax
 
+    def plot_worm(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        level: float = 0.95,
+        figsize: Tuple[float, float] = (10, 5),
+        ax: Optional[Any] = None,
+        **kwargs,
+    ):
+        """Create a worm plot (de-trended QQ plot of the residuals) for model diagnostics.
+
+        Args:
+            X (np.ndarray): Covariate matrix $X$.
+            y (np.ndarray): Response variable $y$.
+            figsize (Tuple[float, float], optional): Figure size. Defaults to (10, 5).
+            ax (matplotlib axis, optional): Axis to plot on. Defaults to None.
+            **kwargs: Additional arguments passed to plt.scatter.
+
+        Returns:
+            matplotlib axis: The axis with the worm plot.
+        """
+        check_is_fitted(self)
+        X, y = validate_data(
+            self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
+        )
+
+        pred = self.predict(X)
+        residuals = y - pred
+        quantiles = np.sort(residuals)
+
+        n = len(y)
+        # avoid infs at 0 and 1
+        loc = residuals.mean()
+        scale = residuals.std(ddof=1)
+        q = np.linspace(0, 1, n + 2)[1:-1]
+        theoretical = st.norm(loc, scale).ppf(q=q)
+
+        empirical = np.sort(quantiles)
+        worm = empirical - theoretical
+
+        z = np.linspace(np.min(theoretical), np.max(theoretical), n)
+        p = st.norm(loc=0, scale=1).cdf(z)
+        se = (1 / st.norm().pdf(z)) * (np.sqrt(p * (1 - p) / n))
+        lower_bound = se * st.norm.ppf((1 - level) / 2)
+        upper_bound = se * st.norm.ppf((1 + level) / 2)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(theoretical, worm, **kwargs)
+        ax.axhline(0, color="red", lw=1)
+        ax.fill_between(
+            theoretical,
+            lower_bound,
+            upper_bound,
+            color="lightgrey",
+            alpha=0.5,
+            label=f"{int(level * 100)}% CI",
+        )
+        ax.set_xlabel("Theoretical Quantiles")
+        ax.set_ylabel("Empirical - Theoretical Quantiles")
+        ax.set_title("Worm Plot (De-trended QQ Plot)")
+        ax.grid()
+        return ax
+
     def _prepare_estimator(self):
         self._equation = self._process_equation(self.equation)
         self._method = {
