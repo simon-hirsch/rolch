@@ -13,7 +13,7 @@ from sklearn.utils.validation import (
     validate_data,
 )
 
-from .. import HAS_PANDAS, HAS_POLARS
+from .. import HAS_MPL, HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, OndilEstimatorMixin
 from ..distributions import Normal
 from ..error import OutOfSupportError
@@ -27,6 +27,8 @@ if HAS_PANDAS:
     import pandas as pd
 if HAS_POLARS:
     import polars as pl  # noqa
+if HAS_MPL:
+    import matplotlib.pyplot as plt  # noqa
 
 
 class OnlineDistributionalRegression(
@@ -228,6 +230,35 @@ class OnlineDistributionalRegression(
     def beta_path(self):
         check_is_fitted(self)
         return self.coef_path_
+
+    def plot_pit_histogram(self, X, y, figsize=(10, 5), **kwargs):
+
+        check_is_fitted(self)
+        X, y = validate_data(
+            self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
+        )
+
+        pred = self.predict_distribution_parameters(X)
+        unif = self.distribution.cdf(y, pred)
+
+        bins = kwargs.pop("bins", np.linspace(0, 1, round(np.sqrt(y.shape[0])) + 1))
+        density = kwargs.pop("density", True)
+        color = kwargs.pop("color", "grey")
+        edgecolor = kwargs.pop("edgecolor", "black")
+        lw = kwargs.pop("lw", 0.5)
+
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.set_title("PIT Histogram")
+        ax.hist(
+            unif, bins=bins, density=density, color=color, edgecolor=edgecolor, lw=lw
+        )
+        ax.set_xlabel("Uniform Space")
+        ax.set_ylabel("Density")
+        ax.set_xlim(0, 1)
+        ax.axhline(1, color="red")
+        ax.grid()
+
+        return ax
 
     def _prepare_estimator(self):
         self._equation = self._process_equation(self.equation)
