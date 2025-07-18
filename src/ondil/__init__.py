@@ -14,7 +14,7 @@ if find_spec("polars") is not None:
     HAS_POLARS = True
 
 if find_spec("matplotlib") is not None:
-    HAS_MPL = False
+    HAS_MPL = True
 
 from .information_criteria import InformationCriterion
 from .scaler import OnlineScaler
