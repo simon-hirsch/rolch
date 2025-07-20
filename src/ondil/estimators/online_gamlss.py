@@ -242,6 +242,10 @@ class OnlineDistributionalRegression(
     ):
         """Create a PIT histogram plot for model diagnostics.
 
+        We use sqrt(n) bins for the histogram by default.
+        Note that for n > 10k, this can be a lot of bins and should
+        be changed with the `bins` parameter in the kwargs.
+
         Args:
             X (np.ndarray): Covariate matrix $X$.
             y (np.ndarray): Response variable $y$.
@@ -354,6 +358,8 @@ class OnlineDistributionalRegression(
         X, y = validate_data(
             self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
         )
+
+        # See https://github.com/gamlss-dev/gamlss/blob/main/R/wp.R
 
         pred = self.predict(X)
         residuals = y - pred
