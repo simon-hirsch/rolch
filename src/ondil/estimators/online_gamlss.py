@@ -17,7 +17,7 @@ from sklearn.utils.validation import (
 from .. import HAS_MPL, HAS_PANDAS, HAS_POLARS
 from ..base import Distribution, EstimationMethod, OndilEstimatorMixin
 from ..distributions import Normal
-from ..error import OutOfSupportError
+from ..error import OutOfSupportError, check_matplotlib
 from ..gram import init_forget_vector
 from ..information_criteria import InformationCriterion
 from ..methods import get_estimation_method
@@ -246,11 +246,13 @@ class OnlineDistributionalRegression(
             X (np.ndarray): Covariate matrix $X$.
             y (np.ndarray): Response variable $y$.
             figsize (Tuple[float, float], optional): Figure size. Defaults to (10, 5).
+            ax (matplotlib axis, optional): Axis to plot on. Defaults to None.
             **kwargs (dict): additional parameters that will be passed to `matplotlib.pyplot.hist()`.
 
         Returns:
             Figure (plt.ax): Returns the matplotlib axis plot.
         """
+        check_matplotlib(HAS_MPL)
         check_is_fitted(self)
         X, y = validate_data(
             self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
@@ -301,6 +303,7 @@ class OnlineDistributionalRegression(
         Returns:
             matplotlib axis: The axis with the QQ plot.
         """
+        check_matplotlib(HAS_MPL)
         check_is_fitted(self)
         X, y = validate_data(
             self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
@@ -338,6 +341,7 @@ class OnlineDistributionalRegression(
         Args:
             X (np.ndarray): Covariate matrix $X$.
             y (np.ndarray): Response variable $y$.
+            level (float, optional): Confidence level for the confidence bands. Defaults to 0.95.
             figsize (Tuple[float, float], optional): Figure size. Defaults to (10, 5).
             ax (matplotlib axis, optional): Axis to plot on. Defaults to None.
             **kwargs: Additional arguments passed to plt.scatter.
@@ -345,11 +349,7 @@ class OnlineDistributionalRegression(
         Returns:
             matplotlib axis: The axis with the worm plot.
         """
-        check_is_fitted(self)
-        X, y = validate_data(
-            self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
-        )
-
+        check_matplotlib(HAS_MPL)
         check_is_fitted(self)
         X, y = validate_data(
             self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
@@ -359,6 +359,7 @@ class OnlineDistributionalRegression(
         residuals = y - pred
 
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.probplot.html
+        # equivalent to R's qqnorm and qqline
         xx, yy = st.probplot(residuals, fit=False)
         yy = yy - xx
         n = len(xx)
