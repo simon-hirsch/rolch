@@ -350,21 +350,19 @@ class OnlineDistributionalRegression(
             self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
         )
 
+        check_is_fitted(self)
+        X, y = validate_data(
+            self, X=X, y=y, reset=False, dtype=[np.float64, np.float32]
+        )
+
         pred = self.predict(X)
         residuals = y - pred
-        quantiles = np.sort(residuals)
 
-        n = len(y)
-        # avoid infs at 0 and 1
-        loc = residuals.mean()
-        scale = residuals.std(ddof=1)
-        q = np.linspace(0, 1, n + 2)[1:-1]
-        theoretical = st.norm(loc, scale).ppf(q=q)
-
-        empirical = np.sort(quantiles)
-        worm = empirical - theoretical
-
-        z = np.linspace(np.min(theoretical), np.max(theoretical), n)
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.probplot.html
+        xx, yy = st.probplot(residuals, fit=False)
+        yy = yy - xx
+        n = len(xx)
+        z = np.linspace(np.min(xx), np.max(xx), n)
         p = st.norm(loc=0, scale=1).cdf(z)
         se = (1 / st.norm().pdf(z)) * (np.sqrt(p * (1 - p) / n))
         lower_bound = se * st.norm.ppf((1 - level) / 2)
@@ -372,16 +370,11 @@ class OnlineDistributionalRegression(
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(theoretical, worm, **kwargs)
-        ax.axhline(0, color="red", lw=1)
-        ax.fill_between(
-            theoretical,
-            lower_bound,
-            upper_bound,
-            color="lightgrey",
-            alpha=0.5,
-            label=f"{int(level * 100)}% CI",
-        )
+        ax.scatter(xx, yy, **kwargs)
+        ax.plot(z, lower_bound, color="red", label="y=x")
+        ax.plot(z, upper_bound, color="red")
+        ax.fill_between(z, lower_bound, upper_bound, color="grey", alpha=0.2)
+        ax.axhline(0, color="black", lw=1, ls="--")
         ax.set_xlabel("Theoretical Quantiles")
         ax.set_ylabel("Empirical - Theoretical Quantiles")
         ax.set_title("Worm Plot (De-trended QQ Plot)")
