@@ -378,8 +378,8 @@ class OnlineDistributionalRegression(
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         ax.scatter(xx, yy, **kwargs)
-        ax.plot(z, lower_bound, color="red", label="y=x")
-        ax.plot(z, upper_bound, color="red")
+        ax.plot(z, lower_bound, color="red", label="Lower confidence bound")
+        ax.plot(z, upper_bound, color="red", label="Upper confidence bound")
         ax.fill_between(z, lower_bound, upper_bound, color="grey", alpha=0.2)
         ax.axhline(0, color="black", lw=1, ls="--")
         ax.set_xlabel("Theoretical Quantiles")
