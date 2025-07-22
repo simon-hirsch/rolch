@@ -21,7 +21,7 @@ def test_ZeroAdjustedGamma_distribution():
     y ~ x1 + x2,
     sigma.formula = ~x1 + x2,
     nu.formula = ~x1 + x2,
-    family = BEINF0()
+    family = ZAGA()
     )
 
 
