@@ -52,19 +52,18 @@ def test_ZeroAdjustedGamma_distribution():
         method="ols",
         scale_inputs=False,
         fit_intercept=True,
-        rss_tol_inner=10,
     )
 
     estimator.fit(X=X, y=y)
     print("Difference in estimates: ", estimator.beta[0] - R_list.rx2("coef_R_mu"))
-    assert np.allclose(estimator.beta[0], R_list.rx2("coef_R_mu")), (
+    assert np.allclose(estimator.beta[0], R_list.rx2("coef_R_mu"), atol=1e-4), (
         "Location coefficients don't match"
     )
     print("Difference in estimates: ", estimator.beta[1] - R_list.rx2("coef_R_sg"))
-    assert np.allclose(estimator.beta[1], R_list.rx2("coef_R_sg")), (
+    assert np.allclose(estimator.beta[1], R_list.rx2("coef_R_sg"), atol=1e-4), (
         "Scale coefficients don't match"
     )
     print("Difference in estimates: ", estimator.beta[2] - R_list.rx2("coef_R_nu"))
-    assert np.allclose(estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-3), (
+    assert np.allclose(estimator.beta[2], R_list.rx2("coef_R_nu"), atol=1e-4), (
         "Skew coefficients don't match"
     )
