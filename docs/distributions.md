@@ -35,6 +35,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 | [`BetaInflated`](#ondil.distributions.BetaInflated)             | Beta Inflated distribution             | -                       |
 | [`ReverseGumbel`](#ondil.distributions.ReverseGumbel)           | Reverse Gumbel distribution            | `scipy.stats.gumbel_r`  |
 | [`InverseGamma`](#ondil.distributions.InverseGamma)             | Inverse Gamma distribution             | `scipy.stats.invgamma`  |
+| [`BetaInflatedZero`](#ondil.distributions.BetaInflatedZero)     | Zero Inflated Beta distribution        | -                       |
 
 ## API Reference
 
@@ -68,6 +69,7 @@ All distributions are based on `scipy.stats` distributions. We implement the pro
 
 ::: ondil.distributions.InverseGamma
 
+::: ondil.distributions.BetaInflatedZero
 
 ## Base Class
 

@@ -1,5 +1,6 @@
 from .beta import Beta
 from .betainflated import BetaInflated
+from .betainflatedzero import BetaInflatedZero
 from .exponential import Exponential
 from .gamma import Gamma
 from .gumbel import Gumbel
@@ -29,4 +30,5 @@ __all__ = [
     "InverseGaussian",
     "ReverseGumbel",
     "InverseGamma",
+    "BetaInflatedZero",
 ]
