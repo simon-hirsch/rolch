@@ -1,14 +1,14 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy.special as spc
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction
-from ..link import LogitLink, LogLink
+from ..links import Logit, Log
 
 
-class DistributionZeroAdjustedGamma(Distribution):
+class ZeroAdjustedGamma(Distribution):
     """The Zero Adjusted Gamma Distribution for GAMLSS.
     
     The zero adjusted gamma distribution is a mixture of a discrete value 0 with
@@ -40,9 +40,9 @@ class DistributionZeroAdjustedGamma(Distribution):
 
     def __init__(
         self,
-        loc_link: LinkFunction = LogLink(),
-        scale_link: LinkFunction = LogLink(),
-        inflation_link: LinkFunction = LogitLink(),
+        loc_link: LinkFunction = Log(),
+        scale_link: LinkFunction = Log(),
+        inflation_link: LinkFunction = Logit(),
     ) -> None:
         super().__init__(links={0: loc_link, 1: scale_link, 2: inflation_link})
 
@@ -149,10 +149,13 @@ class DistributionZeroAdjustedGamma(Distribution):
     def logpdf(self, y, theta):
         mu, sigma, nu = self.theta_to_params(theta)
 
-        result = np.log(1 - nu) + (
-            1 / sigma**2) * np.log(
-            y / (mu * sigma**2)) - y / (mu * sigma**2) -np.log(y) - spc.gammaln(
-            1 / sigma**2)
+        result = (
+            np.log(1 - nu)
+            + (1 / sigma**2) * np.log(y / (mu * sigma**2))
+            - y / (mu * sigma**2)
+            - np.log(y)
+            - spc.gammaln(1 / sigma**2)
+        )
 
         return np.where(y == 0, np.log(nu), result)
 

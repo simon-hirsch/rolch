@@ -13,7 +13,7 @@ from .lognormalmedian import LogNormalMedian
 from .normal import Normal, NormalMeanVariance
 from .reversegumbel import ReverseGumbel
 from .studentt import StudentT
-from .zeroadjustedgamma import DistributionZeroAdjustedGamma
+from .zeroadjustedgamma import ZeroAdjustedGamma
 
 __all__ = [
     "Normal",
@@ -32,5 +32,5 @@ __all__ = [
     "ReverseGumbel",
     "InverseGamma",
     "BetaInflatedZero",
-    "DistributionZeroAdjustedGamma",
+    "ZeroAdjustedGamma",
 ]
