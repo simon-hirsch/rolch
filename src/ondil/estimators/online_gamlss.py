@@ -265,7 +265,7 @@ class OnlineDistributionalRegression(
         pred = self.predict_distribution_parameters(X)
         unif = self.distribution.cdf(y, pred)
 
-        bins = kwargs.pop("bins", np.linspace(0, 1, round(np.sqrt(y.shape[0])) + 1))
+        bins = kwargs.pop("bins", np.linspace(0, 1, min(round(np.sqrt(y.shape[0])) + 1, 50)))
         density = kwargs.pop("density", True)
         color = kwargs.pop("color", "grey")
         edgecolor = kwargs.pop("edgecolor", "black")
