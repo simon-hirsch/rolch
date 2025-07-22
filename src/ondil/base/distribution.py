@@ -15,6 +15,9 @@ class Distribution(ABC):
         self.links = links
         self._validate_links()
 
+    def __call__(self, *args, **kwds):
+        raise NotImplementedError("Not implemented but necessary for sklearn.")
+
     @property
     def corresponding_gamlss(self) -> str | None:
         """The name of the corresponding implementation in 'gamlss.dist' R package."""
@@ -251,7 +254,7 @@ class ScipyMixin(ABC):
         """Maps $\\theta$ to the `scipy` parameters.
 
         Args:
-            theta (np.ndarray): $\\theta$ as estimated by `OnlineGamlss()` estimator
+            theta (np.ndarray): $\\theta$ as estimated by `OnlineDistributionalRegression()` estimator
 
         Raises:
             ValueError: If we don't define the `scipy_names` attribute.
@@ -325,6 +328,17 @@ class ScipyMixin(ABC):
             .rvs((size, theta.shape[0]))
             .T
         )
+
+    def mean(self, theta: np.ndarray) -> np.ndarray:
+        """Compute the mean of the distribution for the given parameters.
+
+        Args:
+            theta (np.ndarray): An array of parameters for the distribution.
+
+        Returns:
+            np.ndarray: An array of means corresponding to the parameters in `theta`.
+        """
+        return self.scipy_dist(**self.theta_to_scipy_params(theta)).mean()
 
     def _scipy_mle_objective(
         self,

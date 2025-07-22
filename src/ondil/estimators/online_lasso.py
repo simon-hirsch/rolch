@@ -3,11 +3,10 @@ from typing import Literal
 import numpy as np
 
 from ..estimators.online_linear_model import OnlineLinearModel
-from ..methods import LassoPathMethod
+from ..methods import LassoPath
 
 
 class OnlineLasso(OnlineLinearModel):
-
     def __init__(
         self,
         forget: float = 0,
@@ -47,7 +46,7 @@ class OnlineLasso(OnlineLinearModel):
             selection (Literal["cyclic", "random"], optional): Whether to cycle through all coordinates in order or random. For large problems, random might increase convergence. Defaults to 100.
         """
 
-        concrete_method = LassoPathMethod(
+        concrete_method = LassoPath(
             lambda_eps=lambda_eps,
             lambda_n=lambda_n,
             start_value_initial="previous_lambda",
