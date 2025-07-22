@@ -3,7 +3,7 @@ import rpy2.robjects as robjects
 from ondil import DistributionZeroAdjustedGamma, OnlineGamlss
 
 
-def test_beta_distribution():
+def test_ZeroAdjustedGamma_distribution():
     dist = DistributionZeroAdjustedGamma()
 
     code = """
