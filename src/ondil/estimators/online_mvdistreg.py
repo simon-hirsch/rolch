@@ -175,7 +175,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         "forget": [Interval(numbers.Real, 0.0, 1.0, closed="left"), dict],
         "learning_rate": [Interval(numbers.Real, 0.0, 1.0, closed="left")],
         "fit_intercept": [bool, dict],
-        "scale_inputs": [bool],
+        "scale_inputs": [bool, np.ndarray],
         "verbose": [Interval(numbers.Integral, 0, None, closed="left")],
         "method": [StrOptions({"ols", "lasso"}), dict],
         "ic": [StrOptions({"ll", "aic", "bic", "hqc", "max"})],
