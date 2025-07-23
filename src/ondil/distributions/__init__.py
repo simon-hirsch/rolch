@@ -1,5 +1,6 @@
 from .beta import Beta
 from .betainflated import BetaInflated
+from .betainflatedzero import BetaInflatedZero
 from .exponential import Exponential
 from .gamma import Gamma
 from .gumbel import Gumbel
@@ -15,12 +16,13 @@ from .mv_t_chol import MultivariateStudentTInverseCholesky
 from .mv_t_low_rank import MultivariateStudentTInverseLowRank
 from .normal import Normal, NormalMeanVariance
 from .reversegumbel import ReverseGumbel
-from .studentt import T
+from .studentt import StudentT
+from .zeroadjustedgamma import ZeroAdjustedGamma
 
 __all__ = [
     "Normal",
     "NormalMeanVariance",
-    "T",
+    "StudentT",
     "JSU",
     "BetaInflated",
     "Gamma",
@@ -37,4 +39,6 @@ __all__ = [
     "MultivariateNormalInverseLowRank",
     "MultivariateStudentTInverseCholesky",
     "MultivariateStudentTInverseLowRank",
+    "BetaInflatedZero",
+    "ZeroAdjustedGamma",
 ]

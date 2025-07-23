@@ -9,7 +9,7 @@ from ..links import Identity, Log, LogShiftTwo
 from ..types import ParameterShapes
 
 
-class T(ScipyMixin, Distribution):
+class StudentT(ScipyMixin, Distribution):
     """Corresponds to GAMLSS TF() and scipy.stats.t()"""
 
     corresponding_gamlss: str = "TF"

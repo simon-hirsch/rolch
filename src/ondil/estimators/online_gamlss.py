@@ -743,6 +743,7 @@ class OnlineDistributionalRegression(
         self._schedule_iteration = self._make_iter_schedule()
         self._schedule_step_size = self._make_step_size_schedule()
 
+        self._it_inner = np.zeros(self.distribution.n_params)
         if self.prefit_initial > 0:
             message = (
                 f"Setting max_it_inner to {self.prefit_initial} for first iteration"
@@ -1187,6 +1188,7 @@ class OnlineDistributionalRegression(
                 self._model_selection_data[param] = model_selection_data_it
                 self._best_ic[param] = best_ic_it
 
+        self._it_inner[param] = it_inner
         return dv_it
 
     def _inner_update(
@@ -1368,6 +1370,7 @@ class OnlineDistributionalRegression(
         self._mean_of_weights_new[param] = (
             self._sum_of_weights_new[param] / self.n_training_[param]
         )
+        self._it_inner[param] = it_inner
         return dv_it
 
     def predict(self, X: np.ndarray) -> np.ndarray:
