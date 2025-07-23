@@ -242,6 +242,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         It regularizes the scale matrix by estimating it sequentially from an "independence" configuration to a full covariance matrix,
         using the AD-R regularization scheme. Supports various regression methods, model selection criteria, early stopping, and input scaling.
 
+        Args:
             distribution (Distribution, optional): The multivariate distribution to fit. Defaults to MultivariateNormalInverseCholesky().
             equation (Dict | None, optional): Dictionary specifying the regression equation. Defaults to None.
             forget (float | Dict, optional): Forgetting factor for online updates, can be a float or per-dimension dict. Defaults to 0.0.
