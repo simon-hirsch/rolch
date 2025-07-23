@@ -361,28 +361,6 @@ class MultivariateOnlineDistributionalRegressionPath(
             self.overshoot_correction, default=None, name="overshoot_correction"
         )
 
-    def _process_parameter(self, attribute: Any, default: Any, name: str) -> None:
-        if isinstance(attribute, dict):
-            for p in range(self.distribution.n_params):
-                if p not in attribute.keys():
-                    warnings.warn(
-                        f"[{self.__class__.__name__}] "
-                        f"No value given for parameter {name} for distribution "
-                        f"parameter {p}. Setting default value {default}.",
-                        RuntimeWarning,
-                        stacklevel=1,
-                    )
-                    if isinstance(default, dict):
-                        attribute[p] = default[p]
-                    else:
-                        attribute[p] = default
-        else:
-            # No warning since we expect that floats/strings/ints are either the defaults
-            # Or given on purpose for all params the ame
-            attribute = {p: attribute for p in range(self.distribution.n_params)}
-
-        return attribute
-
     def make_iteration_indices(self, param: int):
 
         if (
