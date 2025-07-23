@@ -236,6 +236,41 @@ class MultivariateOnlineDistributionalRegressionPath(
         rel_tol_outer: float = 1e-3,
         abs_tol_outer: float = 1e-3,
     ):
+        """Initialize the Online Multivariate Distributional Regression Path Estimator.
+
+        This estimator fits a multivariate distribution to the data using an online approach.
+        It regularizes the scale matrix by estimating it sequentially from an "independence" configuration to a full covariance matrix,
+        using the AD-R regularization scheme. Supports various regression methods, model selection criteria, early stopping, and input scaling.
+
+            distribution (Distribution, optional): The multivariate distribution to fit. Defaults to MultivariateNormalInverseCholesky().
+            equation (Dict | None, optional): Dictionary specifying the regression equation. Defaults to None.
+            forget (float | Dict, optional): Forgetting factor for online updates, can be a float or per-dimension dict. Defaults to 0.0.
+            learning_rate (float, optional): Learning rate for online updates. Defaults to 0.0.
+            fit_intercept (bool, optional): Whether to fit an intercept term. Defaults to True.
+            scale_inputs (bool, optional): Whether to scale input features. Defaults to True.
+            verbose (int, optional): Verbosity level for logging. Defaults to 1.
+            method (Literal["ols", "lasso"] | Dict[int, Literal["ols", "lasso"]], optional): Regression method(s) to use, either "ols", "lasso", or per-dimension dict. Defaults to "ols".
+            ic (Literal["ll", "aic", "bic", "hqc", "max"], optional): Information criterion for model selection. Defaults to "aic".
+            iteration_along_diagonal (bool, optional): If True, iterates regularization along the diagonal of the scale matrix. Defaults to False.
+            approx_fast_model_selection (bool, optional): If True, uses approximate fast model selection. Defaults to True.
+            max_regularisation_size (int | None, optional): Maximum size for regularization path. Defaults to None.
+            early_stopping (bool, optional): Enables early stopping during regularization. Defaults to True.
+            early_stopping_criteria (Literal["ll", "aic", "bic", "hqc", "max"], optional): Criterion for early stopping. Defaults to "aic".
+            early_stopping_abs_tol (float, optional): Absolute tolerance for early stopping. Defaults to 0.001.
+            early_stopping_rel_tol (float, optional): Relative tolerance for early stopping. Defaults to 0.001.
+            weight_delta (float | Dict[int, float], optional): Step size for weight updates, can be float or per-dimension dict. Defaults to 1.0.
+            max_iterations_inner (int, optional): Maximum number of inner iterations. Defaults to 10.
+            max_iterations_outer (int, optional): Maximum number of outer iterations. Defaults to 10.
+            overshoot_correction (Optional[Dict[int, float]], optional): Correction factors for overshooting during updates. Defaults to None.
+            lambda_n (int, optional): Number of regularization steps for LASSO. Defaults to 100.
+            dampen_estimation (bool | int, optional): If True or int, dampens estimation updates. Defaults to False.
+            debug (bool, optional): Enables debug mode for additional logging. Defaults to False.
+            rel_tol_inner (float, optional): Relative tolerance for convergence in inner loop. Defaults to 1e-3.
+            abs_tol_inner (float, optional): Absolute tolerance for convergence in inner loop. Defaults to 1e-3.
+            rel_tol_outer (float, optional): Relative tolerance for convergence in outer loop. Defaults to 1e-3.
+            abs_tol_outer (float, optional): Absolute tolerance for convergence in outer loop. Defaults to 1e-3.
+        """
+
         self.distribution = distribution
         self.forget = forget
         self.fit_intercept = fit_intercept
@@ -558,6 +593,15 @@ class MultivariateOnlineDistributionalRegressionPath(
     # Different UV - MV
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X: np.ndarray, y: np.ndarray):
+        """Fit the estimator to the data.
+
+        Args:
+            X (np.ndarray): Covariate or feature matrix.
+            y (np.ndarray): Multivariate response variable.
+
+        Returns:
+            estimator: Returns the fitted estimator.
+        """
 
         X, y = validate_data(
             self,
@@ -1267,7 +1311,15 @@ class MultivariateOnlineDistributionalRegressionPath(
         self,
         X: Optional[np.ndarray] = None,
     ) -> Dict[int, np.ndarray]:
-        """Predict the location parameter."""
+        """
+        Predict the location parameter.
+
+        Parameters
+        ----------
+        X : np.ndarray, optional
+            The input data. If None, will use a default value of ones.
+
+        """
 
         check_is_fitted(self)
         X = validate_data(self, X=X, reset=False, dtype=[np.float64, np.float32])
@@ -1299,6 +1351,14 @@ class MultivariateOnlineDistributionalRegressionPath(
         self,
         X: Optional[np.ndarray] = None,
     ) -> Dict[int, np.ndarray]:
+        """Predict the distribution parameters.
+
+        Args:
+            X (Optional[np.ndarray], optional): Covariate or feature matrix. Defaults to None.
+
+        Returns:
+            Dict[int, np.ndarray]: Return the predicted distribution parameters as a dictionary.
+        """
 
         check_is_fitted(self)
         X = validate_data(
@@ -1336,6 +1396,15 @@ class MultivariateOnlineDistributionalRegressionPath(
         self,
         X: Optional[np.ndarray] = None,
     ) -> Dict[int, np.ndarray]:
+        """Predict all regualarized fits in one go.
+
+        Args:
+            X (Optional[np.ndarray], optional): Covariate or feature matrix. Defaults to None.
+
+        Returns:
+            Dict[int, np.ndarray]: Return the predicted distribution parameters for all AD-R steps as a dictionary. The structure is
+            {adr_step: {param: np.ndarray}} where `adr_step` is the AD-R step index and `param` is the distribution parameter index.
+        """
 
         check_is_fitted(self)
         X = validate_data(self, X=X, reset=False, dtype=[np.float64, np.float32])
@@ -1396,6 +1465,25 @@ class MultivariateOnlineDistributionalRegressionPath(
     # Different UV - MV
     @_fit_context(prefer_skip_nested_validation=True)
     def update(self, X: np.ndarray, y: np.ndarray):
+        """
+        Updates the estimator with new observations.
+
+        This method validates the input data, updates internal counters for the number of observations,
+        recalculates the effective training length based on the learning rate, and updates the model's
+        likelihood. It also scales the input features, stores previous states for model selection and
+        likelihood, and performs an outer update step with the scaled data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Input feature matrix of shape (n_samples, n_features).
+        y : np.ndarray
+            Target values of shape (n_samples, n_outputs).
+        Returns
+        -------
+        self : object
+            Returns the updated estimator instance.
+        """
 
         X, y = validate_data(
             self,
