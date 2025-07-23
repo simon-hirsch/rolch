@@ -1077,7 +1077,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             message = (
                 f"Outer iteration: {outer_iteration}, inner iteration {inner_iteration}, parameter {p}, AD-R {a}:"
                 f"current likelihood: {self._current_likelihood[a]},"
-                f"previous iteration likelihood {[outer_iteration, inner_iteration-1, p, a] if inner_iteration > 0 else self._current_likelihood[a]}"
+                f"previous iteration likelihood {self.iteration_likelihood_[outer_iteration, inner_iteration-1, p, a] if inner_iteration > 0 else self._current_likelihood[a]}"
             )
             self._print_message(level=2, message=message)
 
