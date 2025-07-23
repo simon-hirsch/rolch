@@ -361,7 +361,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             self.overshoot_correction, default=None, name="overshoot_correction"
         )
 
-    def make_iteration_indices(self, param: int):
+    def _make_iteration_indices(self, param: int):
 
         if (
             self.distribution.parameter_shape
@@ -433,7 +433,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         return theta
 
     # Only MV
-    def is_element_adr_regularized(self, p: int, k: int, a: int):
+    def _is_element_adr_regularized(self, p: int, k: int, a: int):
         if not self.distribution._regularization_allowed[p]:
             return False
         else:
@@ -444,7 +444,7 @@ class MultivariateOnlineDistributionalRegressionPath(
 
     # Only MV
     # This should be using the distribution
-    def prepare_adr_regularization(self) -> None:
+    def _prepare_adr_regularization(self) -> None:
         self._adr_distance = {}
         self._adr_mapping_index_to_max_distance = {
             p: np.arange(1, self.adr_steps_ + 1)
@@ -467,7 +467,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                     )
 
     # Different UV-MV
-    def get_number_of_covariates(self, X: np.ndarray):
+    def _get_number_of_covariates(self, X: np.ndarray):
         J = {}
         for p in range(self.distribution.n_params):
             J[p] = {}
@@ -606,7 +606,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         # Validate the equation and set the method
         self._method = self._prepare_estimation_method(y=y)
         self._equation = self.validate_equation(self.equation)
-        self.n_features_ = self.get_number_of_covariates(X)
+        self.n_features_ = self._get_number_of_covariates(X)
 
         # Without prior information, the optimal ADR regularization is
         # The largest model
@@ -637,10 +637,11 @@ class MultivariateOnlineDistributionalRegressionPath(
         }
 
         self._iter_index = {
-            p: self.make_iteration_indices(p) for p in range(self.distribution.n_params)
+            p: self._make_iteration_indices(p)
+            for p in range(self.distribution.n_params)
         }
 
-        self.prepare_adr_regularization()
+        self._prepare_adr_regularization()
         theta = self._make_initial_theta(y)
 
         # Current information
@@ -862,7 +863,7 @@ class MultivariateOnlineDistributionalRegressionPath(
         if self.distribution._regularization_allowed[param]:
             count = 0
             for kk in self._iter_index[param][idx_k:]:
-                count += int(not self.is_element_adr_regularized(param, kk, adr))
+                count += int(not self._is_element_adr_regularized(param, kk, adr))
         else:
             count = len(self._iter_index[param][idx_k:])
         return count
@@ -958,7 +959,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                 if self.debug:
                     print("Fitting", outer_iteration, inner_iteration, p, k, a)
 
-                if self.is_element_adr_regularized(p=p, k=k, a=a):
+                if self._is_element_adr_regularized(p=p, k=k, a=a):
                     self.coef_[p][k][a] = np.zeros(self.n_features_[p][k])
                     self.coef_path_[p][k][a] = np.zeros(
                         (self.lambda_n, self.n_features_[p][k])
@@ -1525,7 +1526,7 @@ class MultivariateOnlineDistributionalRegressionPath(
 
             for k in self._iter_index[p]:
                 # Handle AD-R Regularization
-                if self.is_element_adr_regularized(p=p, k=k, a=a):
+                if self._is_element_adr_regularized(p=p, k=k, a=a):
                     self.coef_[p][k][a] = np.zeros(self.n_features_[p][k])
                     self.coef_path_[p][k][a] = np.zeros(
                         (self.lambda_n, self.n_features_[p][k])
