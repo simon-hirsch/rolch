@@ -5,7 +5,8 @@ import scipy.special as spc
 import scipy.stats as st
 
 from ..base import Distribution, LinkFunction
-from ..links import Logit, Log
+from ..links import Log, Logit
+from ..types import ParameterShapes
 
 
 class BetaInflatedZero(Distribution):
@@ -32,6 +33,11 @@ class BetaInflatedZero(Distribution):
         2: (np.nextafter(0, 1), np.inf),
     }
     distribution_support = (0, np.nextafter(1, 0))
+    parameter_shape = {
+        0: ParameterShapes.SCALAR,
+        1: ParameterShapes.SCALAR,
+        2: ParameterShapes.SCALAR,
+    }
 
     def __init__(
         self,
@@ -222,4 +228,5 @@ class BetaInflatedZero(Distribution):
         return super().logpmf(y, theta)
 
     def calculate_conditional_initial_values(self, y, theta, param):
+        return super().calculate_conditional_initial_values(y, theta, param)
         return super().calculate_conditional_initial_values(y, theta, param)
