@@ -838,7 +838,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                 ) or (self.improvement_rel_[a - 1] < self.early_stopping_rel_tol):
                     message = (
                         f"Early stopping due to AD-r-regression. "
-                        f"Last inrcease in r lead to relative improvement: {self.improvement_rel_[a-1]}, scaled absolute improvement {self.improvement_abs_scaled_[a-1]}",
+                        f"Last increase in r lead to relative improvement: {self.improvement_rel_[a-1]}, scaled absolute improvement {self.improvement_abs_scaled_[a-1]}",
                     )
                     self._print_message(level=1, message=message)
 
