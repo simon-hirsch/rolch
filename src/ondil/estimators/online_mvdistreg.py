@@ -827,7 +827,7 @@ class MultivariateOnlineDistributionalRegressionPath(
                 )
             else:
                 raise ValueError(
-                    "Did not recognice criteria AD-r regularization stopping criteria."
+                    "Did not recognize criteria AD-R regularization stopping criteria."
                 )
 
             if self.early_stopping and (a > 0) and (a < self.adr_steps_ - 1):
