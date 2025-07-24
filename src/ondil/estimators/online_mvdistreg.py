@@ -20,7 +20,7 @@ from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..types import ParameterShapes
 from ..utils import calculate_effective_training_length
-from ..validation import ensure_atleast_bivariate
+from ..validation import ensure_atleast_bivariate, validate_response_support
 
 try:
     import pandas as pd
@@ -600,6 +600,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             ensure_min_samples=2,
         )
         ensure_atleast_bivariate(y=y)
+        validate_response_support(self, y=y)
         _ = type_of_target(y, raise_unknown=True)
 
         # Prepare the estimator
@@ -1483,6 +1484,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             multi_output=True,
         )
         ensure_atleast_bivariate(y=y)
+        validate_response_support(self, y=y)
 
         self.n_observations_ += y.shape[0]
         self.n_observations_step_ = y.shape[0]
