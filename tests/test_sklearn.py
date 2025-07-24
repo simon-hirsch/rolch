@@ -67,7 +67,7 @@ def test_sklearn_compliance_scaler():
 def test_sklearn_compliance_multivariate():
     EXPECTED_FAILED_CHECKS_MV = {
         "check_estimators_dtypes": "Weird data generation does not support multivariate properly.",
-        "check_fit2d_1feature": "Does not work with my monkey patched version of sklearn _enforce_estimator_tags_y.",
+        "check_fit2d_1feature": "Does not work with my monkey patched version of scikit-learn _enforce_estimator_tags_y.",
     }
 
     def _enforce_estimator_tags_y(estimator, y):
