@@ -57,7 +57,7 @@ def test_sklearn_compliance_scaler():
 # This is necessary because the original implementation does not handle
 # multivariate outputs correctly, leading to issues in the estimator checks.
 # since sklearn thinks that y is always 1-D and it is sufficient to
-# have a (n, 1) shape for y, while ondil assumes that y is at least biviarte
+# have a (n, 1) shape for y, while ondil assumes that y is at least bivariate
 # in the sense of having at least (n, 2) shape.
 
 # https://github.com/scikit-learn/scikit-learn/blob/da08f3d99194565caaa2b6757a3816eef258cd70/sklearn/utils/estimator_checks.py
