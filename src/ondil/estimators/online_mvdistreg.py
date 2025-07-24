@@ -20,6 +20,7 @@ from ..methods import get_estimation_method
 from ..scaler import OnlineScaler
 from ..types import ParameterShapes
 from ..utils import calculate_effective_training_length
+from ..validation import validate_multivariate_response
 
 try:
     import pandas as pd
@@ -574,6 +575,13 @@ class MultivariateOnlineDistributionalRegressionPath(
     def fit(self, X: np.ndarray, y: np.ndarray):
         """Fit the estimator to the data.
 
+        !!! Note
+            The response $y$ must be a multivariate response
+            variable, i.e., a 2D array where each column represents
+            a different response variable and we expect at least a
+            bivariate response. Hence, passing an `(n, 1)` array
+            for y does not work!
+
         Args:
             X (np.ndarray): Covariate or feature matrix.
             y (np.ndarray): Multivariate response variable.
@@ -591,6 +599,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             multi_output=True,
             ensure_min_samples=2,
         )
+        validate_multivariate_response(y=y)
         _ = type_of_target(y, raise_unknown=True)
 
         # Prepare the estimator
@@ -1473,6 +1482,7 @@ class MultivariateOnlineDistributionalRegressionPath(
             dtype=[np.float64, np.float32],
             multi_output=True,
         )
+        validate_multivariate_response(y=y)
 
         self.n_observations_ += y.shape[0]
         self.n_observations_step_ = y.shape[0]
