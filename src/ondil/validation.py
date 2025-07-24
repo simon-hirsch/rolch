@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def validate_multivariate_response(y: np.ndarray) -> None:
+def ensure_atleast_bivariate(y: np.ndarray) -> None:
     """Validates that the response variable is a multivariate array with at least two dimensions.
 
     Args:
