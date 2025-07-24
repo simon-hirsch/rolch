@@ -229,4 +229,3 @@ class BetaInflatedZero(Distribution):
 
     def calculate_conditional_initial_values(self, y, theta, param):
         return super().calculate_conditional_initial_values(y, theta, param)
-        return super().calculate_conditional_initial_values(y, theta, param)
