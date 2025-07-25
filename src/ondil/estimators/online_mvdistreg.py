@@ -104,7 +104,7 @@ def make_model_array(X, eq, fit_intercept):
                 out = X.to_numpy()
             if HAS_POLARS and isinstance(X, pl.DataFrame):
                 out = X.to_numpy()
-        elif isinstance(eq, np.ndarray) | isinstance(eq, list):
+        elif isinstance(eq, np.ndarray) or isinstance(eq, list):
             if isinstance(X, np.ndarray):
                 out = X[:, eq]
             if HAS_PANDAS and isinstance(X, pd.DataFrame):
