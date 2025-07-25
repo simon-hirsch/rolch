@@ -18,7 +18,6 @@ class MultivariateNormalInverseCholesky(MultivariateDistributionMixin, Distribut
     # PRC = (L^-1).T @ (L^-1)
     # The cross derivatives are defined on (L^-1).T
     # The transpose is important!!
-
     corresponding_gamlss: str = None
     parameter_names = {0: "mu", 1: "sigma"}
     parameter_support = {0: (-np.inf, np.inf), 1: (-np.inf, np.inf)}
